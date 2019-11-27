@@ -106,6 +106,9 @@ async function initClaimsImport(sender, claimsImportRequest) {
                     $("#claims_import_list").append(await getClaimItem(decryptedClaims[i], true, i));
                 }
                 $("#claims_import_list").find(".claim-template").css("cursor","pointer");
+                $(".claim-type-id").click(function(){
+                    $(this).prop("checked", !$(this).prop("checked"));
+                });
                 $("#claims_import_list").find(".claim-template").click(function(){
                     var checkbox = $(this).find(".claim-type-id");
                     $(checkbox).prop("checked", !$(checkbox).prop("checked"));
@@ -312,7 +315,7 @@ function getLoginClaimItem(missingClaimTypes, claimType) {
     let name = claimType.name;
 
     if (checkMissingLoginClaimType(missingClaimTypes, claimType.id)) {
-        name += " (Missinng)";
+        name += " (Missing)";
         $(item).find("input").attr("disabled", true);
     }
     $(item).find(".login-claim-type-name").html(name);

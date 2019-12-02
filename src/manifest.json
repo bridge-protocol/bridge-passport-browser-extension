@@ -12,16 +12,13 @@
     "page": "background.html"
   },
   "permissions": [
-    "tabs",
-    "activeTab",
     "storage",
-    "downloads",
-	"<all_urls>"
+    "downloads"
   ],
   "content_scripts": [
     {
       "matches": [
-        "*://*/*"
+        "https://bridgeprotocol.azurewebsites.net/*"
       ],
       "js": [
         "scripts/jquery/jquery-3.1.1.min.js",        

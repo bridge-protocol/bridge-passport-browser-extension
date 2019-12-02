@@ -27,3 +27,15 @@ The Bridge Passport Browser Extension enables end users to easily create and man
 - Load Temporary Add-on
 - Select /src manifest.json
 
+# Additional Notes for Developers
+Due to Google Chrome Web Store publishing policies, any site that interacts with the Bridge Passport Extension needs to be explicitly listed in the manifest under content_scripts -> matches.  While testing, you will need to add your local or published site URL to the list for the page to be able to interact with the extension for requesting auth and claims, requesting payments, etc.
+
+`
+"content_scripts": [
+    {
+      "matches": [
+        "https://bridgeprotocol.azurewebsites.net/*",
+        "http://localhost/*"
+      ]
+...
+`

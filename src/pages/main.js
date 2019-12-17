@@ -819,7 +819,7 @@ async function showApplicationDetails(applicationId) {
 }
 
 function initSidebar() {
-    $("#export_button").click(function () {
+    $("#export_button").click(async function () {
 		//Refresh the passport in memory
 		var passport = await getPassport();
         exportPassport(passport);

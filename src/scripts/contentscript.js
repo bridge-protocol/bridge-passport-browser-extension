@@ -51,3 +51,16 @@ document.addEventListener("bridge-protocol-claims-import-request", function (dat
   chrome.runtime.sendMessage({ target: "background", action: "claimsImport", detail: data.detail });
 });
 
+//Wait for window load and set a window variable to the current Bridge Passport Version
+window.addEventListener('load', loadEvent => {
+  try{
+    var manifestData = chrome.runtime.getManifest();
+    let window = loadEvent.currentTarget;
+    let script = window.document.createElement('script');
+    script.text = "window.bridgePassportVersion='" + manifestData.version + "';";
+    window.document.documentElement.appendChild(script);
+  }
+  catch(err){
+
+  }
+});

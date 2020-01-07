@@ -272,7 +272,7 @@ async function initLogin(sender, loginRequest) {
                     $("#login_claim_types").find("input[type=checkbox]").each(function () {
                         if ($(this).prop("checked")) {
                             let id = $(this).attr("id").replace("loginclaim_", "");
-                            claimTypeIds.push(parseInt(id));
+                            claimTypeIds.push(id);
                         }
                     });
 

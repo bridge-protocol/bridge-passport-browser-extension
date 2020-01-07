@@ -260,9 +260,13 @@ async function getPassportLoginRequest(payload) {
   let claimTypes = new Array();
   if (request.payload.claimTypes) {
     for (let i = 0; i < request.payload.claimTypes.length; i++) {
-      let claimType = await getClaimTypeById(request.payload.claimTypes[i]);
+      let claimTypeId = request.payload.claimTypes[i];
+      let claimType = await getClaimTypeById(claimTypeId);
       if (claimType) {
         claimTypes.push(claimType);
+      }
+      else{
+        claimTypes.push({ id: claimTypeId, name: claimTypeId });
       }
     }
   }

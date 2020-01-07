@@ -50,7 +50,7 @@ $(function () {
         $("#lock_passport").prop('checked', _settings.lockPassport);
         $("#api_url").val(_settings.apiBaseUrl);
         $("#explorer_url").val(_settings.explorerBaseUrl);
-        $('#settings_modal').modal('show');
+        $('#settings_modal').modal({ closable: false }).modal('show');
     });
 
     $("#clear_cache_button").click(async function () {

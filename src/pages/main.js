@@ -523,7 +523,12 @@ async function initClaimPublishedBlockchainValue(claim){
 async function showClaimDetails(claim){
     $("#claim_details_modal").find(".verified-by").text(claim.signedByName);
     $("#claim_details_modal").find(".verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
-    $("#claim_details_modal").find(".verified-claim-type").text(claim.claimTypeId + " - " + claim.claimTypeName);
+    
+    let claimTypeString = claim.claimTypeId;
+    if(claim.claimTypeName != claim.claimTypeId)
+        claimTypeString = claim.claimTypeId + " - " + claim.claimTypeName;
+
+    $("#claim_details_modal").find(".verified-claim-type").text(claimTypeString);
     $("#claim_details_modal").find(".verified-claim-value").text(claim.claimValue);
     await initClaimPublishedBlockchainValue(claim);
     $("#claim_details_modal").modal({closable: false}).modal("show");

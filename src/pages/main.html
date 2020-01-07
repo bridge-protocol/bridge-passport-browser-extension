@@ -202,7 +202,7 @@
         </div>
         <div class="ui content form">
             <div class="field">
-                <label>Verified By</label>
+                <label>Verified By <a href="#" class="verified-claim-remove-link" style="float:right; font-weight:100; font-size:12px;">[ Delete Claim ]</a></label>
                 <span class="verified-by"></span>
             </div>
             <div class="field">
@@ -221,22 +221,25 @@
                 <label>Blockchain</label>
                 <div>
                     <img src="/images/shared/neo-logo.png" style="width:18px;">
-                    <span class="verified-claim-blockchain-published" style="vertical-align:top;">Not Published</span>
+                    <span class="verified-claim-blockchain-publish-status" style="vertical-align:top;">
+                        Not Published
+                    </span>
                 </div>
             </div>
-            <div class="field verified-claim-blockchain-values-container" style="display:none;">
+            <div class="field">
                 <label>Blockchain Value</label>
-                <div>
+                <div class="verified-claim-blockchain-values-container" style="display:none;">
                     <img src="/images/shared/bridge-token.png" style="width:18px;">
                     <span class="verified-claim-blockchain-values" style="vertical-align:top;"></span>
+                    <a href="#" class="verified-claim-blockchain-unpublish-link" style="vertical-align:top; display:none;"> [Unpublish]</a>
+                </div>
+                <div class="verified-claim-blockchain-publish-container" style="display:none;">
+                    <a href="#" class="verified-claim-blockchain-publish-value">[Publish Value]</a> <a href="#" class="verified-claim-blockchain-publish-hash">[Publish Hash Only]</a>
                 </div>
             </div>
         </div>
-        <div class="actions">
-            <a href="#" class="ui button purple verified-claim-blockchain-publish-link" style="display:none;">Publish</a>
-            <a href="#" class="ui button verified-claim-blockchain-unpublish-link" style="display:none;">Unpublish</a>
-            <a href="#" class="ui button verified-claim-remove-link">Delete</a>
-            <div id="verified_claim_cancel_button" class="ui cancel button">Close</div>
+        <div class="actions">            
+            <div id="verified_claim_cancel_button" class="ui purple cancel button">Close</div>
         </div>
         <div id="blockchain_spinner" class="ui inverted dimmer">
             <div id="blockchain_spinner_message" class="ui text small loader">Please wait</div>

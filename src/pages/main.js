@@ -444,10 +444,6 @@ async function initClaims(wait) {
 
 async function initClaimPublishedBlockchainValue(claim){
     $("#claim_details_modal").find(".verified-claim-blockchain-values").html("");
-    $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
-    $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").hide();
-    $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").hide();
-    $("#claim_details_modal").find(".verified-claim-blockchain-published").text("Custom Claims Cannot Be Published");
 
     //Wire up remove link
     $("#claim_details_modal").find(".verified-claim-remove-link").unbind();
@@ -466,69 +462,65 @@ async function initClaimPublishedBlockchainValue(claim){
         }, 50);
     });
 
-    let networkClaimType = false;
-    let networkClaimTypes = BridgeProtocol.Constants.claimTypes;
-    for(let i=0; i<networkClaimTypes.length; i++){
-        if(claim.claimTypeId == networkClaimTypes[i].id)
-            networkClaimType = true;
+    let published = false;
+    try{
+        published = await BridgeProtocol.NEOUtility.getClaimForPassport(claim.claimTypeId, _passport.id);
+    }
+    catch(err){
+
     }
 
-    //if(!networkClaimType)
-        //return;
-
-    let published = await BridgeProtocol.NEOUtility.getClaimForPassport(claim.claimTypeId, _passport.id);
     if(!published){
-        $("#claim_details_modal").find(".verified-claim-blockchain-values").html("");
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-status").text("Not Published");
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").show();
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-value").unbind();
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-value").click(async function(){
+            await publishBlockchainValue(claim, false);
+        });
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-hash").unbind();
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-hash").click(async function(){
+            await publishBlockchainValue(claim, true);
+        });
         $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").text("Publish");
-        $("#claim_details_modal").find(".verified-claim-blockchain-published").text("Not Published");
     }
     else{
-        $("#claim_details_modal").find(".verified-claim-blockchain-values").html(new Date(published.time * 1000).toLocaleDateString() + " - " + published.value);
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-status").text("Published");
         $("#claim_details_modal").find(".verified-claim-blockchain-values-container").show();
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").text("Update");
+        $("#claim_details_modal").find(".verified-claim-blockchain-values").html(new Date(published.time * 1000).toLocaleDateString() + " - " + published.value);
         $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").show();
-        $("#claim_details_modal").find(".verified-claim-blockchain-published").text("Published");
+
+        $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").unbind();
+        $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").click(async function(){
+            $("#claim_details_modal").find("#blockchain_spinner_message").text("Unpublishing from blockchain...");
+            $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
+            var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
+            let res = await blockchainHelper.removeClaim("neo", claim.claimTypeId);
+            if(res == null){
+                alert("Error removing claim from blockchain");
+            }
+            $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
+            await showClaimDetails(claim);
+        });
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").hide();
     }
+}
 
-    //Wireup the button
-    $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").unbind();
-    $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").show();
-    $("#claim_details_modal").find(".verified-claim-blockchain-publish-link").click(async function(){
-        $("#claim_details_modal").find("#blockchain_spinner_message").text("Publishing to blockchain...");
-        $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
-        var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-        let res = await blockchainHelper.addClaim("neo", claim);
-        if(res == null){
-            alert("Error adding claim to blockchain");
-        }
-        $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
-        await showClaimDetails(claim);
-    });
-
-    $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").unbind();
-    $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").click(async function(){
-        $("#claim_details_modal").find("#blockchain_spinner_message").text("Unpublishing from bloockchain...");
-        $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
-        var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-        let res = await blockchainHelper.removeClaim("neo", parseInt(claim.claimTypeId));
-        if(res == null){
-            alert("Error removing claim from blockchain");
-        }
-        $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
-        await showClaimDetails(claim);
-    });
+async function publishBlockchainValue(claim, hashOnly){
+    $("#claim_details_modal").find("#blockchain_spinner_message").text("Publishing " + (hashOnly ? "hash" : "value") + " to blockchain...");
+    $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
+    var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
+    let res = await blockchainHelper.addClaim("neo", claim, hashOnly);
+    if(res == null){
+        alert("Error adding claim to blockchain");
+    }
+    $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
+    await showClaimDetails(claim);
 }
 
 async function showClaimDetails(claim){
     $("#claim_details_modal").find(".verified-by").text(claim.signedByName);
     $("#claim_details_modal").find(".verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
-
-    let claimTypeString = claim.claimTypeId;
-    if(claim.claimTypeName != claim.claimTypeId)
-        claimTypeString = claim.claimTypeId + " - " + claim.claimTypeName;
-
-    $("#claim_details_modal").find(".verified-claim-type").text(claimTypeString);
+    $("#claim_details_modal").find(".verified-claim-type").text(claim.claimTypeName);
     $("#claim_details_modal").find(".verified-claim-value").text(claim.claimValue);
     await initClaimPublishedBlockchainValue(claim);
     $("#claim_details_modal").modal({closable: false}).modal("show");

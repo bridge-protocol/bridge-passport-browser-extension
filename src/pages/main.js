@@ -473,8 +473,8 @@ async function initClaimPublishedBlockchainValue(claim){
             networkClaimType = true;
     }
 
-    if(!networkClaimType)
-        return;
+    //if(!networkClaimType)
+        //return;
 
     let published = await BridgeProtocol.NEOUtility.getClaimForPassport(claim.claimTypeId, _passport.id);
     if(!published){
@@ -523,7 +523,7 @@ async function initClaimPublishedBlockchainValue(claim){
 async function showClaimDetails(claim){
     $("#claim_details_modal").find(".verified-by").text(claim.signedByName);
     $("#claim_details_modal").find(".verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
-    
+
     let claimTypeString = claim.claimTypeId;
     if(claim.claimTypeName != claim.claimTypeId)
         claimTypeString = claim.claimTypeId + " - " + claim.claimTypeName;
@@ -885,6 +885,7 @@ function initSidebar() {
     $("#about_button").click(function(){
         var manifestData = chrome.runtime.getManifest();
         $("#about_version").text(manifestData.version);
+        $("#about_modal").find(".about-year").text(new Date().getFullYear());
         $("#about_modal").modal("show");
     });
 }

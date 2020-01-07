@@ -265,6 +265,11 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
     return true;
   }
 
+  if (request.action == "removeClaimPackage") {
+    removeClaimPackage(request.claimTypeId).then(sendResponse);
+    return true;
+  }
+
   if (request.action == "getNetworkFee") {
     getNetworkFee().then(sendResponse);
     return true;

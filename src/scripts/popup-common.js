@@ -349,6 +349,10 @@ async function updateClaimPackages(claimPackages) {
 	return await _browser.runtime.sendMessage({ target: 'background', action: 'updateClaimPackages', claimPackages });
 }
 
+async function removeClaimPackage(claimTypeId) {
+	return await _browser.runtime.sendMessage({ target: 'background', action: 'removeClaimPackage', claimTypeId });
+}
+
 async function getNetworkFee() {
 	return await _browser.runtime.sendMessage({ target: 'background', action: 'getNetworkFee' });
 }

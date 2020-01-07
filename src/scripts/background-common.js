@@ -304,6 +304,19 @@ async function removeAllApplicationClaims(applicationId) {
   await applicationHelper.removeClaims(applicationId);
 }
 
+async function removeClaimPackage(claimTypeId){
+  let claimPackages = new Array();
+
+  for (let i = 0; i < _passport.claims.length; i++) {
+    let claimPackage = _passport.claims[i];
+    if (claimPackage.typeId != claimTypeId) {
+      claimPackages.push(claimPackage);
+    }
+  }
+
+  _passport.claims = claimPackages;
+}
+
 async function updateClaimPackages(claimPackages) {
   for (let i = 0; i < claimPackages.length; i++) {
     updatePassportClaim(claimPackages[i]);

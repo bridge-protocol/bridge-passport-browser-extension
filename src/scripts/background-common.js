@@ -133,6 +133,7 @@ async function getClaimsObjects(claims) {
     var partnerId = await getPassportIdForPublicKey(claims[i].signedByKey);
     if (partnerId) {
       claims[i].signedById = partnerId;
+      claims[i].signedByName = partnerId;
       var partner = await partnerHelper.getPartner(partnerId);
       if (partner) {
         claims[i].signedByName = partner.name;

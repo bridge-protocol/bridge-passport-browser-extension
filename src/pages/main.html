@@ -126,8 +126,8 @@
             <div class="claim-checkbox-container" style="display:none;">
                 <input type="checkbox" class="claim-type-id">
             </div>
-            <div class="bridge-claim-icon-container">
-                <img src="/images/shared/bridge-token-white.png" style="width:34px; margin:10px;">
+            <div class="claim-icon-container">
+                <img class="claim-icon" src="/images/shared/claim-icon-white.png" style="width:34px; margin:12px 10px 8px 10px;">
             </div>
             <div style="display:inline-table; vertical-align:top; margin-left:4px; height:100%;">
                 <div class="claim-info"><span class="claim-type-name"></span>: <span class="claim-value"></span></div>
@@ -236,6 +236,9 @@
                 <div class="verified-claim-blockchain-publish-container" style="display:none;">
                     <a href="#" class="verified-claim-blockchain-publish-value">[Publish Value]</a> <a href="#" class="verified-claim-blockchain-publish-hash">[Publish Hash Only]</a>
                 </div>
+                <div class="verified-claim-blockchain-nopublish-container" style="display:none;">
+                     Claims from a non-Bridge Network Partner cannot be published.
+                </div>
             </div>
         </div>
         <div class="actions">            
@@ -335,6 +338,9 @@
             Login with Bridge Passport
         </div>
         <div class="content">
+            <div class="ui message error">
+                WARNING: This request is coming from a passport that is not a known Bridge Network Partner.  Ensure you know the source of the request before transmitting any sensitive information.
+            </div>
             <div class="ui segment basic form" style="padding:0px !important;">
                 <div class="field">
                     <label>Requesting Passport Id:</label>

@@ -260,7 +260,14 @@ async function initLogin(sender, loginRequest) {
             }
 
             $("#loginrequest_passport_id").text(requestValue.passportDetails.id);
-            $("#loginrequest_partner_name").text(requestValue.passportDetails.partnerName);
+
+            let partnerName = requestValue.passportDetails.partnerName;
+            if(!requestValue.passportDetails.partnerName){
+                partnerName = "Unknown Passport / Non-Bridge Network Partner";
+                $("#login_modal").find(".ui.message.error").show();
+            }
+                
+            $("#loginrequest_partner_name").text(partnerName);
             if (!requestValue.payload.token) {
                 $("token_invalid").text("Token signature was invalid.  Proceed with caution.");
             }
@@ -462,6 +469,17 @@ async function initClaimPublishedBlockchainValue(claim){
         }, 50);
     });
 
+    //Check and see if this claim is from a network partner to be allowed to publish
+    //Bridge Network will only secondary sign a blockchain transaction for claims that are from
+    //Known partners
+    var partner = await getPartnerInfo(claim.signedById);
+    if(partner.unknownPartner){
+        $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
+        $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").show();
+        return;
+    }
+
     let published = false;
     try{
         published = await BridgeProtocol.NEOUtility.getClaimForPassport(claim.claimTypeId, _passport.id);
@@ -482,6 +500,7 @@ async function initClaimPublishedBlockchainValue(claim){
             await publishBlockchainValue(claim, true);
         });
         $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
+        $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").hide();
     }
     else{
         $("#claim_details_modal").find(".verified-claim-blockchain-publish-status").text("Published");
@@ -502,6 +521,7 @@ async function initClaimPublishedBlockchainValue(claim){
             await showClaimDetails(claim);
         });
         $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").hide();
     }
 }
 
@@ -509,12 +529,19 @@ async function publishBlockchainValue(claim, hashOnly){
     $("#claim_details_modal").find("#blockchain_spinner_message").text("Publishing " + (hashOnly ? "hash" : "value") + " to blockchain...");
     $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
     var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-    let res = await blockchainHelper.addClaim("neo", claim, hashOnly);
-    if(res == null){
-        alert("Error adding claim to blockchain");
+    try{
+        let res = await blockchainHelper.addClaim("neo", claim, hashOnly);
+        if(res == null){
+            alert("Error adding claim to blockchain");
+        }
+        $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
+        await showClaimDetails(claim);
     }
-    $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
-    await showClaimDetails(claim);
+    catch(err){
+        alert("Error publishing to blockchain: " + err);
+        $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
+        $("#claim_details_modal").modal("hide");
+    }
 }
 
 async function showClaimDetails(claim){
@@ -901,6 +928,11 @@ function initSettings() {
 async function getClaimItem(claim, showCheckbox, idx) {
     var partner = await getPartnerInfo(claim.signedById);
     var claimItem = $(_claimTemplate).clone();
+    
+    //Set the tile
+    $(claimItem).find(".claim-icon-container").css("background-color",partner.color);
+    $(claimItem).find(".claim-icon").attr("src",partner.icon);
+
     if (showCheckbox) {
         $(claimItem).find(".claim-checkbox-container").show();
     }
@@ -909,7 +941,8 @@ async function getClaimItem(claim, showCheckbox, idx) {
     $(claimItem).find(".claim-type-name").text(claim.claimTypeName);
     $(claimItem).find(".claim-value").text(claim.claimValue);
     $(claimItem).find(".claim-verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
-    $(claimItem).find(".claim-verified-by").text(claim.signedByName);
+    $(claimItem).find(".claim-verified-by").text(partner.name);
+
 
     return claimItem;
 }

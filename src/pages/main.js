@@ -246,6 +246,8 @@ async function initLogin(sender, loginRequest) {
     showWait("Login request received, please wait");
     setTimeout(async function () {
         try {
+            $("#login_modal").find(".ui.message.error").hide();
+
             //Unpack the request
             let requestValue = await getPassportLoginRequest(loginRequest);
             _loginClaimTypeTemplate = $(".login-claim-type-template").first();
@@ -261,16 +263,14 @@ async function initLogin(sender, loginRequest) {
 
             $("#loginrequest_passport_id").text(requestValue.passportDetails.id);
 
+            //Indicate the partner / whether or not the passport is known by the network
             let partnerName = requestValue.passportDetails.partnerName;
             if(!requestValue.passportDetails.partnerName){
                 partnerName = "Unknown Passport / Non-Bridge Network Partner";
+                $("#login_modal").find(".ui.message.error").text("WARNING: This request is coming from a passport that is not a known Bridge Network Partner.  Ensure you know the source of the request before transmitting any sensitive information.");
                 $("#login_modal").find(".ui.message.error").show();
             }
-                
             $("#loginrequest_partner_name").text(partnerName);
-            if (!requestValue.payload.token) {
-                $("token_invalid").text("Token signature was invalid.  Proceed with caution.");
-            }
 
             $("#login_modal").modal({
                 closable: false,

@@ -670,7 +670,6 @@ async function initVerifications(wait) {
             if (res.error) {
                 $("#create_verification_request_button").prop('disabled', true);
             }
-            console.log(JSON.stringify(res));
 
             if (res.applications) {
                 if (res.applications && res.applications.length > 0) {

@@ -2,19 +2,17 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   let res = null;
 
   if (request.action == 'sendBridgeLoginResponse') {
+    var loginResponse = request.loginResponse;
     var event = new CustomEvent("bridge-protocol-login-response", {
-      detail: {
-        loginResponse: request.loginResponse
-      }
+      detail: loginResponse
     });
     document.dispatchEvent(event);
   }
 
   if (request.action == 'sendBridgePaymentResponse') {
+    var paymentResponse = request.paymentResponse;
     var event = new CustomEvent("bridge-protocol-payment-response", {
-      detail: {
-        paymentResponse: request.paymentResponse
-      }
+      detail: paymentResponse
     });
     document.dispatchEvent(event);
   }

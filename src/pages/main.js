@@ -333,19 +333,28 @@ function getLoginClaimItem(missingClaimTypes, claimType) {
 async function initUI() {
     $(".ui.accordion").accordion();
 
+    //Set the heights
+    var height = $("#main_table").innerHeight();
+    $("#blockchain_addresses_container").outerHeight((height / 2)-2);
+    $("#recent_verifications_container").outerHeight((height / 2)-2);
+
+    $("#bridge_button").unbind();
     $("#bridge_button").click(function () {
         window.open(_settings.explorerBaseUrl);
     });
 
+    $("#refresh_passport_button").unbind();
     $("#refresh_passport_button").click(async function () {
         initPassportDetails();
         await initClaims(true);
     });
 
+    $("#refresh_blockchain_button").unbind();
     $("#refresh_blockchain_button").click(async function () {
         await initBlockchainAddresses(true);
     });
 
+    $("#refresh_verifications_button").unbind();
     $("#refresh_verifications_button").click(async function () {
         await initVerifications(true);
     });
@@ -354,10 +363,12 @@ async function initUI() {
     $("#unload_button").show();
     $("#create_verification_request_button").show();
 
-
+    $("#license_link").unbind();
     $("#license_link").click(function(){
         window.open("https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/LICENSE")
     });
+
+    $("#third_party_link").unbind();
     $("#third_party_link").click(function(){
         window.open("https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/src/scripts/ThirdPartyNotices.txt")
     });

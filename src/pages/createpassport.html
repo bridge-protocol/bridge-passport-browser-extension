@@ -8,13 +8,13 @@
     <script src="/scripts/jquery/jquery-3.1.1.min.js"></script>
     <script src="/scripts/chromeExtensionAsync-3.3.0/chrome-extension-async.js"></script>
     <script src="/styles/semantic/semantic.min.js"></script>
+    <script src="/scripts/bridgeprotocol.min.js"></script>
     <script src="/scripts/common.js"></script>
     <script src="/scripts/popup-common.js"></script>
     <script src="./createpassport.js"></script>
 </head>
 
 <body>
-    <a href="#" id="view_settings_button" class="settings-button"><i class="icon cog"></i></a>
     <div class="ui middle aligned center aligned grid">
         <div class="column">
             <div class="ui segment inverted">
@@ -60,30 +60,6 @@
     <div id="loading_spinner" class="ui active dimmer">
             <div id="loading_spinner_message" class="ui text loader">Please wait</div>
             <img src="/images/shared/bridge-token.png" style="width:75px; margin-top:-80px;">
-    </div>
-    <!-- End Wait Dimmer -->
-    <div id="settings_modal" class="ui tiny dark modal">
-        <div class="header inverted top aligned modal-header">
-            <img class="modal-header-image" src="/images/shared/bridge-token.png" />
-            Bridge Network Settings
-        </div>
-        <div class="content">
-            <div class="ui form">
-                <div id="advanced_settings_container">
-                    <div class="field">
-                        <label>Bridge API Url</label>
-                        <input type="text" id="api_url">
-                    </div>
-                    <div class="field">
-                        <label>Bridge Explorer Url</label>
-                        <input type="text" id="explorer_url">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="actions">
-            <div id="ok_button" class="ui button purple cancel">OK</div>
-        </div>
     </div>
 </body>
 

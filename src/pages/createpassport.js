@@ -31,8 +31,20 @@ $(function () {
         showWait("Creating Bridge Passport...");
         setTimeout(async function () {
             try {
-                var passport = await createPassport(passphrase, $("#neo_wif").val(), true);
-                if (passport) {
+                let neoPrivateKey = $("#neo_wif").val();
+                let ethPrivateKey = $("#eth_key").val();
+
+                var passport = new BridgeProtocol.Models.Passport();
+                await passport.create(passphrase);
+                if(neoPrivateKey)
+                    await passport.addWallet("neo", passphrase, neoPrivateKey);
+                if(ethPrivateKey)
+                    await passport.addWallet("eth", passphrase, ethPrivateKey);
+
+                if (passport.id) {
+                    //Save to browser storage
+                    await savePassportToBrowserStorage(passport);
+                    await savePassphraseToBrowserStorage(passphrase);
                     loadPage("main", _params);
                 }
                 else {
@@ -40,29 +52,9 @@ $(function () {
                 }
             }
             catch (err) {
-                alert("Could not create passport: " + JSON.stringify(err));
+                alert("Could not create passport: " + err.message);
             }
         }, 50);
-    });
-
-    $("#view_settings_button").click(async function () {
-        _settings = await getSettings();
-        $("#lock_passport").prop('checked', _settings.lockPassport);
-        $("#api_url").val(_settings.apiBaseUrl);
-        $("#explorer_url").val(_settings.explorerBaseUrl);
-        $('#settings_modal').modal({ closable: false }).modal('show');
-    });
-
-    $("#clear_cache_button").click(async function () {
-        await clearCache();
-        alert("Cache(s) Cleared");
-    });
-
-    $("#ok_button").click(async function () {
-        _settings.lockPassport = $("#lock_passport").is(':checked');
-        _settings.apiBaseUrl = $("#api_url").val();
-        _settings.explorerBaseUrl = $("#explorer_url").val();
-        await saveSettings(_settings);
     });
 
     $('.ui.accordion').accordion();

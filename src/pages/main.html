@@ -8,9 +8,9 @@
     <script src="/scripts/jquery/jquery-3.1.1.min.js"></script>
     <script src="/styles/semantic/semantic.min.js"></script>
     <script src="/scripts/chromeExtensionAsync-3.3.0/chrome-extension-async.js"></script>
+    <script src="/scripts/bridgeprotocol.min.js"></script>
     <script src="/scripts/common.js"></script>
     <script src="/scripts/popup-common.js"></script>
-    <script src="/scripts/bridgeprotocol.min.js"></script>
     <script src="/scripts/bignumber.min.js"></script>
     <script src="./main.js"></script>
 </head>
@@ -158,8 +158,8 @@
             </div>
         </div>
         <div class="ui segment blockchain-template" style="padding:2px; margin:2px;">
-            <div class="neo-address-icon-container">
-                <img src="/images/shared/neo-logo-white.png" style="width:34px; margin:12px 10px 8px 10px;">
+            <div class="blockchain-address-icon-container" style="display:inline-table;">
+                <img class="blockchain-logo-white" src="/images/shared/neo-logo-white.png" style="width:36px; margin:10px;"></img>
             </div>
             <div style="display:inline-table; vertical-align:top; margin-left:4px;">
                 <div class="blockchain-info">
@@ -171,14 +171,13 @@
                 <div class="blockchain-info">
                     Balances:
                     <span>
-                        <img src="/images/shared/neo-logo.png"
-                            style="width:15px; margin-right:5px; vertical-align: middle;">GAS: <span
-                            class="neo-gas-balance">0</span>
+                        <img class="blockchain-logo" src="/images/shared/neo-logo.png" style="width:15px; margin-right:5px; vertical-align: middle;"></img>
+                            <span class="blockchain-gas-label">GAS</span>: <span class="blockchain-gas-balance">0</span>
                     </span>
                     <span style="margin-left:10px;">
                         <img src="/images/shared/bridge-token.png"
                             style="width:15px; margin-right:5px; vertical-align: middle;">BRDG: <span
-                            class="neo-brdg-balance">0</span>
+                            class="blockchain-brdg-balance">0</span>
                     </span>
                 </div>
                 <div class="blockchain-info">

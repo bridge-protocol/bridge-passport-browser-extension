@@ -22,8 +22,11 @@ $(function () {
         showWait("Opening Bridge Passport...");
         setTimeout(async function () {
             try {
-                var passport = await importPassport(_passportContent, passphrase);
-                if (passport) {
+                var passport = new BridgeProtocol.Models.Passport();
+                let res = await passport.open(_passportContent, passphrase);
+                if (res) {
+                    await savePassportToBrowserStorage(passport);
+                    await savePassphraseToBrowserStorage(passphrase);
                     loadPage("main", _params);
                 }
                 else {

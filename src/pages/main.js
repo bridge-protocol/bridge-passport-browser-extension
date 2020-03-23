@@ -1,5 +1,4 @@
-var _passport;
-var _passphrase;
+var _passportContext;
 var _settings;
 var _params;
 
@@ -41,19 +40,19 @@ $(function () {
 async function Init() {
     window.focus();
 
-    _settings = await getSettings();
-    _passport = await getPassport();
-    _passphrase = await getPassphrase();
-    _params = getQueryStringFromLocation();
+    _settings = await loadSettingsFromBrowserStorage();
+    _passportContext = await getPassportContext();
+    let loaded = _passportContext.passport && _passportContext.passport.id != null;
+    let unlocked = _passportContext.passphrase && _passportContext.passphrase.length > 0;
 
-    if (!_passphrase && _passport) {
-        await initUnlock();
-        $("#unlock_passport_modal").modal({ closable: false }).modal("show");
+    _params = getQueryStringFromLocation();
+    if(!loaded && !unlocked){
+        loadPage("createpassport", _params);
         return;
     }
-
-    if (!_passport) { //If we can't, it means we don't have one loaded
-        loadPage("createpassport", _params);
+    else if(loaded && !unlocked){
+        await initUnlock();
+        $("#unlock_passport_modal").modal({ closable: false }).modal("show");
         return;
     }
 
@@ -61,20 +60,20 @@ async function Init() {
     initSettings();
     await initUI();
     await initPassportDetails();
-    //If we were launched from a request, now that we're loaded, do the action
+    // //If we were launched from a request, now that we're loaded, do the action
     if (_params) {
-        let action = getParamAction(_params);
-        if (action.action === "login") {
-            await initLogin(action.sender, action.loginRequest);
-        }
-        else if (action.action === "payment") {
-            await initPayment(action.sender, action.paymentRequest);
-        }
+         let action = getParamAction(_params);
+         if (action.action === "login") {
+             await initLogin(action.sender, action.loginRequest);
+         }
+         else if (action.action === "payment") {
+             await initPayment(action.sender, action.paymentRequest);
+         }
     }
     else{
-        await initVerifications();
-        await initClaims();
-        await initBlockchainAddresses();
+    //     await initVerifications();
+    //     await initClaims();
+        await initBlockchainAddresses(true);
         hideWait();
     }
 }
@@ -346,7 +345,7 @@ async function initUI() {
     $("#refresh_passport_button").unbind();
     $("#refresh_passport_button").click(async function () {
         initPassportDetails();
-        await initClaims(true);
+        //await initClaims(true);
     });
 
     $("#refresh_blockchain_button").unbind();
@@ -356,7 +355,7 @@ async function initUI() {
 
     $("#refresh_verifications_button").unbind();
     $("#refresh_verifications_button").click(async function () {
-        await initVerifications(true);
+        //await initVerifications(true);
     });
 
     //show the buttons
@@ -384,17 +383,11 @@ async function initUI() {
 }
 
 async function initPassportDetails() {
-    if (!_passport)
+    if (!_passportContext)
         return;
 
-    //We don't have a valid passport object that's unlocked
-    if (!_passport.publicKey) {
-        let passportHelper = new BridgeProtocol.Passport(_settings.apiBaseUrl, _passport, _passphrase);
-        _passport = await passportHelper.loadPassportFromContent(JSON.stringify(_passport), _passphrase);
-    }
-
-    $("#passport_id").val(_passport.id);
-    $("#passport_publickey").val(_passport.key.public);
+    $("#passport_id").val(_passportContext.passport.id);
+    $("#passport_publickey").val(_passportContext.passport.publicKey);
 
     $("#unload_button").unbind();
     $("#unload_button").click(async function () {
@@ -592,31 +585,18 @@ async function initBlockchainAddresses(wait) {
             if(wait)
                 showWait("Refreshing blockchain address info");
                 _blockchainTemplate = $(".blockchain-template").first();
-                var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-                var addresses = _passport.wallets;
-                var info = await blockchainHelper.getPassportStatus("NEO", _passport.id);
-                if (addresses) {
-                    if (addresses && addresses.length > 0) {
-                        $("#blockchain_list").empty();
-                    }
-        
-                    for (let i = 0; i < addresses.length; i++) {
-                        let balances = await getBalancesForAddress(addresses[i].address);
-                        addresses[i].registered = false;
-                        addresses[i].brdgbalance = balances.brdg;
-                        addresses[i].gasbalance = balances.gas;
-                        if (info) {
-                            addresses[i].registered = true;
-                        }
-                        var item = getBlockchainItem(addresses[i]);
-                        $("#blockchain_list").append(item);
-                    }
-                }
-                else {
+
+                //Get the balance of the wallet
+                if(!_passportContext.passport.wallets || _passportContext.passport.wallets.length == 0){
                     $("#blockchain_list").empty();
-                    $("#blockchain_list").text("No blockchain addresses found");
+                    $("#blockchain_list").text("No blockchain wallets found");
+                    resolve();
                 }
-        
+
+                for(let i=0; i<_passportContext.passport.wallets.length; i++){
+                    $("#blockchain_list").append(await getBlockchainItem(_passportContext.passport, _passportContext.passport.wallets[i]));
+                }
+
                 $("#copy_wif").popup({ on: 'click' });
                 $("#copy_wif").unbind();
                 $("#copy_wif").click(function () {
@@ -631,8 +611,8 @@ async function initBlockchainAddresses(wait) {
                     }
                 });
                 hideRefreshSectionProgress($("#refresh_blockchain_button"));
-                resolve();
                 hideWait();
+                resolve();
         },50);
     });
 }
@@ -650,13 +630,16 @@ function initUnlock() {
         showWait("Unlocking Bridge Passport");
         setTimeout(async function () {
             try {
-                var passport = await unlockPassport(passphrase);
-                if (passport) {
+                var res = await unlockPassport(_passportContext.passport, passphrase);
+                if (res) {
+                    await savePassportToBrowserStorage(_passportContext.passport);
+                    await savePassphraseToBrowserStorage(passphrase);
                     loadPage("main", _params);
                 }
                 else {
-                    $("#error").text("Invalid passphrase.");
+                    alert("Invalid passphrase");
                     hideWait();
+                    loadPage("main", _params);
                 }
             }
             catch (err) {
@@ -898,9 +881,7 @@ async function showApplicationDetails(applicationId) {
 
 function initSidebar() {
     $("#export_button").click(async function () {
-		//Refresh the passport in memory
-		var passport = await getPassport();
-        exportPassport(passport);
+        exportPassport(_passportContext.passport);
     });
 
     $("#logout_button").click(async function () {
@@ -921,14 +902,12 @@ function initSidebar() {
 
 function initSettings() {
     $("#settings_button").click(async function () {
-        $("#lock_passport").prop('checked', _settings.lockPassport);
         $("#api_url").val(_settings.apiBaseUrl);
         $("#explorer_url").val(_settings.explorerBaseUrl);
         $('#settings_modal').modal({ closable: false }).modal('show');
     });
 
     $("#save_settings_button").click(async function () {
-        _settings.lockPassport = $("#lock_passport").is(':checked');
         _settings.apiBaseUrl = $("#api_url").val();
         _settings.explorerBaseUrl = $("#explorer_url").val();
         await saveSettings(_settings);
@@ -969,19 +948,49 @@ function getTransactionItem(tx) {
     return transactionItem;
 }
 
-function getBlockchainItem(address) {
+async function getBlockchainItem(passport, wallet) {
+    let publishedPassport = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+    let published = publishedPassport != null && publishedPassport.length > 0;
+    let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
+
+    let brdgBalance = 0;
+    let gasBalance = 0;
+    for(let i=0; i<balances.length; i++){
+        if(balances[i].asset.toLowerCase() === "eth" || balances[i].asset.toLowerCase() === "gas")
+            gasBalance = balances[i].balance;
+        else if(balances[i].asset.toLowerCase() === "brdg")
+            brdgBalance = balances[i].balance;
+    }
+    
     var item = $(_blockchainTemplate).clone();
-    $(item).find(".blockchain-network").html(address.network);
-    $(item).find(".blockchain-address").html(address.address);
-    $(item).find(".neo-brdg-balance").html(address.brdgbalance);
-    $(item).find(".neo-gas-balance").html(address.gasbalance);
+    let network = wallet.network.toUpperCase();
+    let gas = "GAS";
+    if(wallet.network.toLowerCase() === "eth"){
+        network = "Ethereum";
+        gas = "ETH";
+    }
+        
+
+    $(item).find(".blockchain-logo").attr("src","/images/shared/" + wallet.network.toLowerCase() + "-logo.png");
+    $(item).find(".blockchain-logo-white").attr("src","/images/shared/" + wallet.network.toLowerCase() + "-logo-white.png");
+    $(item).find(".blockchain-address-icon-container").css("background-color","green");
+    if(wallet.network.toLowerCase() === "eth")
+        $(item).find(".blockchain-address-icon-container").css("background-color","grey");
+    $(item).find(".blockchain-network").html(network);
+    $(item).find(".blockchain-address").html(wallet.address);
+    $(item).find(".blockchain-brdg-balance").html(brdgBalance);
+    $(item).find(".blockchain-gas-label").html(gas);
+    $(item).find(".blockchain-gas-balance").html(gasBalance);
+    $(item).find(".register-address").css("background-color","green !important");
+    if(wallet.network.toLowerCase() === "eth")
+        $(item).find(".register-address").css("background-color","grey !important");
     $(item).find(".view-key").click(async function () {
-        var key = await getBlockchainPrivateKey(address.network, address.key);
-        if (address.network == "NEO") {
-            $("#key_modal_text").text("Private Key (WIF)");
-            $("#wif_value").val(key);
-            window.getSelection().removeAllRanges();
-        }
+        //var key = await getBlockchainPrivateKey(address.network, address.key);
+        //if (address.network == "NEO") {
+        //    $("#key_modal_text").text("Private Key (WIF)");
+        //    $("#wif_value").val(key);
+        //    window.getSelection().removeAllRanges();
+        //}
         $('#key_modal').modal("show");
     });
 
@@ -1001,28 +1010,23 @@ function getBlockchainItem(address) {
         $("#transactions_modal").modal("show");
     });
 
-    if (address.registered) {
+    if (published) {
         $(item).find(".blockchain-registered").html("Yes");
     }
     else {
         $(item).find(".register-address").click(function () {
-            registerAddress(address.address);
+            showWait("Registering passport and address on blockchain<br>(This may take a few minutes depending on the network)", true);
+            setTimeout(async function () {
+                let res = await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passport);
+                hideWait();
+                if (!res) {
+                    alert("Error registering passport on NEO network.");
+                    return;
+                }
+                initBlockchainAddresses(true);
+            }, 50);
         });
     }
 
     return item;
-}
-
-function registerAddress(address) {
-    showWait("Registering passport and address on blockchain<br>(This may take a few minutes depending on the network)", true);
-    setTimeout(async function () {
-        let blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-        let res = await blockchainHelper.addBlockchainAddress("NEO", address, true);
-        hideWait();
-        if (!res) {
-            alert("Error registering passport on NEO network.");
-            return;
-        }
-        initBlockchainAddresses();
-    }, 50);
 }

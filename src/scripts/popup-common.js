@@ -184,7 +184,14 @@ async function removeSettingsFromBrowserStorage() {
 //Passport context management
 async function getPassportContext(){
 	let passphrase = await loadPassphraseFromBrowserStorage();
-	let passport = await loadPassportFromBrowserStorage();
+	let passportContent = await loadPassportFromBrowserStorage();
+	let passport = passportContent;
+
+	if(passportContent && passphrase){
+		passport = new BridgeProtocol.Models.Passport();
+		await passport.open(passportContent, passphrase);
+	}
+		
 	return { passport, passphrase };
 }
 
@@ -195,7 +202,7 @@ async function savePassportToBrowserStorage(passport) {
 async function loadPassportFromBrowserStorage() {
 	var res = await _browser.storage.local.get('passport');
 	if (res && res.passport)
-	  return JSON.parse(res.passport);
+	  return res.passport;
   
 	return null;
 }
@@ -247,4 +254,61 @@ function exportPassport(passport) {
 		style: 'display: none',
 	});
 	document.body.appendChild(iframe);
+}
+
+//Claim and Application Info
+async function getClaimInfo(passport, password, claimPackage){
+	claimPackage = new BridgeProtocol.Models.ClaimPackage(claimPackage.typeId, claimPackage.signedBy, claimPackage.claim);
+	let claim = await claimPackage.decrypt(passport.privateKey, password);
+	let claimType = await getClaimTypeInfo(claimPackage.typeId);
+	let partner = await getPartnerInfoFromPublicKey(claimPackage.signedBy);
+
+	claim.claimTypeName = claimType.name;
+	claim.partnerIcon = partner.icon;
+	claim.partnerColor = partner.color;
+	claim.partnerId = partner.id;
+	claim.partnerName = partner.name;
+
+	return claim;
+}
+
+async function getPartnerInfoFromPublicKey(publicKey){
+	var partnerId = await BridgeProtocol.Utils.Crypto.getPassportIdForPublicKey(publicKey);
+	return await getPartnerInfo(partnerId);
+}
+
+async function getPartnerInfo(partnerId){
+	let partner = {
+		id: partnerId,
+		name: partnerId,
+		icon: "claim-icon-white.png",
+		color: "grey"
+	};
+	
+	let partnerInfo = await BridgeProtocol.Services.Partner.getPartner(partnerId);
+	
+	if(partnerInfo){
+		partner = partnerInfo;
+
+		//TODO: This will get extended for new partners
+		if(partner.id === BridgeProtocol.Constants.bridgePassportId){
+			partner.icon = "bridge-token-white.png";
+			partner.color = "purple";
+		}
+	}
+
+	return partner;
+}
+
+async function getClaimTypeInfo(claimTypeId){
+	let claimType = {
+		id: claimTypeId,
+		name: claimTypeId
+	};
+
+	let claimTypeInfo =  await BridgeProtocol.Services.Claim.getType(claimTypeId);
+	if(claimTypeInfo)
+		claimType = claimTypeInfo;
+
+	return claimType;
 }

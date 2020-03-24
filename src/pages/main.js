@@ -71,8 +71,8 @@ async function Init() {
          }
     }
     else{
-    //     await initVerifications();
-    //     await initClaims();
+        await initVerifications();
+        await initClaims();
         await initBlockchainAddresses(true);
         hideWait();
     }
@@ -345,7 +345,7 @@ async function initUI() {
     $("#refresh_passport_button").unbind();
     $("#refresh_passport_button").click(async function () {
         initPassportDetails();
-        //await initClaims(true);
+        await initClaims(true);
     });
 
     $("#refresh_blockchain_button").unbind();
@@ -355,7 +355,7 @@ async function initUI() {
 
     $("#refresh_verifications_button").unbind();
     $("#refresh_verifications_button").click(async function () {
-        //await initVerifications(true);
+        await initVerifications(true);
     });
 
     //show the buttons
@@ -429,11 +429,11 @@ async function initClaims(wait) {
                 $(".claim-type-details-link").unbind();
                 $(".claim-type-details-link").click(function () {});
                 _claimTemplate = $(".claim-template").first();
-                var claims = await getPassportClaims();
-                if (claims && claims.length > 0) {
+
+                if (_passportContext.passport.claims && _passportContext.passport.claims.length > 0) {
                     $("#claims_list").empty();
-                    for (let i = 0; i < claims.length; i++) {
-                        let item = await getClaimItem(claims[i]);
+                    for (let i = 0; i <_passportContext.passport.claims.length; i++) {
+                        let item = await getClaimItem(_passportContext.passport.claims[i]);
                         $(item).css("cursor","pointer");
                         $(item).click(function(){
                             showClaimDetails(claims[i]);
@@ -656,17 +656,17 @@ async function initVerifications(wait) {
             if (wait)
                 showWait("Refreshing verification request info");
 
-            let fee = await getNetworkFee();
+            let fee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(_passportContext.passport, _passportContext.passphrase);
             let adjFee = new BigNumber(fee * .00000001);
 
             _applicationTemplate = $(".application-template").first();
-            let res = await getApplications();
-            if (res.error) {
+            let applications = await BridgeProtocol.Services.Application.getActiveApplications(_passportContext.passport, _passportContext.passphrase);
+            if (!applications) {
                 $("#create_verification_request_button").prop('disabled', true);
             }
 
-            if (res.applications) {
-                if (res.applications && res.applications.length > 0) {
+            if (applications) {
+                if (applications.length > 0) {
                     $("#verification_request_list").empty();
                 }
                 else {
@@ -674,12 +674,12 @@ async function initVerifications(wait) {
                     $("#verification_request_list").text("No active verifications found");
                 }
 
-                for (let i = 0; i < res.applications.length; i++) {
-                    var item = await getApplicationItem(res.applications[i]);
+                for (let i = 0; i < applications.length; i++) {
+                    var item = await getApplicationItem(applications[i]);
                     $("#verification_request_list").append(item);
                 }
             }
-            else if (res.error) {
+            else {
                 $("#verification_request_list").empty();
                 $("#verification_request_list").text("Error connecting to Bridge public api. Verification requests are unavailable.");
             }
@@ -689,7 +689,6 @@ async function initVerifications(wait) {
             $("#create_verification_request_button").unbind();
             $("#create_verification_request_button").click(async function () {
                 //Check to make sure the passport is registered
-                let blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
                 var info = await blockchainHelper.getPassportStatus("NEO", _passport.id);
                 if(!info){
                     alert("Blockchain address / passport is not registered.  Please register and try again.");
@@ -812,9 +811,9 @@ async function getApplicationItem(application) {
         }, 50);
     });
     $(applicationItem).find(".bridge-application-icon-container").css("background-color", partner.color);
-    $(applicationItem).find(".bridge-application-icon-container").find("img").attr("src", partner.icon);
+    $(applicationItem).find(".bridge-application-icon-container").find("img").attr("src", "/images/shared/" + partner.icon);
     $(applicationItem).find(".application-status").text("Status: " + makeStringReadable(application.status));
-    $(applicationItem).find(".application-partner").text("Partner: " + application.verificationPartnerName);
+    $(applicationItem).find(".application-partner").text("Partner: " + partner.name);
     $(applicationItem).find(".application-created").text("Created: " + created);
     return applicationItem;
 }
@@ -914,14 +913,13 @@ function initSettings() {
     });
 }
 
-async function getClaimItem(claim, showCheckbox, idx) {
-    var partner = await getPartnerInfo(claim.signedById);
+async function getClaimItem(claimPackage, showCheckbox, idx) {
+    let claim = await getClaimInfo(_passportContext.passport, _passportContext.passphrase, claimPackage);
     var claimItem = $(_claimTemplate).clone();
     
     //Set the tile
-    $(claimItem).find(".claim-icon-container").css("background-color",partner.color);
-    $(claimItem).find(".claim-icon").attr("src",partner.icon);
-
+    $(claimItem).find(".claim-icon-container").css("background-color", claim.partnerColor);
+    $(claimItem).find(".claim-icon").attr("src", "/images/shared/" + claim.partnerIcon);
     if (showCheckbox) {
         $(claimItem).find(".claim-checkbox-container").show();
     }
@@ -930,8 +928,7 @@ async function getClaimItem(claim, showCheckbox, idx) {
     $(claimItem).find(".claim-type-name").text(claim.claimTypeName);
     $(claimItem).find(".claim-value").text(claim.claimValue);
     $(claimItem).find(".claim-verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
-    $(claimItem).find(".claim-verified-by").text(partner.name);
-
+    $(claimItem).find(".claim-verified-by").text(claim.partnerName);
 
     return claimItem;
 }

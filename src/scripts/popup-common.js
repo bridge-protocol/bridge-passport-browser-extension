@@ -1,3 +1,10 @@
+//Browser for compatibility
+var _browser = (function () {
+  return window.msBrowser ||
+    window.browser ||
+    window.chrome;
+})();
+
 //Browser message handling
 _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.target != "popup")

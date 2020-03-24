@@ -44,7 +44,7 @@ $(function () {
                 if (passport.id) {
                     //Save to browser storage
                     await savePassportToBrowserStorage(passport);
-                    await savePassphraseToBrowserStorage(passphrase);
+                    await savePassphrase(passphrase);
                     loadPage("main", _params);
                 }
                 else {

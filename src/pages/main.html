@@ -11,7 +11,6 @@
     <script src="/scripts/bridgeprotocol.min.js"></script>
     <script src="/scripts/common.js"></script>
     <script src="/scripts/popup-common.js"></script>
-    <script src="/scripts/bignumber.min.js"></script>
     <script src="./main.js"></script>
 </head>
 
@@ -220,23 +219,37 @@
                 <label>Blockchain</label>
                 <div>
                     <img src="/images/shared/neo-logo.png" style="width:18px;">
-                    <span class="verified-claim-blockchain-publish-status" style="vertical-align:top;">
+                    <span class="verified-claim-neo-blockchain-publish-status" style="vertical-align:top;">
                         Not Published
                     </span>
+                    <div class="verified-claim-neo-blockchain-values-container" style="display:none;">
+                        <img src="/images/shared/bridge-token.png" style="width:18px;">
+                        <span class="verified-claim-neo-blockchain-values" style="vertical-align:top;"></span>
+                        <a href="#" class="verified-claim-neo-blockchain-unpublish-link" style="vertical-align:top; display:none;"> [Unpublish]</a>
+                    </div>
+                    <div class="verified-claim-neo-blockchain-publish-container" style="display:none;">
+                        <a href="#" class="verified-claim-neo-blockchain-publish-value">[Publish Value]</a> <a href="#" class="verified-claim-neo-blockchain-publish-hash">[Publish Hash Only]</a>
+                    </div>
+                    <div class="verified-claim-neo-blockchain-nopublish-container" style="display:none;">
+                         Claims from a non-Bridge Network Partner cannot be published.
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <label>Blockchain Value</label>
-                <div class="verified-claim-blockchain-values-container" style="display:none;">
-                    <img src="/images/shared/bridge-token.png" style="width:18px;">
-                    <span class="verified-claim-blockchain-values" style="vertical-align:top;"></span>
-                    <a href="#" class="verified-claim-blockchain-unpublish-link" style="vertical-align:top; display:none;"> [Unpublish]</a>
-                </div>
-                <div class="verified-claim-blockchain-publish-container" style="display:none;">
-                    <a href="#" class="verified-claim-blockchain-publish-value">[Publish Value]</a> <a href="#" class="verified-claim-blockchain-publish-hash">[Publish Hash Only]</a>
-                </div>
-                <div class="verified-claim-blockchain-nopublish-container" style="display:none;">
-                     Claims from a non-Bridge Network Partner cannot be published.
+                <div style="margin-top:10px;">
+                    <img src="/images/shared/eth-logo.png" style="width:18px;">
+                    <span class="verified-claim-eth-blockchain-publish-status" style="vertical-align:top;">
+                        Not Published
+                    </span>
+                    <div class="verified-claim-eth-blockchain-values-container" style="display:none;">
+                        <img src="/images/shared/bridge-token.png" style="width:18px;">
+                        <span class="verified-claim-eth-blockchain-values" style="vertical-align:top;"></span>
+                        <a href="#" class="verified-claim-eth-blockchain-unpublish-link" style="vertical-align:top; display:none;"> [Unpublish]</a>
+                    </div>
+                    <div class="verified-claim-neo-blockchain-publish-container" style="display:none;">
+                        <a href="#" class="verified-claim-eth-blockchain-publish-value">[Publish Value]</a> <a href="#" class="verified-claim-eth-blockchain-publish-hash">[Publish Hash Only]</a>
+                    </div>
+                    <div class="verified-claim-eth-blockchain-nopublish-container" style="display:none;">
+                        Claims from a non-Bridge Network Partner cannot be published.
+                    </div>
                 </div>
             </div>
         </div>
@@ -500,9 +513,9 @@
         </div>
         <div class="content">
             <div class="ui labeled input" style="width:100%;">
-                <input type="text" id="wif_value" style="font-size:12px; padding: 11px;" readonly>
-                <div id="copy_wif_label" class="ui corner label">
-                    <a id="copy_wif" data-content="Private Key Copied to Clipboard" style="cursor:pointer;">
+                <input type="text" id="key_value" style="font-size:12px; padding: 11px;" readonly>
+                <div id="copy_key_label" class="ui corner label">
+                    <a id="copy_key" data-content="Private Key Copied to Clipboard" style="cursor:pointer;">
                         <i class="copy icon" style="cursor:pointer;"></i>
                     </a>
                 </div>

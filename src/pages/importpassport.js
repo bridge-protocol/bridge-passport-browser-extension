@@ -26,7 +26,7 @@ $(function () {
                 let res = await passport.open(_passportContent, passphrase);
                 if (res) {
                     await savePassportToBrowserStorage(passport);
-                    await savePassphraseToBrowserStorage(passphrase);
+                    await savePassphrase(passphrase);
                     loadPage("main", _params);
                 }
                 else {

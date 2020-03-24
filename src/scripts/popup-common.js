@@ -183,12 +183,13 @@ async function removeSettingsFromBrowserStorage() {
 
 //Passport context management
 async function getPassportContext(){
-	let passphrase = await loadPassphraseFromBrowserStorage();
+	let passphrase = await loadPassphrase();
 	let passportContent = await loadPassportFromBrowserStorage();
-	let passport = passportContent;
+	let passport;
 
-	if(passportContent && passphrase){
+	if(passportContent != null)
 		passport = new BridgeProtocol.Models.Passport();
+	if(passportContent != null && passphrase != null){
 		await passport.open(passportContent, passphrase);
 	}
 		
@@ -196,13 +197,13 @@ async function getPassportContext(){
 }
 
 async function savePassportToBrowserStorage(passport) {
-	return await _browser.storage.local.set({ 'passport': JSON.stringify(passport) });
+	return await _browser.storage.local.set({ 'passport': passport });
 }
   
 async function loadPassportFromBrowserStorage() {
 	var res = await _browser.storage.local.get('passport');
 	if (res && res.passport)
-	  return res.passport;
+	  return JSON.stringify(res.passport);
   
 	return null;
 }
@@ -211,32 +212,25 @@ async function removePassportFromBrowserStorage() {
 	return await _browser.storage.local.remove('passport');
 }
 
-async function savePassphraseToBrowserStorage(passphrase) {
-	return await _browser.storage.local.set({ 'passphrase': passphrase });
+async function savePassphrase(passphrase) {
+	return await _browser.runtime.sendMessage({ target: 'background', action: 'savePassphrase', passphrase });
 }
 
-async function loadPassphraseFromBrowserStorage() {
-	let res = await _browser.storage.local.get('passphrase');
-	return res.passphrase;
+async function loadPassphrase() {
+	return await _browser.runtime.sendMessage({ target: 'background', action: 'loadPassphrase' });
 }
 
-async function removePassphraseFromBrowserStorage() {
-	return await _browser.storage.local.remove('passphrase');
+async function removePassphrase() {
+	return await _browser.runtime.sendMessage({ target: 'background', action: 'removePassphrase' });
 }
 
 async function closePassport() {
-	await removePassphraseFromBrowserStorage();
+	await removePassphrase();
 }
   
 async function removePassport() {
-	await removePassphraseFromBrowserStorage();
+	await removePassphrase();
 	await removePassportFromBrowserStorage();
-}
-
-async function unlockPassport(passport, passphrase){
-	let passportContent = JSON.stringify(passport);
-	let unlocked = new BridgeProtocol.Models.Passport();
-	return await unlocked.open(passportContent, passphrase);
 }
 
 function exportPassport(passport) {
@@ -256,18 +250,40 @@ function exportPassport(passport) {
 	document.body.appendChild(iframe);
 }
 
+//Blockchain addresses
+async function getBalances(wallet){
+	let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
+    let brdgBalance = 0;
+    let gasBalance = 0;
+    for(let i=0; i<balances.length; i++){
+        if(balances[i].asset.toLowerCase() === "eth" || balances[i].asset.toLowerCase() === "gas")
+            gasBalance = balances[i].balance;
+        else if(balances[i].asset.toLowerCase() === "brdg")
+            brdgBalance = balances[i].balance;
+	}
+	
+	return { gasBalance, brdgBalance };
+}
+
 //Claim and Application Info
-async function getClaimInfo(passport, password, claimPackage){
+async function getClaimPackageInfo(passport, password, claimPackage){
 	claimPackage = new BridgeProtocol.Models.ClaimPackage(claimPackage.typeId, claimPackage.signedBy, claimPackage.claim);
 	let claim = await claimPackage.decrypt(passport.privateKey, password);
-	let claimType = await getClaimTypeInfo(claimPackage.typeId);
-	let partner = await getPartnerInfoFromPublicKey(claimPackage.signedBy);
+	return getClaimInfo(claim);
+}
 
-	claim.claimTypeName = claimType.name;
+async function getClaimInfo(claim){
+	let claimType = await getClaimTypeInfo(claim.claimTypeId);
+	let partner = await getPartnerInfoFromPublicKey(claim.signedByKey);
+
+	claim.claimTypeName = claim.claimTypeId;
+	if(claimType)
+		claim.claimTypeName = claimType.name;
 	claim.partnerIcon = partner.icon;
 	claim.partnerColor = partner.color;
 	claim.partnerId = partner.id;
 	claim.partnerName = partner.name;
+	claim.unknownPartner = partner.unknownPartner;
 
 	return claim;
 }
@@ -282,7 +298,8 @@ async function getPartnerInfo(partnerId){
 		id: partnerId,
 		name: partnerId,
 		icon: "claim-icon-white.png",
-		color: "grey"
+		color: "grey",
+		unknownPartner: true
 	};
 	
 	let partnerInfo = await BridgeProtocol.Services.Partner.getPartner(partnerId);
@@ -312,3 +329,40 @@ async function getClaimTypeInfo(claimTypeId){
 
 	return claimType;
 }
+
+//Messaging
+async function getPassportLoginRequest(passport, password, payload) {
+	var request = await BridgeProtocol.Messaging.Auth.verifyPassportChallengeRequest(payload);
+  
+	let claimTypes = new Array();
+	if (request.payload.claimTypes) {
+	  for (let i = 0; i < request.payload.claimTypes.length; i++) {
+		let claimTypeId = request.payload.claimTypes[i];
+		let claimType = await getClaimTypeById(claimTypeId);
+		if (claimType) {
+		  claimTypes.push(claimType);
+		}
+		else{
+		  claimTypes.push({ id: claimTypeId, name: claimTypeId });
+		}
+	  }
+	}
+
+	request.networks = request.payload.networks;
+	request.claimTypes = claimTypes; //The claim types being requested
+	//request.missingClaimTypes = getMissingPassportClaimTypes(claimTypes);
+	request.passportDetails = await BridgeProtocol.Services.Passport.getDetails(passport, password, request.passportId);
+  
+	return request;
+  }
+  
+  async function getPassportLoginResponse(request, passport, password, claimTypeIds, networks) {
+	let claims = await passport.getDecryptedClaims(claimTypeIds, password);
+	let addresses = passport.getWalletAddresses(networks);
+
+	return {
+	  payload: await BridgeProtocol.Messaging.Auth.createPassportChallengeResponse(passport, password, request.publicKey, request.payload.token, claims, addresses),
+	  passportId: passport.id
+	};
+  }
+  

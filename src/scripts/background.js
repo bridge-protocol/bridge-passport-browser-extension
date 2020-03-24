@@ -124,6 +124,27 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
     openPopup(request.pageName, request.params);
     return;
   }
+
+  if (request.action == "loadPassphrase") {
+    loadPassphrase().then(sendResponse);
+  }
+  async function loadPassphrase(){
+    return _passphrase;
+  }
+
+  if (request.action == "savePassphrase") {
+     savePassphrase(request.passphrase).then(sendResponse);
+  }
+  async function savePassphrase(passphrase){
+     _passphrase = passphrase;
+  }
+
+  if (request.action == "removePassphrase") {
+    removePassphrase().then(sendResponse);
+  }
+  async function removePassphrase(){
+    _passphrase = null;
+  }
 });
 
 

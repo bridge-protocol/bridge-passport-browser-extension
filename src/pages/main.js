@@ -9,7 +9,7 @@ var _applicationTemplate;
 var _transactionTemplate;
 var _loginClaimTypeTemplate;
 
-//Look for login or payment requests
+//Look for login, payment or claims import requests
 _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.target != "popup")
         return;
@@ -42,8 +42,8 @@ async function Init() {
 
     _settings = await loadSettingsFromBrowserStorage();
     _passportContext = await getPassportContext();
-    let loaded = _passportContext.passport && _passportContext.passport.id != null;
-    let unlocked = _passportContext.passphrase && _passportContext.passphrase.length > 0;
+    let loaded = _passportContext.passport != null;
+    let unlocked = _passportContext.passphrase != null;
 
     _params = getQueryStringFromLocation();
     if(!loaded && !unlocked){
@@ -248,7 +248,7 @@ async function initLogin(sender, loginRequest) {
             $("#login_modal").find(".ui.message.error").hide();
 
             //Unpack the request
-            let requestValue = await getPassportLoginRequest(loginRequest);
+            let requestValue = await getPassportLoginRequest(_passportContext.passport, _passportContext.passphrase, loginRequest);
             _loginClaimTypeTemplate = $(".login-claim-type-template").first();
 
             $("#login_claim_types").empty();
@@ -275,6 +275,7 @@ async function initLogin(sender, loginRequest) {
                 closable: false,
                 onApprove: async function () {
                     let claimTypeIds = new Array();
+                    let networks = new Array();
                     $("#login_claim_types").find("input[type=checkbox]").each(function () {
                         if ($(this).prop("checked")) {
                             let id = $(this).attr("id").replace("loginclaim_", "");
@@ -282,10 +283,12 @@ async function initLogin(sender, loginRequest) {
                         }
                     });
 
+                    //TODO: Allow selection of blockchain addresses for inclusion
+
                     showWait("Sending login response");
                     setTimeout(async function () {
                         try {
-                            let responseValue = await getPassportLoginResponse(requestValue, claimTypeIds);
+                            let responseValue = await getPassportLoginResponse(requestValue, _passportContext.passport, _passportContext.passphrase, claimTypeIds, networks);
                             let message = {
                                 action: 'sendBridgeLoginResponse',
                                 loginResponse: responseValue.payload
@@ -435,8 +438,9 @@ async function initClaims(wait) {
                     for (let i = 0; i <_passportContext.passport.claims.length; i++) {
                         let item = await getClaimItem(_passportContext.passport.claims[i]);
                         $(item).css("cursor","pointer");
-                        $(item).click(function(){
-                            showClaimDetails(claims[i]);
+                        $(item).click(async function(){
+                            let claim = await _passportContext.passport.claims[i].decrypt(_passportContext.passport.privateKey, _passportContext.passphrase);
+                            showClaimDetails(claim);
                         });
                         $("#claims_list").append(item);
                     }
@@ -476,44 +480,40 @@ async function initClaimPublishedBlockchainValue(claim){
     //Check and see if this claim is from a network partner to be allowed to publish
     //Bridge Network will only secondary sign a blockchain transaction for claims that are from
     //Known partners
-    var partner = await getPartnerInfo(claim.signedById);
-    if(partner.unknownPartner){
+    if(claim.unknownPartner){
         $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
         $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").hide();
         $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").show();
         return;
     }
 
-    let published = false;
-    try{
-        published = await BridgeProtocol.NEOUtility.getClaimForPassport(claim.claimTypeId, _passport.id);
-    }
-    catch(err){
+    let neoWallet = _passportContext.passport.getWalletForNetwork("neo");
+    let ethWallet = _passportContext.passport.getWalletForNetwork("eth");
+    let neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(neoWallet.network, claim.claimTypeId, neoWallet.address);
+    let ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(ethWallet.network, claim.claimTypeId, ethWallet.address);
 
-    }
-
-    if(!published){
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-status").text("Not Published");
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").show();
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-value").unbind();
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-value").click(async function(){
+    if(!neoClaim){
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-status").text("Not Published");
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-container").show();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-value").unbind();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-value").click(async function(){
             await publishBlockchainValue(claim, false);
         });
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-hash").unbind();
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-hash").click(async function(){
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-hash").unbind();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-hash").click(async function(){
             await publishBlockchainValue(claim, true);
         });
-        $("#claim_details_modal").find(".verified-claim-blockchain-values-container").hide();
-        $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-values-container").hide();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-nopublish-container").hide();
     }
     else{
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-status").text("Published");
-        $("#claim_details_modal").find(".verified-claim-blockchain-values-container").show();
-        $("#claim_details_modal").find(".verified-claim-blockchain-values").html(new Date(published.time * 1000).toLocaleDateString() + " - " + published.value);
-        $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").show();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-status").text("Published");
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-values-container").show();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-values").html(new Date(published.time * 1000).toLocaleDateString() + " - " + published.value);
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-unpublish-link").show();
 
-        $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").unbind();
-        $("#claim_details_modal").find(".verified-claim-blockchain-unpublish-link").click(async function(){
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-unpublish-link").unbind();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-unpublish-link").click(async function(){
             $("#claim_details_modal").find("#blockchain_spinner_message").text("Unpublishing from blockchain...");
             $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
             var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
@@ -524,8 +524,44 @@ async function initClaimPublishedBlockchainValue(claim){
             $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
             await showClaimDetails(claim);
         });
-        $("#claim_details_modal").find(".verified-claim-blockchain-publish-container").hide();
-        $("#claim_details_modal").find(".verified-claim-blockchain-nopublish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-publish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-neo-blockchain-nopublish-container").hide();
+    }
+
+    if(!ethClaim){
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-status").text("Not Published");
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-container").show();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-value").unbind();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-value").click(async function(){
+            await publishBlockchainValue(claim, false);
+        });
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-hash").unbind();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-hash").click(async function(){
+            await publishBlockchainValue(claim, true);
+        });
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-values-container").hide();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-nopublish-container").hide();
+    }
+    else{
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-status").text("Published");
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-values-container").show();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-values").html(new Date(published.time * 1000).toLocaleDateString() + " - " + published.value);
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-unpublish-link").show();
+
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-unpublish-link").unbind();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-unpublish-link").click(async function(){
+            $("#claim_details_modal").find("#blockchain_spinner_message").text("Unpublishing from blockchain...");
+            $("#claim_details_modal").find("#blockchain_spinner").addClass("active");
+            var blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
+            let res = await blockchainHelper.removeClaim("neo", claim.claimTypeId);
+            if(res == null){
+                alert("Error removing claim from blockchain");
+            }
+            $("#claim_details_modal").find("#blockchain_spinner").removeClass("active");
+            await showClaimDetails(claim);
+        });
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-publish-container").hide();
+        $("#claim_details_modal").find(".verified-claim-eth-blockchain-nopublish-container").hide();
     }
 }
 
@@ -549,6 +585,7 @@ async function publishBlockchainValue(claim, hashOnly){
 }
 
 async function showClaimDetails(claim){
+    claim = getClaimInfo(claim);
     $("#claim_details_modal").find(".verified-by").text(claim.signedByName);
     $("#claim_details_modal").find(".verified-on").text(new Date(claim.createdOn * 1000).toLocaleDateString());
     $("#claim_details_modal").find(".verified-claim-type").text(claim.claimTypeName);
@@ -630,10 +667,12 @@ function initUnlock() {
         showWait("Unlocking Bridge Passport");
         setTimeout(async function () {
             try {
-                var res = await unlockPassport(_passportContext.passport, passphrase);
+                let passport = new BridgeProtocol.Models.Passport();
+                let passportContent = await loadPassportFromBrowserStorage();
+                let res = await passport.open(passportContent, passphrase);
                 if (res) {
-                    await savePassportToBrowserStorage(_passportContext.passport);
-                    await savePassphraseToBrowserStorage(passphrase);
+                    await savePassportToBrowserStorage(passport);
+                    await savePassphrase(passphrase);
                     loadPage("main", _params);
                 }
                 else {
@@ -655,9 +694,6 @@ async function initVerifications(wait) {
         setTimeout(async function () {
             if (wait)
                 showWait("Refreshing verification request info");
-
-            let fee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(_passportContext.passport, _passportContext.passphrase);
-            let adjFee = new BigNumber(fee * .00000001);
 
             _applicationTemplate = $(".application-template").first();
             let applications = await BridgeProtocol.Services.Application.getActiveApplications(_passportContext.passport, _passportContext.passphrase);
@@ -688,8 +724,10 @@ async function initVerifications(wait) {
             //are added to the network
             $("#create_verification_request_button").unbind();
             $("#create_verification_request_button").click(async function () {
+                let fee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(_passportContext.passport, _passportContext.passphrase);
                 //Check to make sure the passport is registered
-                var info = await blockchainHelper.getPassportStatus("NEO", _passport.id);
+                var wallet = _passportContext.passport.getWalletForNetwork("neo");
+                var info = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
                 if(!info){
                     alert("Blockchain address / passport is not registered.  Please register and try again.");
                     return;
@@ -698,7 +736,7 @@ async function initVerifications(wait) {
                 $("#partner_select_partner_id").val("");
                 $("#partner_select_dropdown").dropdown();
                 $("#verification_create_button").focus();
-                $("#partner_network_fee").text(adjFee);
+                $("#partner_network_fee").text(fee);
 
                 $("#partner_name").text("Bridge Protocol");
                 $("#partner_select_info_link").unbind();
@@ -712,9 +750,9 @@ async function initVerifications(wait) {
                 $("#partner_select_modal").modal({
                     closable: false,
                     onApprove: async function () {
-                        let balances = await getBalancesForAddress(_passport.wallets[0].address);
-                        if(!balances || !balances.brdg || balances.brdg < 1){
-                            alert("Insufficient funds (BRDG) to cover network fee.");
+                        let balances = await getBalances(wallet);
+                        if(balances.brdgBalance < fee){
+                            alert("Insufficient funds (BRDG) to cover network fee of " + fee);
                             hideWait();
                             return false;
                         }
@@ -722,7 +760,7 @@ async function initVerifications(wait) {
                         setTimeout(async function () {
                             try {
                                 let partnerId = $("#partner_select_partner_id").val();
-                                let application = await createApplication(partnerId);
+                                let application = await BridgeProtocol.Services.Application.createApplication(_passportContext.passport, _passportContext.passphrase, partnerId);
                                 if (!application) {
                                     alert("Could not create verification request.");
                                     hideWait();
@@ -733,8 +771,8 @@ async function initVerifications(wait) {
                                 showWait("Sending network fee transaction");
                                 setTimeout(async function () {
                                     let txid;
-                                    let blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
                                     try {
+                                        txid = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, fee, recipient, paymentIdentifier, wait);
                                         txid = await blockchainHelper.sendPayment("NEO", fee, BridgeProtocol.Constants.bridgeContractAddress, application.id, false);
                                         if (!txid) {
                                             alert("Error sending payment transaction.");
@@ -819,10 +857,15 @@ async function getApplicationItem(application) {
 }
 
 async function showApplicationDetails(applicationId) {
-    let application = await getApplication(applicationId);
+    let application = await BridgeProtocol.Services.Application.getApplication(_passportContext.passport, _passportContext.passphrase, applicationId);
     var createdDate = new Date(application.createdOn * 1000);
     var created = createdDate.toLocaleDateString() + " " + createdDate.toLocaleTimeString();
-    var fee = new BigNumber(application.transactionFee * .00000001);
+    var fee = application.transactionFee;
+
+    //Old NEO transaction fee
+    if(fee == 100000000)
+        fee = 1;
+
     //Init the modal
     $("#application_details_modal").modal("show");
     $("#application_details_modal").find(".application-id").text(application.id);
@@ -887,7 +930,8 @@ function initSidebar() {
         showWait("Logging out..");
         setTimeout(async function(){
             await closePassport();
-            window.close();
+            loadPage("main");
+            //window.close();
         },100);
     });
 
@@ -914,7 +958,7 @@ function initSettings() {
 }
 
 async function getClaimItem(claimPackage, showCheckbox, idx) {
-    let claim = await getClaimInfo(_passportContext.passport, _passportContext.passphrase, claimPackage);
+    let claim = await getClaimPackageInfo(_passportContext.passport, _passportContext.passphrase, claimPackage);
     var claimItem = $(_claimTemplate).clone();
     
     //Set the tile
@@ -935,12 +979,12 @@ async function getClaimItem(claimPackage, showCheckbox, idx) {
 
 function getTransactionItem(tx) {
     var transactionItem = $(_transactionTemplate).clone();
-    $(transactionItem).find(".transaction-id").text("Id: " + tx.txid);
+    $(transactionItem).find(".transaction-id").text("Id: " + tx.hash);
     $(transactionItem).find(".transaction-amount").text("Amount: " + tx.amount);
-    $(transactionItem).find(".transaction-from").text("From: " + tx.address_from);
-    $(transactionItem).find(".transaction-to").text("To: " + tx.address_to);
+    $(transactionItem).find(".transaction-from").text("From: " + tx.from);
+    $(transactionItem).find(".transaction-to").text("To: " + tx.to);
     $(transactionItem).find(".transaction-details-link").click(function () {
-        window.open("https://neoscan.io/transaction/" + tx.txid);
+        window.open(tx.url);
     });
     return transactionItem;
 }
@@ -948,17 +992,8 @@ function getTransactionItem(tx) {
 async function getBlockchainItem(passport, wallet) {
     let publishedPassport = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
     let published = publishedPassport != null && publishedPassport.length > 0;
-    let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
+    let balances = await getBalances(wallet);
 
-    let brdgBalance = 0;
-    let gasBalance = 0;
-    for(let i=0; i<balances.length; i++){
-        if(balances[i].asset.toLowerCase() === "eth" || balances[i].asset.toLowerCase() === "gas")
-            gasBalance = balances[i].balance;
-        else if(balances[i].asset.toLowerCase() === "brdg")
-            brdgBalance = balances[i].balance;
-    }
-    
     var item = $(_blockchainTemplate).clone();
     let network = wallet.network.toUpperCase();
     let gas = "GAS";
@@ -967,7 +1002,6 @@ async function getBlockchainItem(passport, wallet) {
         gas = "ETH";
     }
         
-
     $(item).find(".blockchain-logo").attr("src","/images/shared/" + wallet.network.toLowerCase() + "-logo.png");
     $(item).find(".blockchain-logo-white").attr("src","/images/shared/" + wallet.network.toLowerCase() + "-logo-white.png");
     $(item).find(".blockchain-address-icon-container").css("background-color","green");
@@ -975,25 +1009,22 @@ async function getBlockchainItem(passport, wallet) {
         $(item).find(".blockchain-address-icon-container").css("background-color","grey");
     $(item).find(".blockchain-network").html(network);
     $(item).find(".blockchain-address").html(wallet.address);
-    $(item).find(".blockchain-brdg-balance").html(brdgBalance);
+    $(item).find(".blockchain-brdg-balance").html(balances.brdgBalance);
     $(item).find(".blockchain-gas-label").html(gas);
-    $(item).find(".blockchain-gas-balance").html(gasBalance);
+    $(item).find(".blockchain-gas-balance").html(balances.gasBalance);
     $(item).find(".register-address").css("background-color","green !important");
     if(wallet.network.toLowerCase() === "eth")
         $(item).find(".register-address").css("background-color","grey !important");
     $(item).find(".view-key").click(async function () {
-        //var key = await getBlockchainPrivateKey(address.network, address.key);
-        //if (address.network == "NEO") {
-        //    $("#key_modal_text").text("Private Key (WIF)");
-        //    $("#wif_value").val(key);
-        //    window.getSelection().removeAllRanges();
-        //}
+        await wallet.unlock(_passportContext.passphrase);
+        $("#key_modal_text").text("Private Key");
+        $("#key_value").val(wallet.privateKey);
+        window.getSelection().removeAllRanges();
         $('#key_modal').modal("show");
     });
 
     $(item).find(".view-transactions").click(async function () {
-        let blockchainHelper = new BridgeProtocol.Blockchain(_settings.apiBaseUrl, _passport, _passphrase);
-        let res = await blockchainHelper.getRecentTransactions("NEO", address.address);
+        let res = await BridgeProtocol.Services.Blockchain.getRecentTransactions(wallet.network, wallet.address);
 
         $("#transaction_list").empty();
         if (!res || res.length == 0) {

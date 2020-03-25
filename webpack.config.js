@@ -10,13 +10,14 @@ const config = {
   mode: process.env.NODE_ENV,
   context: __dirname + '/src',
   entry: {
-    'scripts/jquery-3.1.1.min.js': './scripts/jquery-3.1.1.min.js',
-    'scripts/bridgeprotocol.min.js': './scripts/bridgeprotocol.min.js',
-    'scripts/popup-common.js':'./scripts/popup-common.js',
+    'scripts/jquery-3.1.1.min': './scripts/jquery-3.1.1.min.js',
+    'scripts/bridgeprotocol.min': './scripts/bridgeprotocol.min.js',
+    'scripts/common':'./scripts/common.js',
     'contentscript': './contentscript.js',
     'background': './background.js',
     'popup/popup': './popup/popup.js',
     'options/options': './options/options.js',
+    'pages/main/main':'./pages/main/main.js'
   },
   output: {
     path: __dirname + '/dist',
@@ -81,6 +82,7 @@ const config = {
       { from: 'icons', to: 'icons', ignore: ['icon.xcf'] },
       { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
       { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
+      { from: 'pages/main/main.html', to:'pages/main/main.html', transform: transformHtml },
       {
         from: 'manifest.json',
         to: 'manifest.json',

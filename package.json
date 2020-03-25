@@ -1,6 +1,6 @@
 {
   "name": "bridge-passport",
-  "version": "1.0.0",
+  "version": "2.5.0",
   "description": "Extension to allow users to create, manage, and use their Bridge Passport",
   "author": "Bridge Protocol Corporation",
   "license": "Apache 2.0",

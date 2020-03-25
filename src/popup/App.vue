@@ -1,18 +1,18 @@
 <template>
-  <p>{{ message }}</p>
+  <div>
+    <p>Hello world!</p>
+  </div>
 </template>
 
 <script>
 export default {
   data () {
-    return {
-      message: "My new tab page"
-    }
+    return {}
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 p {
   font-size: 20px;
 }

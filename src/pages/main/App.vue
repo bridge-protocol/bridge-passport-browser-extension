@@ -61,15 +61,53 @@
         </template>
 
         <v-list>
-          <v-list-item @click="">
-            <v-list-item-title>Export Passport</v-list-item-title>
+          <v-subheader inset>Passport Options</v-subheader>
+          <v-divider inset></v-divider>
+
+          <v-list-item two-line @click="">
+            <v-list-item-icon>
+              <v-icon>mdi-download</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Export Passport</v-list-item-title>
+              <v-list-item-subtitle>
+                Backup your passport to a file on your local disk
+              </v-list-item-subtitle>
+            </v-list-item-content>
           </v-list-item>
-          <v-list-item @click="">
-            <v-list-item-title>Lock Passport</v-list-item-title>
+         <v-list-item two-line  @click="">
+            <v-list-item-icon>
+              <v-icon>mdi-lock</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Lock Passport</v-list-item-title>
+              <v-list-item-subtitle>
+                Clear your passphrase but keep the passport json cached for future use
+              </v-list-item-subtitle>
+            </v-list-item-content>
           </v-list-item>
-          <v-list-item @click="">
-            <v-list-item-title>Unload Passport</v-list-item-title>
-          
+          <v-list-item two-line  @click="">
+            <v-list-item-icon>
+              <v-icon>mdi-close</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Unload Passport</v-list-item-title>
+              <v-list-item-subtitle>
+                Clear your passphrase and clear the cached the passport json
+              </v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-divider inset></v-divider>
+
+          <v-list-item@click="">
+            <v-list-item-icon>
+              <v-icon>mdi-information</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>About Bridge Passport</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
@@ -110,7 +148,7 @@
       <div>
       </div>
       <div>
-        Bridge Passport v{{ passportVersion }}  <a style="color:#B19CD9;">About</a>
+        Bridge Passport v{{ passportVersion }}
       </div>
     </v-footer>
   </v-app>

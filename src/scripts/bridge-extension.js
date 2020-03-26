@@ -1,3 +1,6 @@
+//const _bridge = require('@bridge-protocol/bridge-protocol-js');
+//const _bridge = require('./bridgeprotocol-sdk');
+
 class BridgeExtension {
   constructor(){
     this.browser = window.msBrowser || window.browser || window.chrome;

@@ -17,7 +17,7 @@
   },
   "background": {
     "scripts": [
-      "background.js"
+      "scripts/background.js"
     ],
     "persistent": true
   },
@@ -28,7 +28,7 @@
         "https://bridgeprotocol.azurewebsites.net/*"
       ],
       "js": [
-        "contentscript.js"
+        "scripts/contentscript.js"
       ],
       "run_at": "document_end",
       "all_frames": false

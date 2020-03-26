@@ -7,16 +7,17 @@ const { VueLoaderPlugin } = require('vue-loader');
 const { version } = require('./package.json');
 
 const config = {
-  mode: process.env.NODE_ENV,
+  node:{
+    fs: 'empty'
+  },
+  mode: 'development',
   context: __dirname + '/src',
   entry: {
-    'scripts/jquery-3.1.1.min': './scripts/jquery-3.1.1.min.js',
-    'scripts/bridgeprotocol.min': './scripts/bridgeprotocol.min.js',
-    'scripts/common':'./scripts/common.js',
-    'contentscript': './contentscript.js',
-    'background': './background.js',
-    'popup/popup': './popup/popup.js',
+    'scripts/background': './scripts/background.js',
+    'scripts/contentscript': './scripts/contentscript.js',
+    'scripts/bridge-extension':'./scripts/bridge-extension',
     'options/options': './options/options.js',
+    'popup/popup': './popup/popup.js',
     'pages/main/main':'./pages/main/main.js'
   },
   output: {
@@ -24,7 +25,7 @@ const config = {
     filename: '[name].js',
   },
   resolve: {
-    extensions: ['.js', '.vue'],
+    extensions: ['.js', '.json', '.vue'],
   },
   module: {
     rules: [
@@ -80,8 +81,8 @@ const config = {
     new CopyPlugin([
       { from: 'images', to: 'images' },
       { from: 'icons', to: 'icons', ignore: ['icon.xcf'] },
-      { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
       { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
+      { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
       { from: 'pages/main/main.html', to:'pages/main/main.html', transform: transformHtml },
       {
         from: 'manifest.json',

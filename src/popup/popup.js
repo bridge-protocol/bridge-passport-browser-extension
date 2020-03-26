@@ -1,6 +1,10 @@
 import Vue from 'vue'
 import App from './App'
-const BridgeExtension = require("../scripts/common").BridgeExtension;
+
+window.$ = require('jquery');
+window.jQuery = window.$;
+window.Bridge = require('@bridge-protocol/bridge-protocol-js');
+window.Extension = require("../scripts/bridge-extension").BridgeExtension;
 
 /* eslint-disable no-new */
 new Vue({
@@ -13,6 +17,7 @@ $(function () {
 });
 
 async function Init(){
-  BridgeExtension.loadPage("main", null, true);
+  alert(Bridge.Constants.passportVersion);
+  Extension.loadPage("main", null, true);
 	window.close();
 }

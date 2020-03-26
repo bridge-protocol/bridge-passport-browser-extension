@@ -17,6 +17,9 @@
     "watch:dev": "cross-env HMR=true npm run build:dev -- --watch"
   },
   "dependencies": {
+    "@bridge-protocol/bridge-protocol-js": "^2.5.1",
+    "chrome-extension-async": "^3.4.1",
+    "jquery": "^3.4.1",
     "semantic-ui-vue": "^0.10.1",
     "vue": "^2.6.10"
   },

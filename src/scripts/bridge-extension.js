@@ -1,11 +1,15 @@
-//const _bridge = require('@bridge-protocol/bridge-protocol-js');
-//const _bridge = require('./bridgeprotocol-sdk');
+const Bridge = require('@bridge-protocol/bridge-protocol-js');
 
 class BridgeExtension {
   constructor(){
+    this.SDK = Bridge;
     this.browser = window.msBrowser || window.browser || window.chrome;
   }
 
+  get passportVersion(){
+    return this.SDK.Constants.passportVersion;
+  }
+  
   //Page navigation
   loadPage(pageName, params, popup) {
     if (popup) {

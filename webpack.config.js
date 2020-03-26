@@ -16,6 +16,7 @@ const config = {
     'scripts/background': './scripts/background.js',
     'scripts/contentscript': './scripts/contentscript.js',
     'scripts/bridge-extension':'./scripts/bridge-extension',
+    'scripts/window':'./scripts/window',
     'options/options': './options/options.js',
     'popup/popup': './popup/popup.js',
     'pages/main/main':'./pages/main/main.js'

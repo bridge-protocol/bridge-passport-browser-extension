@@ -47,20 +47,31 @@
       clipped-left
     >
       <v-toolbar-title><v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer"></v-img></v-toolbar-title>
+
       <v-spacer></v-spacer>
-      <v-tooltip right>
+
+      <v-menu offset-y>
         <template v-slot:activator="{ on }">
           <v-btn
-            :href="source"
             icon
-            target="_blank"
             v-on="on"
           >
-          <v-icon small>mdi-dots-vertical</v-icon>
+            <v-icon small>mdi-dots-vertical</v-icon>
           </v-btn>
         </template>
-        <span>Lock Passport</span>
-      </v-tooltip>
+
+        <v-list>
+          <v-list-item @click="">
+            <v-list-item-title>Export Passport</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="">
+            <v-list-item-title>Lock Passport</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="">
+            <v-list-item-title>Unload Passport</v-list-item-title>
+          
+        </v-list>
+      </v-menu>
     </v-app-bar>
 
     <v-content>
@@ -99,7 +110,7 @@
       <div>
       </div>
       <div>
-        Version {{ passportVersion }}  
+        Bridge Passport v{{ passportVersion }}  <a style="color:#B19CD9;">About</a>
       </div>
     </v-footer>
   </v-app>

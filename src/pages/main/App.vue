@@ -50,7 +50,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-menu offset-y>
+      <v-menu offset-y small>
         <template v-slot:activator="{ on }">
           <v-btn
             icon
@@ -60,7 +60,7 @@
           </v-btn>
         </template>
 
-        <v-list>
+        <v-list dense>
           <v-subheader inset>Passport Options</v-subheader>
           <v-divider inset></v-divider>
 

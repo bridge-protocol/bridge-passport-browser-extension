@@ -50,7 +50,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-menu offset-y small>
+      <v-menu close-on-click offset-y small>
         <template v-slot:activator="{ on }">
           <v-btn
             icon
@@ -100,14 +100,27 @@
 
           <v-divider inset></v-divider>
 
-          <v-list-item@click="">
-            <v-list-item-icon>
-              <v-icon>mdi-information</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>About Bridge Passport</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
+          <v-dialog v-model="about_dialog" persistent max-width="600">
+            <template v-slot:activator="{ on }">
+              <v-list-item v-on="on">
+                  <v-list-item-icon>
+                    <v-icon>mdi-information</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-content>
+                    <v-list-item-title>About Bridge Passport</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+            </template>
+            <v-card>
+              <v-card-title class="headline">Use Google's location service?</v-card-title>
+              <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text @click="about_dialog = false">Disagree</v-btn>
+                <v-btn text @click="about_dialog = false">Agree</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </v-list>
       </v-menu>
     </v-app-bar>
@@ -117,27 +130,10 @@
         class="fill-height"
         fluid
       >
-        <v-row
-          align="center"
-          justify="center"
-        >
-          <v-col class="shrink">
-            <v-tooltip right>
-              <template v-slot:activator="{ on }">
-                <v-btn
-                  :href="source"
-                  icon
-                  large
-                  target="_blank"
-                  v-on="on"
-                >
-                  <v-icon large>mdi-code-tags</v-icon>
-                </v-btn>
-              </template>
-              <span>Source</span>
-            </v-tooltip>
-          </v-col>
-        </v-row>
+
+      <!-- content -->
+
+
       </v-container>
     </v-content>
 
@@ -160,6 +156,7 @@
       source: String,
     },
     data: () => ({
+      about_dialog: false,
       drawer: null,
       currentYear: new Date().getFullYear(),
       passportVersion: BridgeExtension.version

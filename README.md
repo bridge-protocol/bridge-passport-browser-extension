@@ -15,7 +15,7 @@ The Bridge Passport Browser Extension enables end users to easily create and man
 
 
 # Installation
-- "npm i && npx webpack" (you can also use "npm run watch:dev")
+- "npm i && npx webpack" (you can also use "npm run watch")
 
 # Browser Installation
 ### Chrome and Chromium Based Browsers (Opera, Brave, etc)

@@ -12,8 +12,8 @@ $(function () {
 });
 
 async function Init(){
-  alert(Bridge.passportVersion);
-  alert(Bridge.getPassportVersion());
-  Bridge.loadPage("main", null, true);
-	window.close();
+  BridgeExtension.loadPage("main", null, true);
+  window.close();
 }
+
+

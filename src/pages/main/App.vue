@@ -3,22 +3,40 @@
     <v-navigation-drawer
       v-model="drawer"
       app
+      clipped
+      permanent
     >
       <v-list dense>
         <v-list-item link>
           <v-list-item-action>
-            <v-icon>mdi-home</v-icon>
+            <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Home</v-list-item-title>
+            <v-list-item-title>My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item link>
           <v-list-item-action>
-            <v-icon>mdi-contact-mail</v-icon>
+            <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Contact</v-list-item-title>
+            <v-list-item-title>My Blockchain Wallets</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link>
+          <v-list-item-action>
+            <v-icon>mdi-shopping</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Bridge Marketplace</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link>
+          <v-list-item-action>
+            <v-icon>mdi-compass</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Bridge Network Explorer</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -26,11 +44,23 @@
 
     <v-app-bar
       app
-      color="indigo"
-      dark
+      clipped-left
     >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title>Application</v-toolbar-title>
+      <v-toolbar-title><v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer"></v-img></v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-tooltip right>
+        <template v-slot:activator="{ on }">
+          <v-btn
+            :href="source"
+            icon
+            target="_blank"
+            v-on="on"
+          >
+          <v-icon small>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+        <span>Lock Passport</span>
+      </v-tooltip>
     </v-app-bar>
 
     <v-content>
@@ -42,8 +72,8 @@
           align="center"
           justify="center"
         >
-          <v-col class="text-center">
-            <v-tooltip left>
+          <v-col class="shrink">
+            <v-tooltip right>
               <template v-slot:activator="{ on }">
                 <v-btn
                   :href="source"
@@ -57,30 +87,20 @@
               </template>
               <span>Source</span>
             </v-tooltip>
-
-            <v-tooltip right>
-              <template v-slot:activator="{ on }">
-                <v-btn
-                  icon
-                  large
-                  href="https://codepen.io/johnjleider/pen/zgxeLQ"
-                  target="_blank"
-                  v-on="on"
-                >
-                  <v-icon large>mdi-codepen</v-icon>
-                </v-btn>
-              </template>
-              <span>Codepen</span>
-            </v-tooltip>
           </v-col>
         </v-row>
       </v-container>
     </v-content>
-    <v-footer
-      color="indigo"
-      app
-    >
-      <span class="white--text">&copy; 2019</span>
+
+    <v-footer app class="d-flex flex-row justify-space-between">
+      <div>
+        &copy; {{ currentYear }} Bridge Protocol Corporation
+      </div>
+      <div>
+      </div>
+      <div>
+        Version {{ passportVersion }}  
+      </div>
     </v-footer>
   </v-app>
 </template>
@@ -92,6 +112,11 @@
     },
     data: () => ({
       drawer: null,
+      currentYear: new Date().getFullYear(),
+      passportVersion: BridgeExtension.version
     }),
+    created () {
+      this.$vuetify.theme.dark = true
+    },
   }
 </script>

@@ -4,6 +4,10 @@
 
     class BridgeExtension
     {
+        get version(){
+            return "2.5.1";
+        }
+
         //Page navigation
         loadPage(pageName, params, popup) {
             if (popup) {

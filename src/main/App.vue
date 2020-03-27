@@ -64,7 +64,7 @@
           <v-subheader inset>Passport Options</v-subheader>
           <v-divider inset></v-divider>
 
-          <v-list-item two-line @click="">
+          <v-list-item two-line :disabled="!passportLoaded" @click="">
             <v-list-item-icon>
               <v-icon>mdi-download</v-icon>
             </v-list-item-icon>
@@ -75,7 +75,7 @@
               </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-         <v-list-item two-line  @click="">
+         <v-list-item two-line :disabled="!passportLoaded" @click="">
             <v-list-item-icon>
               <v-icon>mdi-lock</v-icon>
             </v-list-item-icon>
@@ -86,7 +86,7 @@
               </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line  @click="">
+          <v-list-item two-line :disabled="!passportLoaded" @click="">
             <v-list-item-icon>
               <v-icon>mdi-close</v-icon>
             </v-list-item-icon>
@@ -165,6 +165,7 @@
       source: String,
     },
     data: () => ({
+      passportLoaded: false,
       overlayOpacity: 1,
       overlay: false,
       unlockDialog: false,
@@ -185,6 +186,7 @@
       unlockPassport: function(){
         this.unlockDialog = false;
         this.currentView = "passportDetails";
+        this.passportLoaded = true;
       }
     },
     async created () {

@@ -83,7 +83,6 @@ function openPopup(pageName, params) {
 //Look for closing popups
 _browser.windows.onRemoved.addListener(function (winId) {
   if (popupWindowId === winId) {
-    //_browser.browserAction.enable();
     _browser.browserAction.setTitle({ title: windowNotOpenTitle });
     popupWindowId = false;
   }
@@ -118,24 +117,29 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
   }
 
   if(request.action == "claimsImport"){
+    console.log("claims import request received");
     _browser.runtime.sendMessage({target:"popup", action:"claimsImport", sender: sender.tab.id, claimsImportRequest: request.detail.claimsImportRequest});
   }
 
   if (request.action == "openPopup") {
+    console.log("opening popup for " + request.pageName);
     openPopup(request.pageName, request.params);
     return;
   }
 
   if (request.action == "loadPassphrase") {
+    console.log("load passphrase " + _passphrase);
     sendResponse(_passphrase);
   }
 
   if (request.action == "savePassphrase") {
-    _passphrase = passphrase;
+    console.log("saving passphrase " + request.passphrase);
+    _passphrase = request.passphrase;
     sendResponse();
   }
 
   if (request.action == "removePassphrase") {
+    console.log("removing passphrase");
     _passphrase = null;
     sendResponse();
   }

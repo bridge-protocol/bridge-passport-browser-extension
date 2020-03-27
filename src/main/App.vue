@@ -183,16 +183,23 @@
       openPage: function(url){
         BridgeExtension.openPage(url);
       },
-      unlockPassport: function(){
+      unlockPassport: async function(){
         this.unlockDialog = false;
         this.currentView = "passportDetails";
         this.passportLoaded = true;
+        let passportContext = await BridgeExtension.getPassportContext();
       }
     },
     async created () {
       this.$vuetify.theme.dark = true;
       let passportContext = await BridgeExtension.getPassportContext();
-      this.unlockDialog = true;
-    },
+      if(!passportContext.passphrase){
+        this.unlockDialog = true;
+      }
+      else if(passportContext.passport && passportContext.passphrase){
+        this.passportLoaded = true;
+        this.currentView = "passportDetails";
+      }
+    }
   }
 </script>

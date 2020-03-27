@@ -36,12 +36,26 @@ export default {
     },
     methods:{
         verifyUnlockPassword: async function(){
-            if(this.unlockPassword === "123"){
+            let passportContent = BridgeExtension.testPassportContent;
+            console.log(passportContent);
+            let passport = new BridgeProtocol.Models.Passport();
+            let success = false;
+            try{
+                success = await passport.open(passportContent, this.unlockPassword);
+            }
+            catch(err){
+                console.log(err.message);
+            }
+
+            if(success){
+                await BridgeExtension.savePassportToBrowserStorage(passport);
+                await BridgeExtension.savePassphrase(this.unlockPassword);
                 this.$emit('unlocked', true);
             }
             else{
                 this.unlockErrorMessage = "Invalid password, try again.";
             }
+
         }
     }
 };

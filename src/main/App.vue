@@ -123,7 +123,7 @@
       <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @open="openPage"></about-dialog>
 
       <!-- unlock dialog -->
-      <unlock-dialog v-if="unlockDialog" @unlocked="unlockDialog = false, unlockPassport"></unlock-dialog>
+      <unlock-dialog v-if="unlockDialog" @unlocked="unlockPassport()"></unlock-dialog>
 
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
@@ -182,8 +182,9 @@
       openPage: function(url){
         BridgeExtension.openPage(url);
       },
-      unlockPassport: function(success){
-        //alert('unlock passport');
+      unlockPassport: function(){
+        this.unlockDialog = false;
+        this.currentView = "passportDetails";
       }
     },
     async created () {

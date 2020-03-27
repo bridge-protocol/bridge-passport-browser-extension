@@ -7,7 +7,7 @@
       permanent
     >
       <v-list dense>
-        <v-list-item link @click="currentView = 'passportDetails'">
+        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportDetails'">
           <v-list-item-action>
             <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
@@ -15,7 +15,7 @@
             <v-list-item-title>My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="currentView = 'passportWallets'">
+        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportWallets'">
           <v-list-item-action>
             <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
@@ -23,7 +23,7 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="currentView = 'passportApplications'">
+        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>

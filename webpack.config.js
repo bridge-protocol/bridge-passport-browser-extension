@@ -18,7 +18,7 @@ const config = {
     'scripts/window':'./scripts/window',
     'options/options': './options/options.js',
     'popup/popup': './popup/popup.js',
-    'pages/main/main':'./pages/main/main.js'
+    'main/main':'./main/main.js'
   },
   output: {
     path: __dirname + '/dist',
@@ -99,7 +99,7 @@ const config = {
       { from: 'icons', to: 'icons', ignore: ['icon.xcf'] },
       { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
       { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
-      { from: 'pages/main/main.html', to:'pages/main/main.html', transform: transformHtml },
+      { from: 'main/main.html', to:'main/main.html', transform: transformHtml },
       {
         from: 'manifest.json',
         to: 'manifest.json',

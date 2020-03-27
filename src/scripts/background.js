@@ -48,7 +48,7 @@ function openPopup(pageName, params) {
     top
   };
   
-  let url = _browser.extension.getURL("/pages/" + pageName + "/" + pageName + ".html");
+  let url = _browser.extension.getURL("/" + pageName + "/" + pageName + ".html");
   if (params)
     url = url + "?" + params;
 

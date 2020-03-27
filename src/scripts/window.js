@@ -21,7 +21,7 @@
                 browser.runtime.sendMessage({ target: 'background', action: 'openPopup', params, pageName });
             }
             else {
-            let url = "../pages/" + pageName + "/" + pageName + ".html";
+            let url = "../" + pageName + "/" + pageName + ".html";
             if (params)
                 url = url + "?" + params;
         

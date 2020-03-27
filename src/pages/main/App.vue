@@ -7,7 +7,7 @@
       permanent
     >
       <v-list dense>
-        <v-list-item link>
+        <v-list-item link @click="currentView = 'passportDetails'">
           <v-list-item-action>
             <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
@@ -15,7 +15,7 @@
             <v-list-item-title>My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link>
+        <v-list-item link @click="currentView = 'passportWallets'">
           <v-list-item-action>
             <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
@@ -23,7 +23,7 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link>
+        <v-list-item link @click="currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>
@@ -31,7 +31,7 @@
             <v-list-item-title>Bridge Marketplace</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link>
+        <v-list-item link @click="">
           <v-list-item-action>
             <v-icon>mdi-compass</v-icon>
           </v-list-item-action>
@@ -152,12 +152,15 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="verifyUnlockPassword();">Unlock</v-btn>
+            <v-btn text @click="verifyUnlockPassword();">Unlock</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <!-- content -->
 
+      <!-- content -->
+      <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
+      <passport-wallets v-if="isCurrentView('passportWallets')"></passport-wallets>
+      <passport-applications v-if="isCurrentView('passportApplications')"></passport-applications>
 
       </v-container>
     </v-content>
@@ -176,7 +179,16 @@
 </template>
 
 <script>
+  import PassportDetails from '../../components/PassportDetails.vue';
+  import PassportWallets from '../../components/PassportWallets.vue';
+  import PassportApplications from '../../components/PassportApplications.vue';
+
   export default {
+    components: {
+      PassportDetails,
+      PassportWallets,
+      PassportApplications
+    },
     props: {
       source: String,
     },
@@ -188,7 +200,8 @@
       about_dialog: false,
       drawer: null,
       currentYear: new Date().getFullYear(),
-      passportVersion: BridgeExtension.version
+      passportVersion: BridgeExtension.version,
+      currentView: ""
     }),
     methods: {
       showOverlay(overlayOpacity){
@@ -199,6 +212,9 @@
         this.about_dialog = true;
         this.showOverlay(.5);
       },
+      isCurrentView: function(name){
+        return this.currentView === name;
+      },
       hideAboutDialog: function(){
         this.about_dialog = false;
         this.overlay = false;
@@ -207,8 +223,8 @@
         this.unlock_dialog = true;
         this.showOverlay(1);
       },
-      verifyUnlockPassword: function(){
-        verifyPassword(this);
+      verifyUnlockPassword: async function(){
+        await verifyPassword(this);
       }
     },
     async created () {
@@ -222,6 +238,7 @@
     if(password === "123"){
       app.unlock_dialog = false;
       app.overlay = false;
+      app.currentView = "passportDetails";
     }
     else{
       app.unlockErrorMessage = "Invalid password, try again.";

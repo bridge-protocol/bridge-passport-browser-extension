@@ -8,6 +8,13 @@
             return "2.5.1";
         }
 
+        async getPassportContext(){
+            return {
+                passport: "123412412541251235",
+                passphrase: "123"
+            };
+        }
+
         //Page navigation
         loadPage(pageName, params, popup) {
             if (popup) {

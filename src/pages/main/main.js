@@ -4,7 +4,7 @@ import Vuetify from "vuetify";
 
 Vue.use(Vuetify);
 
-new Vue({
+var app = new Vue({
   el: '#app',
   vuetify: new Vuetify(),
   render: h => h(App)

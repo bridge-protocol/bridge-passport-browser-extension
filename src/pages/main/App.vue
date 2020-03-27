@@ -99,28 +99,16 @@
           </v-list-item>
 
           <v-divider inset></v-divider>
-
-          <v-dialog v-model="about_dialog" persistent max-width="600">
-            <template v-slot:activator="{ on }">
-              <v-list-item v-on="on">
-                  <v-list-item-icon>
-                    <v-icon>mdi-information</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>About Bridge Passport</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-            </template>
-            <v-card>
-              <v-card-title class="headline">Use Google's location service?</v-card-title>
-              <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn text @click="about_dialog = false">Disagree</v-btn>
-                <v-btn text @click="about_dialog = false">Agree</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+          
+          <v-list-item @click="showAboutDialog">
+            <v-list-item-icon>
+              <v-icon>mdi-information</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>About Bridge Passport</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          
         </v-list>
       </v-menu>
     </v-app-bar>
@@ -131,6 +119,43 @@
         fluid
       >
 
+      <!-- overlay to mask background -->
+      <v-overlay :value="overlay" :opacity="overlayOpacity"></v-overlay>
+
+      <!-- about dialog -->
+      <v-dialog v-model="about_dialog" persistent max-width="600">
+        <v-card>
+          <v-card-title class="headline">About Bridge Passport</v-card-title>
+          <v-card-text>Bridge Passport information, license info, etc</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="hideAboutDialog()">Ok</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- unlock dialog -->
+      <v-dialog v-model="unlock_dialog" persistent max-width="600px">
+        <v-card>
+          <v-card-title>
+            <span class="headline">Unlock Passport</span>
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field v-model="unlockPassword" label="Password" type="password" required></v-text-field>
+                  <div>{{ unlockErrorMessage }}</p>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="verifyUnlockPassword();">Unlock</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <!-- content -->
 
 
@@ -156,13 +181,56 @@
       source: String,
     },
     data: () => ({
+      overlayOpacity: 1,
+      overlay: false,
+      unlock_dialog: false,
+      unlockErrorMessage: "",
       about_dialog: false,
       drawer: null,
       currentYear: new Date().getFullYear(),
       passportVersion: BridgeExtension.version
     }),
-    created () {
-      this.$vuetify.theme.dark = true
+    methods: {
+      showOverlay(overlayOpacity){
+        this.overlayOpacity = overlayOpacity;
+        this.overlay = true;
+      },
+      showAboutDialog: function(){
+        this.about_dialog = true;
+        this.showOverlay(.5);
+      },
+      hideAboutDialog: function(){
+        this.about_dialog = false;
+        this.overlay = false;
+      },
+      showUnlockDialog: function () {
+        this.unlock_dialog = true;
+        this.showOverlay(1);
+      },
+      verifyUnlockPassword: function(){
+        verifyPassword(this);
+      }
     },
+    async created () {
+      this.$vuetify.theme.dark = true;
+      await checkPassportLoaded(this); 
+    },
+  }
+
+  async function verifyPassword(app){
+    let password = app.unlockPassword;
+    if(password === "123"){
+      app.unlock_dialog = false;
+      app.overlay = false;
+    }
+    else{
+      app.unlockErrorMessage = "Invalid password, try again.";
+    }
+  }
+
+  async function checkPassportLoaded(app){
+      //Check the passport lock status, etc
+      let passportContext = await BridgeExtension.getPassportContext();
+      app.showUnlockDialog();
   }
 </script>

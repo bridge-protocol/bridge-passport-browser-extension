@@ -31,7 +31,7 @@
             <v-list-item-title>Bridge Marketplace</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="">
+        <v-list-item link @click="openPage('https://bridgeprotocol.azurewebsites.net/')">
           <v-list-item-action>
             <v-icon>mdi-compass</v-icon>
           </v-list-item-action>
@@ -100,7 +100,7 @@
 
           <v-divider inset></v-divider>
           
-          <v-list-item @click="showAboutDialog">
+          <v-list-item @click="aboutDialog = true">
             <v-list-item-icon>
               <v-icon>mdi-information</v-icon>
             </v-list-item-icon>
@@ -119,43 +119,11 @@
         fluid
       >
 
-      <!-- overlay to mask background -->
-      <v-overlay :value="overlay" :opacity="overlayOpacity"></v-overlay>
-
       <!-- about dialog -->
-      <v-dialog v-model="about_dialog" persistent max-width="600">
-        <v-card>
-          <v-card-title class="headline">About Bridge Passport</v-card-title>
-          <v-card-text>Bridge Passport information, license info, etc</v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="hideAboutDialog()">Ok</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @open="openPage"></about-dialog>
 
       <!-- unlock dialog -->
-      <v-dialog v-model="unlock_dialog" persistent max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="headline">Unlock Passport</span>
-          </v-card-title>
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field v-model="unlockPassword" label="Password" type="password" required></v-text-field>
-                  <div>{{ unlockErrorMessage }}</p>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="verifyUnlockPassword();">Unlock</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <unlock-dialog v-if="unlockDialog" @unlocked="unlockDialog = false, unlockPassport"></unlock-dialog>
 
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
@@ -179,12 +147,16 @@
 </template>
 
 <script>
-  import PassportDetails from '../../components/PassportDetails.vue';
-  import PassportWallets from '../../components/PassportWallets.vue';
-  import PassportApplications from '../../components/PassportApplications.vue';
+  import AboutDialog from '../components/AboutDialog.vue';
+  import UnlockDialog from '../components/UnlockDialog.vue';
+  import PassportDetails from '../components/PassportDetails.vue';
+  import PassportWallets from '../components/PassportWallets.vue';
+  import PassportApplications from '../components/PassportApplications.vue';
 
   export default {
     components: {
+      AboutDialog,
+      UnlockDialog,
       PassportDetails,
       PassportWallets,
       PassportApplications
@@ -195,59 +167,29 @@
     data: () => ({
       overlayOpacity: 1,
       overlay: false,
-      unlock_dialog: false,
+      unlockDialog: false,
       unlockErrorMessage: "",
-      about_dialog: false,
+      aboutDialog: false,
       drawer: null,
       currentYear: new Date().getFullYear(),
       passportVersion: BridgeExtension.version,
       currentView: ""
     }),
     methods: {
-      showOverlay(overlayOpacity){
-        this.overlayOpacity = overlayOpacity;
-        this.overlay = true;
-      },
-      showAboutDialog: function(){
-        this.about_dialog = true;
-        this.showOverlay(.5);
-      },
       isCurrentView: function(name){
         return this.currentView === name;
       },
-      hideAboutDialog: function(){
-        this.about_dialog = false;
-        this.overlay = false;
+      openPage: function(url){
+        BridgeExtension.openPage(url);
       },
-      showUnlockDialog: function () {
-        this.unlock_dialog = true;
-        this.showOverlay(1);
-      },
-      verifyUnlockPassword: async function(){
-        await verifyPassword(this);
+      unlockPassport: function(success){
+        //alert('unlock passport');
       }
     },
     async created () {
       this.$vuetify.theme.dark = true;
-      await checkPassportLoaded(this); 
-    },
-  }
-
-  async function verifyPassword(app){
-    let password = app.unlockPassword;
-    if(password === "123"){
-      app.unlock_dialog = false;
-      app.overlay = false;
-      app.currentView = "passportDetails";
-    }
-    else{
-      app.unlockErrorMessage = "Invalid password, try again.";
-    }
-  }
-
-  async function checkPassportLoaded(app){
-      //Check the passport lock status, etc
       let passportContext = await BridgeExtension.getPassportContext();
-      app.showUnlockDialog();
+      this.unlockDialog = true;
+    },
   }
 </script>

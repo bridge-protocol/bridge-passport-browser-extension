@@ -16,6 +16,10 @@
         }
 
         //Page navigation
+        openPage(url){
+            window.open(url);
+        }
+
         loadPage(pageName, params, popup) {
             if (popup) {
                 browser.runtime.sendMessage({ target: 'background', action: 'openPopup', params, pageName });

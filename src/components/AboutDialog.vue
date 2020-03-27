@@ -9,7 +9,7 @@
                         {{version}}
                     </p>
 
-                    <div class="subtitle-2">License<div>
+                    <div class="subtitle-2">License</div>
                     <p class="caption">
                         This software is licensed under the Apache 2.0 License and is being provided to you on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  Bridge Protocol Corporation will not be held liable for any loss or damages resulting from the use of this software.  If you do not agree with these terms, you must stop using this software immediately.  Please <a @click="open('https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/LICENSE')">review the full license before using this software.</a>
                     </p>

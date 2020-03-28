@@ -36,8 +36,7 @@ export default {
     },
     methods:{
         verifyUnlockPassword: async function(){
-            let passportContent = BridgeExtension.testPassportContent;
-            console.log(passportContent);
+            let passportContent = await BridgeExtension.loadPassportFromBrowserStorage();
             let passport = new BridgeProtocol.Models.Passport();
             let success = false;
             try{
@@ -55,7 +54,6 @@ export default {
             else{
                 this.unlockErrorMessage = "Invalid password, try again.";
             }
-
         }
     }
 };

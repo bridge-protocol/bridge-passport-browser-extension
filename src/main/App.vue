@@ -64,7 +64,7 @@
           <v-subheader inset>Passport Options</v-subheader>
           <v-divider inset></v-divider>
 
-          <v-list-item two-line :disabled="!passportLoaded" @click="">
+          <v-list-item two-line :disabled="!passportLoaded" @click="exportPassport()">
             <v-list-item-icon>
               <v-icon>mdi-download</v-icon>
             </v-list-item-icon>
@@ -75,7 +75,7 @@
               </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-         <v-list-item two-line :disabled="!passportLoaded" @click="">
+         <v-list-item two-line :disabled="!passportLoaded" @click="closePassport()">
             <v-list-item-icon>
               <v-icon>mdi-lock</v-icon>
             </v-list-item-icon>
@@ -86,7 +86,7 @@
               </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line :disabled="!passportLoaded" @click="">
+          <v-list-item two-line :disabled="!passportLoaded" @click="removePassport()">
             <v-list-item-icon>
               <v-icon>mdi-close</v-icon>
             </v-list-item-icon>
@@ -122,8 +122,11 @@
       <!-- about dialog -->
       <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @open="openPage"></about-dialog>
 
+      <!-- open dialog -->
+      <open-dialog v-if="openDialog" @unlocked="openPassport()"></open-dialog>
+
       <!-- unlock dialog -->
-      <unlock-dialog v-if="unlockDialog" @unlocked="unlockPassport()"></unlock-dialog>
+      <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
 
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
@@ -148,6 +151,7 @@
 
 <script>
   import AboutDialog from '../components/AboutDialog.vue';
+  import OpenDialog from '../components/OpenDialog.vue';
   import UnlockDialog from '../components/UnlockDialog.vue';
   import PassportDetails from '../components/PassportDetails.vue';
   import PassportWallets from '../components/PassportWallets.vue';
@@ -156,6 +160,7 @@
   export default {
     components: {
       AboutDialog,
+      OpenDialog,
       UnlockDialog,
       PassportDetails,
       PassportWallets,
@@ -166,10 +171,8 @@
     },
     data: () => ({
       passportLoaded: false,
-      overlayOpacity: 1,
-      overlay: false,
+      openDialog: false,
       unlockDialog: false,
-      unlockErrorMessage: "",
       aboutDialog: false,
       drawer: null,
       currentYear: new Date().getFullYear(),
@@ -183,23 +186,42 @@
       openPage: function(url){
         BridgeExtension.openPage(url);
       },
-      unlockPassport: async function(){
+      openPassport: async function(){
         this.unlockDialog = false;
+        this.openDialog = false;
         this.currentView = "passportDetails";
         this.passportLoaded = true;
-        let passportContext = await BridgeExtension.getPassportContext();
+        //TODO: Force refresh on the passport details
+      },
+      closePassport: async function(){
+          await BridgeExtension.closePassport();
+          await this.checkPassportStatus();
+      },
+      removePassport: async function(){
+          await BridgeExtension.removePassport();
+          await this.checkPassportStatus();
+      },
+      exportPassport: async function(){
+          let passportContext = await BridgeExtension.getPassportContext();
+          await BridgeExtension.exportPassport(passportContext.passport);
+      },
+      checkPassportStatus: async function(){
+          let passportContext = await BridgeExtension.getPassportContext();
+          //Check to see if we're loaded, unlocked, etc
+          if(!passportContext.passport && !passportContext.passphrase){
+            this.openDialog = true;
+          }
+          else if(!passportContext.passphrase && passportContext.passport){
+            this.unlockDialog = true;
+          }
+          else if(passportContext.passport && passportContext.passphrase){
+            this.openPassport();
+          }
       }
     },
     async created () {
       this.$vuetify.theme.dark = true;
-      let passportContext = await BridgeExtension.getPassportContext();
-      if(!passportContext.passphrase){
-        this.unlockDialog = true;
-      }
-      else if(passportContext.passport && passportContext.passphrase){
-        this.passportLoaded = true;
-        this.currentView = "passportDetails";
-      }
+      await this.checkPassportStatus();
     }
   }
 </script>

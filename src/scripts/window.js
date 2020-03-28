@@ -95,13 +95,16 @@
             await this.removePassportFromBrowserStorage();
         }
         
-        exportPassport(passport) {
+        exportPassport(passport, filename) {
+            if(!filename)
+                filename = "passport";
+                
             var iframe = Object.assign(document.createElement('iframe'), {
                 onload() {
                     var doc = this.contentDocument;
                     var a = Object.assign(doc.createElement('a'), {
                         href: 'data:text/plain;base64,' + btoa(JSON.stringify(passport)),
-                        download: 'passport.json',
+                        download: filename + '.json',
                     });
                     doc.body.appendChild(a);
                     a.dispatchEvent(new MouseEvent('click'));

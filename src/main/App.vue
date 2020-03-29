@@ -7,15 +7,15 @@
       permanent
     >
       <v-list dense>
-        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportDetails'">
+        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportDetails') ? 'primary':''" link @click="currentView = 'passportDetails'">
           <v-list-item-action>
             <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>My Digital Identity</v-list-item-title>
+            <v-list-item-title >My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportWallets'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportWallets') ? 'primary':''" @click="currentView = 'passportWallets'">
           <v-list-item-action>
             <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
@@ -23,7 +23,7 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" @click="currentView = 'passportApplications'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'primary':''" @click="currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>
@@ -31,7 +31,7 @@
             <v-list-item-title>Bridge Marketplace</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="openPage('https://bridgeprotocol.azurewebsites.net/')">
+        <v-list-item color="red" link @click="openPage('https://bridgeprotocol.azurewebsites.net/')">
           <v-list-item-action>
             <v-icon>mdi-compass</v-icon>
           </v-list-item-action>

@@ -129,9 +129,9 @@
       <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
 
       <!-- content -->
-      <passport-details :passport="passportId"></passport-details>
-      <passport-wallets v-if="isCurrentView('passportWallets')"></passport-wallets>
-      <passport-applications v-if="isCurrentView('passportApplications')"></passport-applications>
+      <passport-details v-if="isCurrentView('passportDetails')" :passport="passportId"></passport-details>
+      <passport-wallets v-if="isCurrentView('passportWallets')" :passport="passportId"></passport-wallets>
+      <passport-applications v-if="isCurrentView('passportApplications')" :passport="passportId"></passport-applications>
 
       </v-container>
     </v-content>

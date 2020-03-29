@@ -129,7 +129,7 @@
       <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
 
       <!-- content -->
-      <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
+      <passport-details :passport="passportId"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')"></passport-wallets>
       <passport-applications v-if="isCurrentView('passportApplications')"></passport-applications>
 
@@ -170,6 +170,7 @@
       source: String,
     },
     data: () => ({
+      passportId: "",
       passportLoaded: false,
       openDialog: false,
       unlockDialog: false,
@@ -190,8 +191,9 @@
         this.unlockDialog = false;
         this.openDialog = false;
         this.currentView = "passportDetails";
+        let passportContext = await BridgeExtension.getPassportContext();
         this.passportLoaded = true;
-        //TODO: Force refresh on the passport details
+        this.passportId = passportContext.passport.id;
       },
       closePassport: async function(){
           await BridgeExtension.closePassport();

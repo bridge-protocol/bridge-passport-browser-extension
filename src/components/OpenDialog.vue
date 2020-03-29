@@ -116,6 +116,7 @@ export default {
             }
         },
         createPassport: async function(){
+            //TODO: Extend field validators and improve error messaging
             if(!this.password){
                 alert("You must specify a password");
             }
@@ -133,6 +134,24 @@ export default {
             }
             catch(err){
                 console.log(err.message);
+            }
+
+            if(this.neoPrivateKey){
+                try{
+                    await passport.addWallet("neo", this.password, this.neoPrivateKey);
+                }
+                catch(err){
+                    console.log("Unable to add NEO wallet: " + err.message);
+                }
+            }
+
+            if(this.ethPrivateKey){
+                try{
+                    await passport.addWallet("eth", this.password, this.ethPrivateKey);
+                }
+                catch(err){
+                    console.log("Unable to add Ethererum wallet: " + err.message);
+                }
             }
 
             await BridgeExtension.savePassportToBrowserStorage(passport);

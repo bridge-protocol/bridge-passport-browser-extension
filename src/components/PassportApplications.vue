@@ -10,11 +10,16 @@
             ></v-progress-circular>
         </v-container>
         <v-container fill-height align-start v-if="applicationsLoaded">
-            <v-row v-if="applications.length == 0">
-                <v-col cols="auto" fill-height fill-width align-start text-center>
-                    No verification requests found.
-                </v-col>
-            </v-row>
+            <v-alert
+                border="left"
+                colored-border
+                type="info"
+                elevation="2"
+                class="mt-2 text-left"
+                v-if="applications.length == 0"
+                >
+                No Bridge Marketplace verification requests found.  Create a verification request to get started.
+            </v-alert>
             <v-expansion-panels>
                     <v-expansion-panel
                     v-for="(app,i) in applications"
@@ -28,7 +33,7 @@
                                     <h3 class="mb-2" v-text="app.createdOn"></h3>
                                     <div v-text="app.partnerName"></div>
                                 </v-col>
-                            <v-row>
+                            </v-row>
                         </v-expansion-panel-header>
                         <v-expansion-panel-content>
                             <v-row>

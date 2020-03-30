@@ -5,11 +5,16 @@
         <h3 inset><v-icon class="mr-2">mdi-wallet</v-icon> My Blockchain Wallets</h3>
     </v-container>
     <v-container fill-height align-start>
-        <v-row v-if="wallets.length == 0">
-            <v-col cols="auto" fill-height fill-width align-start text-center>
-                No wallets found.
-            </v-col>
-        </v-row>
+        <v-alert
+            border="left"
+            colored-border
+            type="info"
+            elevation="2"
+            class="mt-2 text-left"
+            v-if="wallets.length == 0"
+            >
+            No blockchain wallets found.  Add or import a wallet below to get started.
+        </v-alert>
         <v-expansion-panels >
             <v-expansion-panel
             v-for="(wallet,i) in wallets"

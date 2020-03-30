@@ -34,16 +34,16 @@
                         </v-row>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
-                    <v-alert
-                        border="top"
-                        colored-border
-                        type="info"
-                        elevation="2"
-                        class="mt-2 text-left"
-                        >
-                        No digital claims found.  To add claims, find a verification partner on the Bridge Marketplace.
-                    </v-alert>
-
+                <v-alert
+                    border="left"
+                    colored-border
+                    type="info"
+                    elevation="2"
+                    class="text-left mt-2"
+                    v-if="claims.length == 0"
+                    >
+                    No digital claims found.  To add claims, find a verification partner on the Bridge Marketplace.
+                </v-alert>
                 <v-expansion-panel
                 v-for="(claim,i) in claims"
                 :key="i"

@@ -20,8 +20,9 @@
             v-for="(wallet,i) in wallets"
             :key="wallet.network"
             @click="walletSelected(wallet)"
+            class="mb-2"
             >
-                <v-expansion-panel-header class="mb-2" :color="wallet.color">
+                <v-expansion-panel-header class="left-border-color-primary">
                     <v-row>
                         <v-col cols="auto"><v-img :src="wallet.src" height="40" width="40"></v-img></v-col>
                         <v-col cols="auto">
@@ -31,7 +32,7 @@
                     <v-row>
                 </v-expansion-panel-header>
                 <v-expansion-panel-content>
-                    <div class="text-center pt-2" v-if="!wallet.loaded">
+                    <div class="text-center" v-if="!wallet.loaded">
                         <v-progress-circular
                             indeterminate
                             color="primary"

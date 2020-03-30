@@ -11,8 +11,8 @@
         </v-container>
         <v-container fill-height align-start text-center v-if="passportLoaded">
             <v-expansion-panels>
-                <v-expansion-panel>
-                    <v-expansion-panel-header class="mb-2" color="secondary">
+                <v-expansion-panel class="mb-2">
+                    <v-expansion-panel-header class="left-border-color-primary">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
@@ -47,8 +47,9 @@
                 <v-expansion-panel
                 v-for="(claim,i) in claims"
                 :key="i"
+                class="mb-2"
                 >
-                    <v-expansion-panel-header class="mb-2" color="secondary">
+                    <v-expansion-panel-header class="left-border-color-primary">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">

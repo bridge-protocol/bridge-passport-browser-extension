@@ -25,8 +25,9 @@
                     v-for="(app,i) in applications"
                     :key="app.id"
                     @click="appSelected(app)"
+                    class="mb-2"
                     >
-                        <v-expansion-panel-header class="mb-2" color="secondary">
+                        <v-expansion-panel-header class="left-border-color-primary">
                             <v-row>
                                 <v-col cols="auto"><v-img :src="app.src" height="40" width="40"></v-img></v-col>
                                 <v-col cols="auto">

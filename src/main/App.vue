@@ -7,7 +7,7 @@
       permanent
     >
       <v-list dense>
-        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportDetails') ? 'primary':''" link @click="currentView = 'passportDetails'">
+        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportDetails') ? 'secondary':''" link @click="currentView = 'passportDetails'">
           <v-list-item-action>
             <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
@@ -15,7 +15,7 @@
             <v-list-item-title >My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportWallets') ? 'primary':''" @click="currentView = 'passportWallets'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportWallets') ? 'secondary':''" @click="currentView = 'passportWallets'">
           <v-list-item-action>
             <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
@@ -23,7 +23,7 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'primary':''" @click="currentView = 'passportApplications'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'secondary':''" @click="currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>
@@ -45,6 +45,7 @@
     <v-app-bar
       app
       clipped-left
+      color="gradient"
     >
       <v-toolbar-title><v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer"></v-img></v-toolbar-title>
 
@@ -120,7 +121,7 @@
       >
 
       <!-- about dialog -->
-      <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @open="openPage"></about-dialog>
+      <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @openUrl="openUrl"></about-dialog>
 
       <!-- open dialog -->
       <open-dialog v-if="openDialog" @unlocked="openPassport()"></open-dialog>
@@ -129,9 +130,9 @@
       <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
 
       <!-- content -->
-      <passport-details v-if="isCurrentView('passportDetails')" :passport="passportId"></passport-details>
-      <passport-wallets v-if="isCurrentView('passportWallets')" :passport="passportId"></passport-wallets>
-      <passport-applications v-if="isCurrentView('passportApplications')" :passport="passportId"></passport-applications>
+      <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
+      <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
+      <passport-applications v-if="isCurrentView('passportApplications')" @openUrl="openUrl"></passport-applications>
 
       </v-container>
     </v-content>
@@ -184,7 +185,7 @@
       isCurrentView: function(name){
         return this.currentView === name;
       },
-      openPage: function(url){
+      openUrl: function(url){
         BridgeExtension.openPage(url);
       },
       openPassport: async function(){
@@ -196,10 +197,14 @@
         this.passportId = passportContext.passport.id;
       },
       closePassport: async function(){
+          this.currentView = "";
+          this.passportId = "";
           await BridgeExtension.closePassport();
           await this.checkPassportStatus();
       },
       removePassport: async function(){
+          this.currentView = "";
+          this.passportId = "";
           await BridgeExtension.removePassport();
           await this.checkPassportStatus();
       },
@@ -223,6 +228,8 @@
     },
     async created () {
       this.$vuetify.theme.dark = true;
+      this.$vuetify.theme.primary = '#673ab7';
+
       await this.checkPassportStatus();
     }
   }

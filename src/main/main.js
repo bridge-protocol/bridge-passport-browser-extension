@@ -6,6 +6,17 @@ Vue.use(Vuetify);
 
 var app = new Vue({
   el: '#app',
-  vuetify: new Vuetify(),
+  vuetify: new Vuetify({
+    theme: {
+      themes: {
+        dark: {
+          primary: '#3c7fc6',
+          secondary: '#6155a3',
+          accent: '#904099',
+          error: '#b71c1c',
+        },
+      },
+    },
+  }),
   render: h => h(App)
 });

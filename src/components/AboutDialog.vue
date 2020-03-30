@@ -11,7 +11,7 @@
 
                     <div class="subtitle-2">License</div>
                     <p class="caption">
-                        This software is licensed under the Apache 2.0 License and is being provided to you on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  Bridge Protocol Corporation will not be held liable for any loss or damages resulting from the use of this software.  If you do not agree with these terms, you must stop using this software immediately.  Please <a @click="open('https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/LICENSE')">review the full license before using this software.</a>
+                        This software is licensed under the Apache 2.0 License and is being provided to you on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  Bridge Protocol Corporation will not be held liable for any loss or damages resulting from the use of this software.  If you do not agree with these terms, you must stop using this software immediately.  Please <a @click="openUrl('https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/LICENSE')">review the full license before using this software.</a>
                     </p>
                     <div class="subtitle-2">Limitation of Liability</div>
                     <p class="caption">
@@ -19,7 +19,7 @@
                     </p>
                     <div class="subtitle-2">Assignment of Copyright</div>
                     <p class="caption">
-                        This software, "Bridge" Logo, and any other related content are Copyright ©2018-<span>{{currentYear}}</span> Bridge Protocol Corporation, All Rights Reserved.  Some portions of this software and logos are copyright to their respective owners.  See <a @click="open('https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/src/scripts/ThirdPartyNotices.txt')">third party notices</a> for more details.
+                        This software, "Bridge" Logo, and any other related content are Copyright ©2018-<span>{{currentYear}}</span> Bridge Protocol Corporation, All Rights Reserved.  Some portions of this software and logos are copyright to their respective owners.  See <a @click="openUrl('https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/src/scripts/ThirdPartyNotices.txt')">third party notices</a> for more details.
                     </p>
                 </v-card-text>
                 <v-card-actions>
@@ -45,8 +45,8 @@ export default {
         close: function(){
             this.$emit('close', true);
         },
-        open: function(url){
-            this.$emit('open', url);
+        openPage: function(url){
+            this.$emit('openUrl', url);
         }
     }
 };

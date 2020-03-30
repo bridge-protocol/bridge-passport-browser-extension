@@ -100,6 +100,7 @@ const config = {
       { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
       { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
       { from: 'main/main.html', to:'main/main.html', transform: transformHtml },
+      { from: 'main/main.css', to:'main/main.css' },
       {
         from: 'manifest.json',
         to: 'manifest.json',

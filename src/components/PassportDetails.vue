@@ -24,13 +24,13 @@
                     <v-expansion-panel-content class="left-border-color-primary">
                         <v-divider></v-divider>
                         <v-row>
-                            <v-col cols="2">Public Key:</v-col>
+                            <v-col cols="auto" text-left>Public Key:</v-col>
+                        </v-row>
+                        <v-row>
                             <v-col cols="auto" 
                             style="height: 100px"
-                            class="overflow-y-auto">
-                                <div class="text-break">
-                                    {{publicKey}}
-                                </div>
+                            class="overflow-y-auto text-left text-break">
+                                {{publicKey}}
                             </v-col>
                         </v-row>
                     </v-expansion-panel-content>
@@ -70,7 +70,7 @@
                             <v-col cols="auto">{{claim.expiresOn}}</v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="2">Signed By:</v-col>
+                            <v-col cols="2">Issuer:</v-col>
                             <v-col cols="auto">{{claim.signedByName}}</v-col>
                         </v-row>
                     </v-expansion-panel-content>

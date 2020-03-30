@@ -40,27 +40,27 @@
                     </div>
                     <div v-if="wallet.loaded">
                         <v-divider></v-divider>
+                        <div class="d-flex justify-center">
+                            <div class="justify-center text-center ml-2 mr-2">
+                                <div>{{wallet.gasBalanceLabel}}</div>
+                                <div width="40">
+                                    <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="30" contain></v-img>
+                                </div>
+                                <div>{{wallet.gasBalance}}</div>
+                            </div>
+                            <div class="justify-center text-center ml-2 mr-2">
+                                <div>BRDG</div>
+                                <div width="40">
+                                    <v-img :src="'/images/bridge-token.png'" height="30" contain></v-img>
+                                </div>
+                                <div>{{wallet.brdgBalance}}</div>
+                            </div>
+                        </div>
                         <v-row>
-                            <v-col cols="2">Registered</v-col>
+                            <v-col cols="3">Passport Registered</v-col>
                             <v-col cols="auto">
                                 <span v-if="wallet.registered">Registered on Blockchain</span>
-                                <v-btn v-if="!wallet.registered" x-small color="primary">Register</v-btn>
-                            </v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="2">Balances</v-col>
-                            <v-col cols="10">
-                                <v-row v-if="wallet.network.toLowerCase() == 'neo'">
-                                    <v-col cols="10">
-                                        <v-img :src="'/images/bridge-token.png'" height="20" width="20"></v-img>
-                                        <span>BRDG {{wallet.brdgBalance}}</span>
-                                    </v-col>
-                                </v-row>
-                                <v-row>
-                                    <v-col cols="10">
-                                        <span><v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="22" width="22"></v-img></span> <span v-text="wallet.gasBalanceLabel"></span> <span v-text="wallet.gasBalance"></span>
-                                    </v-col>
-                                </v-row>
+                                <span v-if="!wallet.registered">Not Registered</span>
                             </v-col>
                         </v-row>
                     </div>

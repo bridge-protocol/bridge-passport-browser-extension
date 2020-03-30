@@ -136,22 +136,18 @@ export default {
                 console.log(err.message);
             }
 
-            if(this.neoPrivateKey){
-                try{
-                    await passport.addWallet("neo", this.password, this.neoPrivateKey);
-                }
-                catch(err){
-                    console.log("Unable to add NEO wallet: " + err.message);
-                }
+            try{
+                await passport.addWallet("neo", this.password, this.neoPrivateKey);
+            }
+            catch(err){
+                console.log("Unable to add NEO wallet: " + err.message);
             }
 
-            if(this.ethPrivateKey){
-                try{
-                    await passport.addWallet("eth", this.password, this.ethPrivateKey);
-                }
-                catch(err){
-                    console.log("Unable to add Ethererum wallet: " + err.message);
-                }
+            try{
+                await passport.addWallet("eth", this.password, this.ethPrivateKey);
+            }
+            catch(err){
+                console.log("Unable to add Ethererum wallet: " + err.message);
             }
 
             await BridgeExtension.savePassportToBrowserStorage(passport);

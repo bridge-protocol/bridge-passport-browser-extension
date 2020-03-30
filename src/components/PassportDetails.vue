@@ -42,7 +42,7 @@
                     class="text-left mt-2"
                     v-if="claims.length == 0"
                     >
-                    No digital claims found.  To add claims, find a verification partner on the Bridge Marketplace.
+                    No digital identity verified claims found.  To add verified claims, find a verification partner on the Bridge Marketplace.
                 </v-alert>
                 <v-expansion-panel
                 v-for="(claim,i) in claims"

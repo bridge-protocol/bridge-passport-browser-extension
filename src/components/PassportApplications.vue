@@ -36,7 +36,8 @@
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-header>
-                        <v-expansion-panel-content>
+                        <v-expansion-panel-content class="left-border-color-primary">
+                            <v-divider></v-divider>
                             <v-row>
                                 <v-col cols="2">Status</v-col>
                                 <v-col cols="auto">{{ app.status }}</v-col>

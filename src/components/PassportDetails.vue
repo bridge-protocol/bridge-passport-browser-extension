@@ -21,7 +21,8 @@
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
-                    <v-expansion-panel-content>
+                    <v-expansion-panel-content class="left-border-color-primary">
+                        <v-divider></v-divider>
                         <v-row>
                             <v-col cols="2">Public Key:</v-col>
                             <v-col cols="auto" 
@@ -58,7 +59,8 @@
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
-                    <v-expansion-panel-content>
+                    <v-expansion-panel-content class="left-border-color-primary">
+                        <v-divider></v-divider>
                         <v-row>
                             <v-col cols="2">Verified:</v-col>
                             <v-col cols="auto">{{claim.verifiedOn}}</v-col>

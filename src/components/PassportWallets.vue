@@ -31,7 +31,7 @@
                         </v-col>
                     <v-row>
                 </v-expansion-panel-header>
-                <v-expansion-panel-content>
+                <v-expansion-panel-content class="left-border-color-primary">
                     <div class="text-center" v-if="!wallet.loaded">
                         <v-progress-circular
                             indeterminate
@@ -39,6 +39,7 @@
                         ></v-progress-circular>
                     </div>
                     <div v-if="wallet.loaded">
+                        <v-divider></v-divider>
                         <v-row>
                             <v-col cols="2">Registered</v-col>
                             <v-col cols="auto">

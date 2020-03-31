@@ -113,6 +113,24 @@
             });
             document.body.appendChild(iframe);
         }
+
+        async sendLoginResponse(sender, response){
+            let message = {
+                action: 'sendBridgeLoginResponse',
+                loginResponse: response
+            };
+            await this.sendMessageToTab(sender, message, true);
+        }
+
+        async sendMessageToTab(tabId, message, focus) {
+            window.browser.tabs.update(parseInt(tabId), { active: true, highlighted: true }, async function (tab) {
+                if(focus){
+                    let tabInfo = await window.browser.tabs.get(parseInt(tabId));
+                    await window.browser.windows.update(tabInfo.windowId, { "focused": true });
+                }
+                await window.browser.tabs.sendMessage(tab.id, message);
+            });
+        }
     }
 
     //Setup the window

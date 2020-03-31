@@ -129,6 +129,9 @@
       <!-- unlock dialog -->
       <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
 
+      <!-- login dialog -->
+      <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login"></login-dialog>
+
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
@@ -154,6 +157,7 @@
   import AboutDialog from '../components/AboutDialog.vue';
   import OpenDialog from '../components/OpenDialog.vue';
   import UnlockDialog from '../components/UnlockDialog.vue';
+  import LoginDialog from '../components/LoginDialog.vue';
   import PassportDetails from '../components/PassportDetails.vue';
   import PassportWallets from '../components/PassportWallets.vue';
   import PassportApplications from '../components/PassportApplications.vue';
@@ -163,6 +167,7 @@
       AboutDialog,
       OpenDialog,
       UnlockDialog,
+      LoginDialog,
       PassportDetails,
       PassportWallets,
       PassportApplications
@@ -176,6 +181,9 @@
       openDialog: false,
       unlockDialog: false,
       aboutDialog: false,
+      loginDialog: false,
+      request: null,
+      sender: null,
       drawer: null,
       currentYear: new Date().getFullYear(),
       passportVersion: BridgeExtension.version,
@@ -225,19 +233,12 @@
             this.openPassport();
           }
       },
-      initListeners: async function(){
-        BridgeExtension.initListeners(async function(sender, loginRequest){
-          alert(loginRequest);
-        },
-        async function(sender, paymentRequest){
-          alert(paymentRequest);
-        },
-        async function(sender, claimsImportRequest){
-          alert(claimsImportRequest);
-        });
-      },
-      showLoginRequest: async function(sender, request){
-        alert("show login request: " + request);
+      login: async function(res){
+        this.sender = null;
+        this.request = null;
+        this.loginDialog = false;
+
+        await BridgeExtension.sendLoginResponse(res.sender, res.response);
       }
     },
     async created () {
@@ -256,7 +257,9 @@
 
           if (request.action === "login") {
               window.focus();
-              app.showLoginRequest(request.sender, request.loginRequest);
+              app.sender = request.sender;
+              app.request = request.loginRequest;
+              app.loginDialog = true;
           }
 
           if (request.action === "payment") {

@@ -49,7 +49,7 @@
                             </v-col>
                             <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
                         </v-row>
-                        <v-row v-if="wallet.network.toLowerCase() === 'neo'">
+                        <v-row>
                             <v-col cols="auto" class="align-start">
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>

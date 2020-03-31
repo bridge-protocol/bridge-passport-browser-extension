@@ -6,6 +6,13 @@
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#904099",endColorstr="#348bc9",GradientType=1) !important;
 }
 
+.gradient2{
+    background:#6451ab !important;
+    background: -moz-linear-gradient(343deg, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: -webkit-linear-gradient(343deg,rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: linear-gradient(343deg, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+}
+
 .left-border-color-primary{
     border-left:8px solid rgba(97,85,163,1);
 }

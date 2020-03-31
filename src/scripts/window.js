@@ -38,6 +38,63 @@
             }
         }
 
+        getParamRequest(queryString) {
+            let action = {
+                action: "none",
+                loginRequest: null,
+                paymentRequest: {
+                    amount: 0,
+                    account: null,
+                    identifier: null
+                },
+                sender: null
+            };
+        
+            let params = this.getParamsFromQueryString(queryString);
+            if (!params || !Array.isArray(params) || params.length == 0)
+                return { action };
+        
+            for (let i = 0; i < params.length; i++) {
+                if (params[i].key == "sender") {
+                    action.sender = params[i].val;
+                }
+                else if (params[i].key == "login_request") {
+                    action.action = "login";
+                    action.loginRequest = params[i].val;
+                }
+                else if (params[i].key == "payment_request") {
+                    action.action = "payment";
+                    action.paymentRequest = params[i].val;
+                }
+            }
+        
+            return action;
+        }
+        
+        getQueryStringFromLocation() {
+            var target = String(window.location);
+            var idx = target.lastIndexOf("?");
+            if (idx == -1)
+                return null;
+        
+            let params = target.substring(idx + 1, target.length);
+            console.log("param: " + params);
+            return params;
+        }
+        
+        getParamsFromQueryString(qs) {
+            let params = [];
+            let pairs = qs.split('&');
+            for (let i = 0; i < pairs.length; i++) {
+                let pair = pairs[i].split('=');
+                params.push({
+                    key: pair[0],
+                    val: pair[1]
+                });
+            }
+            return params;
+        }
+
         //Passport context management
         async getPassportContext(){
             let passphrase = await this.loadPassphrase();

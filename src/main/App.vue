@@ -299,5 +299,22 @@
           }
           sendResponse();
       });
+
+      //If we were launched from an external request whille closed, now that we're loaded, handle the request
+      let params = BridgeExtension.getQueryStringFromLocation();
+      if (params) {
+          let request = BridgeExtension.getParamRequest(params);
+          if (request.action === "login") {
+              window.focus();
+              app.sender = request.sender;
+              app.request = request.loginRequest;
+              app.loginDialog = true;
+          }
+          else if (requst.action === "payment") {
+              window.focus();
+              app.sender = request.sender;
+              app.request = request.paymentRequest;
+          }
+      }
   }
 </script>

@@ -6,7 +6,7 @@
         <v-container text-center v-if="!applicationsLoaded">
             <v-progress-circular
                 indeterminate
-                color="primary"
+                color="secondary"
             ></v-progress-circular>
         </v-container>
         <v-container fill-height align-start v-if="applicationsLoaded">

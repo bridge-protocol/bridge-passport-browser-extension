@@ -6,7 +6,7 @@
         <v-container text-center v-if="!passportLoaded">
             <v-progress-circular
                 indeterminate
-                color="primary"
+                color="secondary"
             ></v-progress-circular>
         </v-container>
         <v-container fill-height align-start text-center v-if="passportLoaded">
@@ -49,6 +49,7 @@
                 v-for="(claim,i) in claims"
                 :key="i"
                 class="mb-2"
+                @click="claimSelected(claim)"
                 >
                     <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                         <v-row>
@@ -60,19 +61,41 @@
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
-                        <v-divider></v-divider>
-                        <v-row>
-                            <v-col cols="2">Verified:</v-col>
-                            <v-col cols="auto">{{claim.verifiedOn}}</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="2">Expires:</v-col>
-                            <v-col cols="auto">{{claim.expiresOn}}</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="2">Issuer:</v-col>
-                            <v-col cols="auto">{{claim.signedByName}}</v-col>
-                        </v-row>
+                        <div class="text-center" v-if="!claim.loaded">
+                            <v-progress-circular
+                                indeterminate
+                                color="secondary"
+                            ></v-progress-circular>
+                        </div>
+                        <div v-if="claim.loaded">
+                            <v-divider></v-divider>
+                            <v-row>
+                                <v-col cols="2" class="text-left">Verified:</v-col>
+                                <v-col cols="auto">{{claim.verifiedOn}}</v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="2" class="text-left">Expires:</v-col>
+                                <v-col cols="auto">{{claim.expiresOn}}</v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="2" class="text-left">Issuer:</v-col>
+                                <v-col cols="auto">{{claim.signedByName}}</v-col>
+                            </v-row>
+                            <div v-if="claim.walletExists">
+                                <v-subheader class="pl-0 ml-0">Blockchain Publishing</v-subheader>
+                                <v-divider></v-divider>
+                                <v-row>
+                                    <v-col cols="2" class="text-left">NEO:</v-col>
+                                    <v-col cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</v-col>
+                                    <v-col cols="auto" v-if="!claim.neoClaim">Not Published</v-col>
+                                </v-row>
+                                <v-row>
+                                    <v-col cols="2" class="text-left">Ethereum:</v-col>
+                                    <v-col cols="auto" v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</v-col>
+                                    <v-col cols="auto" v-if="!claim.ethClaim">Not Published</v-col>
+                                </v-row>
+                            </div>
+                        </div>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
             </v-expansion-panels>
@@ -97,6 +120,45 @@ export default {
             }
 
             this.passportLoaded = true;
+        },
+        claimSelected: async function(claim){
+            if(this.lastSelectedClaim == claim.claimTypeId){
+                this.lastSelectedClaim = "";
+            }
+            else{
+                this.lastSelectedClaim = claim.claimTypeId;
+                this.refreshClaim(claim);
+            }
+        },
+        refreshClaim: async function(claim){
+            claim.loaded = false;
+
+            //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
+            this.claims.push({});
+            this.claims.pop();
+
+            try
+            {
+                let passportContext = await BridgeExtension.getPassportContext();
+                let neoWallet = passportContext.passport.getWalletForNetwork("neo");
+                let ethWallet = passportContext.passport.getWalletForNetwork("eth");
+                if(neoWallet){
+                    claim.walletExists = true;
+                    claim.neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(neoWallet.network, claim.claimTypeId, neoWallet.address);
+                }
+                if(ethWallet){
+                    claim.walletExists = true;
+                    claim.ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(ethWallet.network, claim.claimTypeId, ethWallet.address);
+                }  
+            }
+            catch(err){
+                alert(err.message);
+            }
+            claim.loaded = true;
+
+            //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
+            this.claims.push({});
+            this.claims.pop();
         },
         refreshClaims: async function(){
             this.passportLoaded = false;
@@ -140,6 +202,7 @@ export default {
             passportId: "",
             passportLoaded: false,
             publicKey: "",
+            lastSelectedClaim: "",
             claims: []
         }
     },

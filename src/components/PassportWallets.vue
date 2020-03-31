@@ -15,7 +15,7 @@
             >
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
-        <v-expansion-panels >
+        <v-expansion-panels>
             <v-expansion-panel
             v-for="(wallet,i) in wallets"
             :key="wallet.network"
@@ -35,7 +35,7 @@
                     <div class="text-center" v-if="!wallet.loaded">
                         <v-progress-circular
                             indeterminate
-                            color="primary"
+                            color="secondary"
                         ></v-progress-circular>
                     </div>
                     <div v-if="wallet.loaded">

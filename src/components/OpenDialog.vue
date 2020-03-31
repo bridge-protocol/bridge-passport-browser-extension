@@ -4,6 +4,7 @@
             <v-tabs
                 v-model="tab"
                 dark
+                color="secondary"
                 >
                 <v-tab>
                     Create New
@@ -13,67 +14,96 @@
                 </v-tab>
                 <v-tab-item>
                     <v-card>
-                        <v-card-title>
-                            <span class="headline">Create New Passport</span>
+                        <v-card-title class="pb-0">
+                            <v-row>
+                                <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                                <v-col cols="10">Create a New Passport</v-col>
+                            </v-row>
                         </v-card-title>
                         <v-card-text>
                             <v-container>
-                                <v-row>
+                                <p>
+                                    Create a password to be used to encrypt your Bridge Passport and any associated blockchain wallets when exported or not in use.  This should be a complex password or passphrase only you know.  Be sure to save this password as you will be unable to access your passport without it.
+                                </p>
+                                <v-row dense>
                                     <v-col cols="12">
-                                    <v-text-field v-model="password" label="Password" type="password" required></v-text-field>
+                                        <v-text-field v-model="password" :error="passwordErrorMessages != null" :errorMessages="passwordErrorMessages" color="secondary" placeholder=" " label="Password" type="password" outlined dense></v-text-field>
                                     </v-col>
                                 </v-row>
-                                <v-row>
+                                <v-row dense>
                                     <v-col cols="12">
-                                    <v-text-field v-model="verifyPassword" label="Verify Password" type="password" required></v-text-field>
+                                        <v-text-field v-model="verifyPassword" :error="verifyPasswordErrorMessages != null" :errorMessages="verifyPasswordErrorMessages" color="secondary" placeholder=" " label="Verify Password" type="password" outlined dense></v-text-field>
                                     </v-col>
                                 </v-row>
-                                <v-row>
-                                    <v-col cols="12">
-                                    <v-text-field v-model="ethPrivateKey" label="Ethereum Private Key" type="text"></v-text-field>
-                                    </v-col>
-                                </v-row>
-                                <v-row>
-                                    <v-col cols="12">
-                                    <v-text-field v-model="neoPrivateKey" label="NEO Private Key" type="text"></v-text-field>
-                                    </v-col>
-                                </v-row>
+                                <v-expansion-panels flat class="mt-n6">
+                                    <v-expansion-panel key="1" class="px-0 mx-0">
+                                        <v-expansion-panel-header class="px-0 mx-0" >
+                                            Import Existing Blockchain Wallets
+                                        </v-expansion-panel-header>
+                                        <v-expansion-panel-content class="mx-n5">
+                                             <v-alert
+                                                border="left"
+                                                colored-border
+                                                type="info"
+                                                elevation="2"
+                                                class="text-left mt-n4"
+                                                >
+                                                If you have existing NEO or Ethereum wallets you would like to include in your passport, provide the private keys below.  If you want to generate one or more new wallets, simply leave the field(s) blank.
+                                            </v-alert>
+                                            <v-row dense>
+                                                <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
+                                                <v-col cols="11">
+                                                <v-text-field v-model="neoPrivateKey" color="secondary" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                                                </v-col>
+                                            </v-row>
+                                            <v-row dense>
+                                                <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
+                                                <v-col cols="11">
+                                                <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                                                </v-col>
+                                            </v-row>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                </v-expansion-panels>
+                                
                             </v-container>
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text @click="createPassport();">Create Passport</v-btn>
+                            <v-btn text @click="createPassport();" :loading="wait">Create Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>
                 <v-tab-item>
                     <v-card>
-                        <v-card-title>
-                            Import Passport
+                        <v-card-title class="pb-0">
+                            <v-row>
+                                <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                                <v-col cols="10">Import Passport</v-col>
+                            </v-row>
                         </v-card-title>
                         <v-card-text>
-                            <v-row>
+                            <p>
+                                If you have an existing Bridge Passport you would like to import, simply select the exported passport file and enter the password you created when you created the passport.
+                            </p>
+                            <v-row dense>
                                 <v-col cols="12">
-                                    <v-file-input v-model="importFile" accept=".json" label="Passport File"></v-file-input>
+                                    <v-file-input v-model="importFile" :error="importFileErrorMessages != null" :errorMessages="importFileErrorMessages" color="secondary" accept=".json" label="Passport File" placeholder="Select passport file" required outlined dense prepend-icon=""></v-file-input>
                                 </v-col>
                             </v-row>
-                            <v-row>
+                            <v-row dense>
                                 <v-col cols="12">
-                                <v-text-field v-model="importPassword" label="Password" type="password" required></v-text-field>
-                                <div>{{ importErrorMessage }}</p>
+                                <v-text-field v-model="importPassword" :error="importPasswordErrorMessages != null" :errorMessages="importPasswordErrorMessages" color="secondary" label="Password" type="password" placeholder=" " required outlined dense></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text @click="importPassport();">Import Passport</v-btn>
+                            <v-btn text @click="importPassport();" :loading="wait">Import Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>
-            </v-tabs>
-
-
-            
+            </v-tabs>      
         </v-dialog>
     </v-overlay>
 </template>
@@ -84,21 +114,39 @@ export default {
     data: function () {
         return {
             visible: true,
-            importFile: "",
-            importPassword: "",
-            importErrorMessage: "",
-            neoPrivateKey: "",
-            ethPrivateKey: "",
-            password: "",
-            verifyPassword: ""
+            wait: false,
+            passwordErrorMessages: null,
+            verifyPasswordErrorMessages: null,
+            importFileErrorMessages: null,
+            importPasswordErrorMessages: null,
+            neoPrivateKey: null,
+            ethPrivateKey: null,
+            importFile: null,
+            importPassword: null,
+            password: null,
+            verifyPassword: null
         }
     },
     methods:{
         importPassport: async function(){
+            this.importFileErrorMessages = null;
+            this.importPasswordErrorMessages = null;
+
+            if(!this.importFile){
+                this.importFileErrorMessages = ["Please select a passport file"];
+                return;
+            }
+            if(!this.importPassword){
+                this.importPasswordErrorMessages = ["Password is required"];
+                return;
+            }
+            
+            this.wait = true;
+
             let passportContent = await this.importFile.text();
             let passport = new BridgeProtocol.Models.Passport();
             let success = false;
-            
+
             try{
                 success = await passport.open(passportContent, this.importPassword);
             }
@@ -109,22 +157,30 @@ export default {
             if(success){
                 await BridgeExtension.savePassportToBrowserStorage(passport);
                 await BridgeExtension.savePassphrase(this.importPassword);
+                this.wait = false;
                 this.$emit('unlocked', true);
             }
             else{
-                this.importErrorMessage = "Invalid password, try again.";
+                this.wait = false;
+                this.importPasswordErrorMessages = ["Invalid password, try again."];
             }
         },
         createPassport: async function(){
+            this.passwordErrorMessages = null;
+            this.verifyPasswordErrorMessages = null;
+
             //TODO: Extend field validators and improve error messaging
             if(!this.password){
-                alert("You must specify a password");
+                this.passwordErrorMessages = ["Password is required"];
+                return;
             }
             if(this.password != this.verifyPassword)
             {
-                alert("Passwords do not match");
+                this.verifyPasswordErrorMessages = ["Passwords do not match"];
                 return;
             }
+
+            this.wait = true;
 
             let passport = new BridgeProtocol.Models.Passport();
             await passport.create(this.password);
@@ -153,6 +209,7 @@ export default {
             await BridgeExtension.savePassportToBrowserStorage(passport);
             await BridgeExtension.savePassphrase(this.password);
 
+            this.wait = false;
             this.$emit('unlocked', true);
         }
     }

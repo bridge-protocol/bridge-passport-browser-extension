@@ -15,7 +15,6 @@
         }
 
         get passportVersion(){
-            alert(BridgeProtocol.Constants.passportVersion);
             return BridgeProtocol.Constants.passportVersion;
         }
 

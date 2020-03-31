@@ -39,11 +39,24 @@
                         ></v-progress-circular>
                     </div>
                     <div v-if="wallet.loaded">
-                        <v-divider></v-divider>
-                        <v-row>
-                            <v-col cols="auto" class="text-left">Address</v-col>
+                        <v-subheader class="pl-0 ml-0">Balances</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
+                        <v-row dense>
+                            <v-col cols="auto" class="text-left">
+                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
                         </v-row>
-                        <v-row>
+                        <v-row dense>
+                            <v-col cols="auto" class="text-left">
+                                <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                        </v-row>
+
+                        <v-subheader class="pl-0 ml-0">Address</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
+                        <v-row dense>
                             <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
                             </v-col>
@@ -59,25 +72,10 @@
                                 </v-chip>
                                 <v-btn v-if="!wallet.registered" @click="removeWallet(wallet)" x-small color="secondary" class="ml-2" :loading="removing">Remove</v-btn></v-col>
                         </v-row>
-                        <v-row>
-                            <v-col cols="auto" class="text-left">Balances</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="auto" class="text-left">
-                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
-                            </v-col>
-                            <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="auto" class="text-left">
-                                <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
-                            </v-col>
-                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="auto" class="text-left">Private Key</v-col>
-                        </v-row>
-                        <v-row>
+
+                        <v-subheader class="pl-0 ml-0">Private Key</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
+                        <v-row dense>
                             <v-col cols="auto" class="text-center">
                                 <v-icon small class="mx-3">mdi-key</v-icon>
                             </v-col>

@@ -31,30 +31,37 @@
                             <v-row>
                                 <v-col cols="auto"><v-img :src="app.src" height="40" width="40"></v-img></v-col>
                                 <v-col cols="auto">
-                                    <h3 class="mb-2" v-text="app.partnerName"></h3>
-                                    <div v-text="app.createdOn"></div>
+                                    <div class="my-1 title-2" v-text="app.partnerName"></div>
+                                    <div class="caption" v-text="app.createdOn"></div>
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-header>
                         <v-expansion-panel-content class="left-border-color-primary">
-                            <v-divider></v-divider>
-                            <v-row>
+                            <v-subheader class="pl-0 ml-0">Request Information</v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left">Status</v-col>
                                 <v-col cols="auto">{{ app.status }}</v-col>
                             </v-row>
-                            <v-row>
+                            <v-row dense>
+                                <v-col cols="2" class="text-left">Partner</v-col>
+                                <v-col cols="auto">{{ app.partnerName }}</v-col>
+                            </v-row>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left">Link</v-col>
                                 <v-col cols="10"  class="text-break text-left">
                                     <a @click="openUrl(app.url)">{{app.url}}</a>
                                 </v-col>
                             </v-row>
-                            <v-row>
+                            <v-subheader class="pl-0 ml-0">Payment Transaction</v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
-                                <v-col cols="auto">{{app.transactionFee}}</v-col>
+                                <v-col cols="auto">{{app.transactionFee}} BRDG</v-col>
                             </v-row>
-                            <v-row>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left"><v-img :src="'/images/' + app.transactionNetwork.toLowerCase() + '-logo.png'" height="20" width="20"></v-img></v-col>
-                                <v-col cols="10" class="text-break text-left caption">{{app.transactionId}}</v-col>
+                                <v-col cols="10" class="text-break text-left caption"><a @click="openUrl(app.transactionUrl)">{{app.transactionUrl}}</a></v-col>
                             </v-row>
                         </v-expansion-panel-content>
                     </v-expansion-panel>
@@ -101,6 +108,13 @@ export default {
                     //Legacy transaction amount format
                     if(applications[i].transactionFee = 1000000000) 
                         applications[i].transactionFee = 1;
+
+                    if(applications[i].transactionNetwork.toLowerCase() === "neo"){
+                        applications[i].transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + applications[i].transactionId;
+                    }
+                    else if(applications[i].transactionNetwork.toLowerCase() === "eth"){
+                        applications[i].transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + applications[i].transactionId;
+                    }
                 }
 
                 this.applications = applications;

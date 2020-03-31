@@ -16,30 +16,21 @@
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
-                                <h3 class="mb-2">Id</h3>
-                                <div v-text="passportId"></div>
+                                <div class="mb-1 title-2">Id</div>
+                                <div class="caption" v-text="passportId"></div>
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
-                        <v-divider></v-divider>
+                        <v-subheader class="pl-0 ml-0">Passport Details</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
                         <v-row class="mb-n4">
-                            <v-col cols="auto" class="text-left">Passport Version:</v-col>
+                            <v-col cols="2" class="text-left">Version:</v-col>
                             <v-col cols="auto" class="text-left">{{version}}</v-col>
                         </v-row>
                         <v-row class="mb-n4">
-                            <v-col cols="3" class="text-left">Passport Id:</v-col>
+                            <v-col cols="2" class="text-left">Id:</v-col>
                             <v-col cols="auto" class="text-left">{{passportId}}</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="auto" class="text-left mb-n3">Public Key:</v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="auto" 
-                            style="height: 100px"
-                            class="overflow-y-auto text-left text-break">
-                                {{publicKey}}
-                            </v-col>
                         </v-row>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -63,8 +54,8 @@
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
-                                <h3 class="mb-2" v-text="claim.claimTypeName"></h3>
-                                <div v-text="claim.claimValue"></div>
+                                <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
+                                <div class="caption" v-text="claim.claimValue"></div>
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
@@ -76,29 +67,34 @@
                             ></v-progress-circular>
                         </div>
                         <div v-if="claim.loaded">
-                            <v-divider></v-divider>
-                            <v-row>
+                            <v-subheader class="pl-0 ml-0">Claim Details</v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left">Verified:</v-col>
                                 <v-col cols="auto">{{claim.verifiedOn}}</v-col>
                             </v-row>
-                            <v-row>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left">Expires:</v-col>
                                 <v-col cols="auto">{{claim.expiresOn}}</v-col>
                             </v-row>
-                            <v-row>
+                            <v-row dense>
                                 <v-col cols="2" class="text-left">Issuer:</v-col>
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
                             <div v-if="claim.walletExists">
-                                <v-subheader class="pl-0 ml-0">Blockchain Publishing</v-subheader>
-                                <v-divider></v-divider>
-                                <v-row>
-                                    <v-col cols="2" class="text-left">NEO:</v-col>
+                                <v-subheader class="pl-0 ml-0">Blockchain Claims</v-subheader>
+                                <v-divider class="mb-2"></v-divider>
+                                <v-row dense v-if="neoWallet">
+                                    <v-col cols="auto" class="text-left">
+                                        <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                                    </v-col>
                                     <v-col cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</v-col>
                                     <v-col cols="auto" v-if="!claim.neoClaim">Not Published</v-col>
                                 </v-row>
-                                <v-row>
-                                    <v-col cols="2" class="text-left">Ethereum:</v-col>
+                                <v-row dense v-if="ethWallet">
+                                    <v-col cols="auto" class="text-left">
+                                        <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
+                                    </v-col>
                                     <v-col cols="auto" v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</v-col>
                                     <v-col cols="auto" v-if="!claim.ethClaim">Not Published</v-col>
                                 </v-row>
@@ -127,6 +123,9 @@ export default {
                 this.publicKey = passportContext.passport.publicKey;
                 this.version = BridgeExtension.passportVersion;
             }
+
+            this.neoWallet = passportContext.passport.getWalletForNetwork("neo") != null;
+            this.ethWallet = passportContext.passport.getWalletForNetwork("eth") != null;
             this.passportLoaded = true;
         },
         claimSelected: async function(claim){
@@ -212,6 +211,8 @@ export default {
             passportLoaded: false,
             publicKey: "",
             lastSelectedClaim: "",
+            neoWallet: false,
+            ethWallet: false,
             claims: []
         }
     },

@@ -147,10 +147,11 @@
 
       <!-- home view -->
       <div v-if="isCurrentView('passportHome')" class="justify-center text-center pt-n6 mt-n6">
-          <div width="250">
+          <div width="250" class="mt-n6">
               <v-img src="../../images/bridge-passport.png" height="250" contain></v-img>
           </div>
-          <div class="pt-3">{{passportId}}</div>
+          <v-divider class="my-4"></v-divider>
+          <div class="text-uppercase">{{passportId}}</div>
       </div>
 
       </v-container>

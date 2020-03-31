@@ -37,7 +37,7 @@
                             </v-row>
                         </v-expansion-panel-header>
                         <v-expansion-panel-content class="left-border-color-primary">
-                            <v-subheader class="pl-0 ml-0">Request Information</v-subheader>
+                            <v-subheader class="pl-0 ml-0 caption">Request Information</v-subheader>
                             <v-divider class="mb-2"></v-divider>
                             <v-row dense>
                                 <v-col cols="2" class="text-left">Status</v-col>
@@ -53,7 +53,7 @@
                                     <a @click="openUrl(app.url)">{{app.url}}</a>
                                 </v-col>
                             </v-row>
-                            <v-subheader class="pl-0 ml-0">Payment Transaction</v-subheader>
+                            <v-subheader class="pl-0 ml-0 caption">Payment Transaction</v-subheader>
                             <v-divider class="mb-2"></v-divider>
                             <v-row dense>
                                 <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>

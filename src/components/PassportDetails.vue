@@ -22,7 +22,7 @@
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
-                        <v-subheader class="pl-0 ml-0">Passport Details</v-subheader>
+                        <v-subheader class="pl-0 ml-0 caption">Passport Details</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row class="mb-n4">
                             <v-col cols="2" class="text-left">Version:</v-col>
@@ -67,7 +67,7 @@
                             ></v-progress-circular>
                         </div>
                         <div v-if="claim.loaded">
-                            <v-subheader class="pl-0 ml-0">Claim Details</v-subheader>
+                            <v-subheader class="pl-0 ml-0 caption">Claim Details</v-subheader>
                             <v-divider class="mb-2"></v-divider>
                             <v-row dense>
                                 <v-col cols="2" class="text-left">Verified:</v-col>
@@ -82,7 +82,7 @@
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
                             <div v-if="claim.walletExists">
-                                <v-subheader class="pl-0 ml-0">Blockchain Claims</v-subheader>
+                                <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
                                 <v-divider class="mb-2"></v-divider>
                                 <v-row dense v-if="neoWallet">
                                     <v-col cols="auto" class="text-left">

@@ -39,7 +39,7 @@
                         ></v-progress-circular>
                     </div>
                     <div v-if="wallet.loaded">
-                        <v-subheader class="pl-0 ml-0">Balances</v-subheader>
+                        <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row dense>
                             <v-col cols="auto" class="text-left">
@@ -54,7 +54,7 @@
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                         </v-row>
 
-                        <v-subheader class="pl-0 ml-0">Address</v-subheader>
+                        <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row dense>
                             <v-col cols="auto" class="text-left">

@@ -63,18 +63,15 @@
                             <v-col cols="auto" class="text-left">{{wallet.address}} 
                                 <v-chip
                                 v-if="wallet.registered"
-                                class="ma-2"
                                 label
                                 x-small
-                                :color="secondaryv"
+                                :color="secondary"
+                                class="ml-2"
                                 >
                                     Registered
                                 </v-chip>
                                 <v-btn v-if="!wallet.registered" @click="removeWallet(wallet)" x-small color="secondary" class="ml-2" :loading="removing">Remove</v-btn></v-col>
                         </v-row>
-
-                        <v-subheader class="pl-0 ml-0">Private Key</v-subheader>
-                        <v-divider class="mb-2"></v-divider>
                         <v-row dense>
                             <v-col cols="auto" class="text-center">
                                 <v-icon small class="mx-3">mdi-key</v-icon>

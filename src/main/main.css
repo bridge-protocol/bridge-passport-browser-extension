@@ -13,6 +13,14 @@
     background: linear-gradient(343deg, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
 }
 
+.gradient3{
+    background: rgb(27,28,29) !important;
+    background: -moz-linear-gradient(90deg, rgba(27,28,29,1) 30%, rgba(54,56,57,1) 100%) !important;
+    background: -webkit-linear-gradient(90deg, rgba(27,28,29,1) 30%, rgba(54,56,57,1) 100%) !important;
+    background: linear-gradient(90deg, rgba(27,28,29,1) 30%, rgba(54,56,57,1) 100%) !important;
+    border-right: 1px solid #666666 !important;
+}
+
 .left-border-color-primary{
     border-left:8px solid rgba(97,85,163,1);
 }

@@ -37,19 +37,13 @@
                                 </v-row>
                                 <v-expansion-panels flat class="mt-n6">
                                     <v-expansion-panel key="1" class="px-0 mx-0">
-                                        <v-expansion-panel-header class="px-0 mx-0" >
+                                        <v-expansion-panel-header class="px-0 mx-0">
                                             Import Existing Blockchain Wallets
                                         </v-expansion-panel-header>
                                         <v-expansion-panel-content class="mx-n5">
-                                             <v-alert
-                                                border="left"
-                                                colored-border
-                                                type="info"
-                                                elevation="2"
-                                                class="text-left mt-n4"
-                                                >
-                                                If you have existing NEO or Ethereum wallets you would like to include in your passport, provide the private keys below.  If you want to generate one or more new wallets, simply leave the field(s) blank.
-                                            </v-alert>
+                                            <p class="body-2 mb-8">
+                                                 If you have existing NEO or Ethereum wallets you would like to include in your passport, provide the private keys below.  If you want to generate one or more new wallets, simply leave the field(s) blank.
+                                            </p>
                                             <v-row dense>
                                                 <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
                                                 <v-col cols="11">

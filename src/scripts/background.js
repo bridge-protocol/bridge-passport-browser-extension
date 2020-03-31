@@ -27,10 +27,10 @@ function openPopup(pageName, params) {
   else if (height > 1024)
     height = 1024;
 
-  if (width < 850)
+  if (width < 700)
     width = screen.width;
-  else if (width > 850)
-    width = 850;
+  else if (width > 700)
+    width = 700;
 
   //Center the window
   hcenter = screen.width * .50;

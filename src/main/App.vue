@@ -4,10 +4,14 @@
       v-model="drawer"
       app
       clipped
-      permanent
+      class="gradient3"
     >
       <v-list dense>
-        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportDetails') ? 'gradient2':''" link @click="currentView = 'passportDetails'">
+        <v-list-item link @click="drawer = !drawer, currentView = 'passportHome'">
+            <v-img src="../../images/bridge-white.png" contain height="46" aspect="1" position="left" class="ml-0 mt-1 mb-3" @click.stop="drawer = !drawer, currentView = 'passportHome'"></v-img>
+        </v-list-item>
+        <v-divider class="mb-2"></v-divider>
+        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportDetails') ? 'gradient2':''" link @click="drawer = !drawer, currentView = 'passportDetails'">
           <v-list-item-action>
             <v-icon>mdi-fingerprint</v-icon>
           </v-list-item-action>
@@ -15,7 +19,7 @@
             <v-list-item-title >My Digital Identity</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportWallets') ? 'gradient2':''" @click="currentView = 'passportWallets'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportWallets') ? 'gradient2':''" @click="drawer = !drawer, currentView = 'passportWallets'">
           <v-list-item-action>
             <v-icon>mdi-wallet</v-icon>
           </v-list-item-action>
@@ -23,7 +27,7 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'gradient2':''" @click="currentView = 'passportApplications'">
+        <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'gradient2':''" @click="drawer = !drawer, currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>
@@ -47,8 +51,10 @@
       clipped-left
       color="gradient"
     >
-      <v-toolbar-title>
-          <v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer" @click="currentView = 'passportHome'"></v-img>
+      <v-toolbar-title @click.stop="drawer = !drawer" link>
+        <v-row link>
+          <v-col cols="auto" link><v-icon>mdi-menu</v-icon></v-col>
+        </v-row>
       </v-toolbar-title>
 
       <v-spacer></v-spacer>

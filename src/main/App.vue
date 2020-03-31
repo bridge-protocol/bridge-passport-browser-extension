@@ -132,6 +132,9 @@
       <!-- login dialog -->
       <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login"></login-dialog>
 
+      <!-- claims import dialog -->
+      <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @close="closeImport"></claims-import-dialog>
+
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
@@ -158,6 +161,7 @@
   import OpenDialog from '../components/OpenDialog.vue';
   import UnlockDialog from '../components/UnlockDialog.vue';
   import LoginDialog from '../components/LoginDialog.vue';
+  import ClaimsImportDialog from '../components/ClaimsImportDialog.vue';
   import PassportDetails from '../components/PassportDetails.vue';
   import PassportWallets from '../components/PassportWallets.vue';
   import PassportApplications from '../components/PassportApplications.vue';
@@ -168,6 +172,7 @@
       OpenDialog,
       UnlockDialog,
       LoginDialog,
+      ClaimsImportDialog,
       PassportDetails,
       PassportWallets,
       PassportApplications
@@ -182,6 +187,7 @@
       unlockDialog: false,
       aboutDialog: false,
       loginDialog: false,
+      claimsImportDialog: false,
       request: null,
       sender: null,
       drawer: null,
@@ -239,6 +245,11 @@
         this.loginDialog = false;
 
         await BridgeExtension.sendLoginResponse(res.sender, res.response);
+      },
+      closeImport: async function(){
+        this.sender = null;
+        this.request = null;
+        this.claimsImportDialog = false;
       }
     },
     async created () {
@@ -264,12 +275,15 @@
 
           if (request.action === "payment") {
               window.focus();
-              //bridge.initPayment(request.sender, request.paymentRequest);
+              app.sender = request.sender;
+              app.request = request.paymentRequest;
           }
 
           if (request.action === "claimsImport") {
               window.focus();
-              //bridge.initClaimsImport(request.sender, request.claimsImportRequest);
+              app.sender = request.sender;
+              app.request = request.claimsImportRequest;
+              app.claimsImportDialog = true;
           }
           sendResponse();
       });

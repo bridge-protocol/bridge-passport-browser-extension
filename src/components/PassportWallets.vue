@@ -40,28 +40,20 @@
                     </div>
                     <div v-if="wallet.loaded">
                         <v-divider></v-divider>
-                        <div class="d-flex justify-center">
-                            <div class="justify-center text-center ml-2 mr-2">
-                                <div>{{wallet.gasBalanceLabel}}</div>
-                                <div width="40">
-                                    <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="30" contain></v-img>
-                                </div>
-                                <div>{{wallet.gasBalance}}</div>
-                            </div>
-                            <div class="justify-center text-center ml-2 mr-2">
-                                <div>BRDG</div>
-                                <div width="40">
-                                    <v-img :src="'/images/bridge-token.png'" height="30" contain></v-img>
-                                </div>
-                                <div>{{wallet.brdgBalance}}</div>
-                            </div>
-                        </div>
                         <v-row>
-                            <v-col cols="3">Passport Registered</v-col>
-                            <v-col cols="auto">
-                                <span v-if="wallet.registered">Registered on Blockchain</span>
-                                <span v-if="!wallet.registered">Not Registered</span>
+                            <v-col cols="auto">Balances</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="auto" class="align-start">
+                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
                             </v-col>
+                            <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
+                        </v-row>
+                        <v-row v-if="wallet.network.toLowerCase() === 'neo'">
+                            <v-col cols="auto" class="align-start">
+                                <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                         </v-row>
                     </div>
                 </v-expansion-panel-content>

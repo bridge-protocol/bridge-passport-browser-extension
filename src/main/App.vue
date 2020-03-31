@@ -224,13 +224,51 @@
           else if(passportContext.passport && passportContext.passphrase){
             this.openPassport();
           }
+      },
+      initListeners: async function(){
+        BridgeExtension.initListeners(async function(sender, loginRequest){
+          alert(loginRequest);
+        },
+        async function(sender, paymentRequest){
+          alert(paymentRequest);
+        },
+        async function(sender, claimsImportRequest){
+          alert(claimsImportRequest);
+        });
+      },
+      showLoginRequest: async function(sender, request){
+        alert("show login request: " + request);
       }
     },
     async created () {
       this.$vuetify.theme.dark = true;
       this.$vuetify.theme.primary = '#673ab7';
-
-      await this.checkPassportStatus();
+      init(this);
     }
+  }
+
+  async function init(app){
+      window.app = this;
+      await app.checkPassportStatus();
+      window.browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+          if (request.target != "popup")
+              return;
+
+          if (request.action === "login") {
+              window.focus();
+              app.showLoginRequest(request.sender, request.loginRequest);
+          }
+
+          if (request.action === "payment") {
+              window.focus();
+              //bridge.initPayment(request.sender, request.paymentRequest);
+          }
+
+          if (request.action === "claimsImport") {
+              window.focus();
+              //bridge.initClaimsImport(request.sender, request.claimsImportRequest);
+          }
+          sendResponse();
+      });
   }
 </script>

@@ -93,6 +93,7 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
     return;
 
   if (request.action == "login") {
+    console.log("login request received");
     if(popupWindowId === false){
       openPopup("main", "sender=" + sender.tab.id + "&login_request=" + request.detail.loginRequest);
     }
@@ -105,6 +106,7 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
   }
 
   if (request.action == "payment") {
+    console.log("paymentrequest received");
     if(popupWindowId === false){
       openPopup("main", "sender=" + sender.tab.id + "&payment_request=" + request.detail.paymentRequest);
     }

@@ -65,7 +65,6 @@
                                         </v-expansion-panel-content>
                                     </v-expansion-panel>
                                 </v-expansion-panels>
-                                
                             </v-container>
                         </v-card-text>
                         <v-card-actions>

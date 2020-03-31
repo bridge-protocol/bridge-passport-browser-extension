@@ -35,8 +35,26 @@ export default {
     },
     methods:{
         login: async function(){
-            let response = this.loginRequest;
+            let passportContext = await BridgeExtension.getPassportContext();
+
+            //The user verifies the payload and the auth request and gets details about the request
+            let message = await BridgeProtocol.Messaging.Auth.verifyPassportChallengeRequest(this.loginRequest);
+            console.log("Decrypted and Verified Auth Request:");
+            console.log(JSON.stringify(message));
+            
+            //TODO: This needs to be part of a selection process on what is requested, included, etc
+            var passportDetails = await BridgeProtocol.Services.Passport.getDetails(passportContext.passport, passportContext.passphrase, message.passportId);
+            console.log("Requesting Passport Info:");
+            console.log(JSON.stringify(passportDetails));
+
+            //Retrieve the requested claims
+            let claims = []; //await passportContext.passport.getDecryptedClaims(message.payload.claimTypes, passportContext.passphrase);
+            
+            //Get the requested blockchain addresses
+            let addresses = []; //passportContext.passport.getWalletAddresses(message.payload.networks);
+
             let sender = this.sender;
+            let response = await BridgeProtocol.Messaging.Auth.createPassportChallengeResponse(passportContext.passport, passportContext.passphrase, message.publicKey, message.payload.token, claims, addresses); 
             this.$emit('login', { sender, response });
         }
     },

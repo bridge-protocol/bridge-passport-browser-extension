@@ -10,7 +10,8 @@
         }
 
         get version(){
-            return "2.5.1";
+            var manifestData = chrome.runtime.getManifest();
+            return manifestData.version;
         }
 
         get passportVersion(){

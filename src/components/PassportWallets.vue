@@ -1,7 +1,7 @@
 <template>
 
 <v-container fill-height align-start>
-    <v-container class="mt-0 pt-0">
+    <v-container class="mt-0 pt-0 text-left">
         <h3 inset><v-icon class="mr-2">mdi-wallet</v-icon> My Blockchain Wallets</h3>
     </v-container>
     <v-container fill-height align-start>
@@ -22,7 +22,7 @@
             @click="walletSelected(wallet)"
             class="mb-2"
             >
-                <v-expansion-panel-header class="left-border-color-primary">
+                <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                     <v-row>
                         <v-col cols="auto"><v-img :src="wallet.src" height="40" width="40"></v-img></v-col>
                         <v-col cols="auto">

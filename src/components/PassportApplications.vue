@@ -1,6 +1,6 @@
 <template>
     <v-container fill-height align-start>
-        <v-container class="mt-0 pt-0">
+        <v-container class="mt-0 pt-0 text-left">
             <h3 inset><v-icon class="mr-2">mdi-shopping</v-icon> Bridge Marketplace Verification Requests</h3>
         </v-container>
         <v-container text-center v-if="!applicationsLoaded">
@@ -27,12 +27,12 @@
                     @click="appSelected(app)"
                     class="mb-2"
                     >
-                        <v-expansion-panel-header class="left-border-color-primary">
+                        <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                             <v-row>
                                 <v-col cols="auto"><v-img :src="app.src" height="40" width="40"></v-img></v-col>
                                 <v-col cols="auto">
-                                    <h3 class="mb-2" v-text="app.createdOn"></h3>
-                                    <div v-text="app.partnerName"></div>
+                                    <h3 class="mb-2" v-text="app.partnerName"></h3>
+                                    <div v-text="app.createdOn"></div>
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-header>
@@ -44,7 +44,7 @@
                             </v-row>
                             <v-row>
                                 <v-col cols="2">Link</v-col>
-                                <v-col cols="10"  class="text-break">
+                                <v-col cols="10"  class="text-break text-left">
                                     <a @click="openUrl(app.url)">{{app.url}}</a>
                                 </v-col>
                             </v-row>
@@ -54,7 +54,7 @@
                             </v-row>
                             <v-row>
                                 <v-col cols="2"><v-img :src="'/images/' + app.transactionNetwork.toLowerCase() + '-logo.png'" height="20" width="20"></v-img></v-col>
-                                <v-col cols="10" class="text-break caption">{{app.transactionId}}</v-col>
+                                <v-col cols="10" class="text-break text-left caption">{{app.transactionId}}</v-col>
                             </v-row>
                         </v-expansion-panel-content>
                     </v-expansion-panel>

@@ -1,6 +1,6 @@
 <template>
     <v-container fill-height align-start>
-        <v-container class="mt-0 pt-0">
+        <v-container class="text-left mt-0 pt-0">
             <h3 inset><v-icon class="mr-2">mdi-fingerprint</v-icon> My Digital Identity</h3>
         </v-container>
         <v-container text-center v-if="!passportLoaded">
@@ -12,7 +12,7 @@
         <v-container fill-height align-start text-center v-if="passportLoaded">
             <v-expansion-panels>
                 <v-expansion-panel class="mb-2">
-                    <v-expansion-panel-header class="left-border-color-primary">
+                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
@@ -50,7 +50,7 @@
                 :key="i"
                 class="mb-2"
                 >
-                    <v-expansion-panel-header class="left-border-color-primary">
+                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">

@@ -47,7 +47,9 @@
       clipped-left
       color="gradient"
     >
-      <v-toolbar-title><v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer"></v-img></v-toolbar-title>
+      <v-toolbar-title>
+          <v-img src="../../images/bridge-white.png" contain height="30" aspect="1" position="left" @click.stop="drawer = !drawer" @click="currentView = 'passportHome'"></v-img>
+      </v-toolbar-title>
 
       <v-spacer></v-spacer>
 
@@ -116,7 +118,7 @@
 
     <v-content>
       <v-container
-        class="fill-height"
+        class="fill-height justify-center text-center"
         fluid
       >
 
@@ -139,6 +141,14 @@
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
       <passport-applications v-if="isCurrentView('passportApplications')" @openUrl="openUrl"></passport-applications>
+
+      <!-- home view -->
+      <div v-if="isCurrentView('passportHome')" class="justify-center text-center pt-n6 mt-n6">
+          <div width="250">
+              <v-img src="../../images/bridge-passport.png" height="250" contain></v-img>
+          </div>
+          <div class="pt-3">{{passportId}}</div>
+      </div>
 
       </v-container>
     </v-content>
@@ -205,7 +215,7 @@
       openPassport: async function(){
         this.unlockDialog = false;
         this.openDialog = false;
-        this.currentView = "passportDetails";
+        this.currentView = "passportHome";
         let passportContext = await BridgeExtension.getPassportContext();
         this.passportLoaded = true;
         this.passportId = passportContext.passport.id;
@@ -245,11 +255,13 @@
         this.loginDialog = false;
 
         await BridgeExtension.sendLoginResponse(res.sender, res.response);
+        this.currentView = "passportHome";
       },
       closeImport: async function(){
         this.sender = null;
         this.request = null;
         this.claimsImportDialog = false;
+        this.currentView = "passportDetails";
       }
     },
     async created () {

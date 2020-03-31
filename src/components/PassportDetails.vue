@@ -23,8 +23,16 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
                         <v-divider></v-divider>
+                        <v-row class="mb-n4">
+                            <v-col cols="auto" class="text-left">Passport Version:</v-col>
+                            <v-col cols="auto" class="text-left">{{version}}</v-col>
+                        </v-row>
+                        <v-row class="mb-n4">
+                            <v-col cols="3" class="text-left">Passport Id:</v-col>
+                            <v-col cols="auto" class="text-left">{{passportId}}</v-col>
+                        </v-row>
                         <v-row>
-                            <v-col cols="auto" text-left>Public Key:</v-col>
+                            <v-col cols="auto" class="text-left mb-n3">Public Key:</v-col>
                         </v-row>
                         <v-row>
                             <v-col cols="auto" 
@@ -117,8 +125,8 @@ export default {
             if(passportContext.passport){
                 this.passportId = passportContext.passport.id;
                 this.publicKey = passportContext.passport.publicKey;
+                this.version = BridgeExtension.passportVersion;
             }
-
             this.passportLoaded = true;
         },
         claimSelected: async function(claim){
@@ -200,6 +208,7 @@ export default {
     data: function() {
         return {
             passportId: "",
+            version: null,
             passportLoaded: false,
             publicKey: "",
             lastSelectedClaim: "",

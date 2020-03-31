@@ -39,21 +39,21 @@
                         <v-expansion-panel-content class="left-border-color-primary">
                             <v-divider></v-divider>
                             <v-row>
-                                <v-col cols="2">Status</v-col>
+                                <v-col cols="2" class="text-left">Status</v-col>
                                 <v-col cols="auto">{{ app.status }}</v-col>
                             </v-row>
                             <v-row>
-                                <v-col cols="2">Link</v-col>
+                                <v-col cols="2" class="text-left">Link</v-col>
                                 <v-col cols="10"  class="text-break text-left">
                                     <a @click="openUrl(app.url)">{{app.url}}</a>
                                 </v-col>
                             </v-row>
                             <v-row>
-                                <v-col cols="2"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
+                                <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
                                 <v-col cols="auto">{{app.transactionFee}}</v-col>
                             </v-row>
                             <v-row>
-                                <v-col cols="2"><v-img :src="'/images/' + app.transactionNetwork.toLowerCase() + '-logo.png'" height="20" width="20"></v-img></v-col>
+                                <v-col cols="2" class="text-left"><v-img :src="'/images/' + app.transactionNetwork.toLowerCase() + '-logo.png'" height="20" width="20"></v-img></v-col>
                                 <v-col cols="10" class="text-break text-left caption">{{app.transactionId}}</v-col>
                             </v-row>
                         </v-expansion-panel-content>

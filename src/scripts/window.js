@@ -13,6 +13,11 @@
             return "2.5.1";
         }
 
+        get passportVersion(){
+            alert(BridgeProtocol.Constants.passportVersion);
+            return BridgeProtocol.Constants.passportVersion;
+        }
+
         async getPassportContext(){
             return {
                 passport: "123412412541251235",

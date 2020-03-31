@@ -149,6 +149,7 @@ export default {
 
             try{
                 success = await passport.open(passportContent, this.importPassword);
+                passport.version = BridgeExtension.passportVersion;
             }
             catch(err){
                 console.log(err.message);

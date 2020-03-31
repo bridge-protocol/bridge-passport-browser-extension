@@ -41,19 +41,40 @@
                     <div v-if="wallet.loaded">
                         <v-divider></v-divider>
                         <v-row>
-                            <v-col cols="auto">Balances</v-col>
+                            <v-col cols="auto" class="text-left">Address</v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="auto" class="align-start">
+                            <v-col cols="auto" class="text-left">
+                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left">{{wallet.address}}</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="auto" class="text-left">Balances</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="auto" class="align-start">
+                            <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="auto" class="text-left">Private Key</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="auto" class="text-center">
+                                <v-icon small class="mx-3">mdi-key</v-icon>
+                            </v-col>
+                            <v-col cols="10" class="text-left">
+                                <v-btn v-if="!wallet.unlocked" @click="showPrivateKey(wallet)" x-small color="secondary" :loading="unlocking">Show Private Key</v-btn>
+                                <div v-if="wallet.unlocked != null" class="text-break">{{wallet.privateKey}}</div>
+                            </v-col>
                         </v-row>
                     </div>
                 </v-expansion-panel-content>
@@ -103,7 +124,14 @@ export default {
                 this.refreshWallet(wallet);
             }
         },
+        showPrivateKey: async function(wallet){
+            this.unlocking = true;
+            let passportContext = await BridgeExtension.getPassportContext();
+            await wallet.unlock(passportContext.passphrase);
+            this.unlocking = false;          
+        },
         refreshWallet: async function(wallet){
+            wallet.unlocked = null;
             wallet.loaded = false;
             wallet.registered = false;
             wallet.brdgBalance = "0";
@@ -152,6 +180,7 @@ export default {
         return {
             passportId: "",
             lastSelectedWallet: "",
+            unlocking: false,
             wallets: []
         }
     },

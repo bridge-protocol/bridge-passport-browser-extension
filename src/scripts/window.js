@@ -179,6 +179,14 @@
             await this.sendMessageToTab(sender, message, true);
         }
 
+        async sendPaymentResponse(sender, response){
+            let message = {
+                action: 'sendBridgePaymentResponse',
+                paymentResponse: response
+            };
+            await this.sendMessageToTab(sender, message, true);
+        }
+
         async sendMessageToTab(tabId, message, focus) {
             window.browser.tabs.update(parseInt(tabId), { active: true, highlighted: true }, async function (tab) {
                 if(focus){

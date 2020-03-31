@@ -133,6 +133,9 @@
 
       <!-- login dialog -->
       <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login"></login-dialog>
+      
+      <!-- Payment dialog -->
+      <payment-dialog v-if="paymentDialog" :sender="sender" :request="request" @paymentSent="paymentSent"></payment-dialog>
 
       <!-- claims import dialog -->
       <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @close="closeImport"></claims-import-dialog>
@@ -171,6 +174,7 @@
   import OpenDialog from '../components/OpenDialog.vue';
   import UnlockDialog from '../components/UnlockDialog.vue';
   import LoginDialog from '../components/LoginDialog.vue';
+  import PaymentDialog from '../components/PaymentDialog.vue';
   import ClaimsImportDialog from '../components/ClaimsImportDialog.vue';
   import PassportDetails from '../components/PassportDetails.vue';
   import PassportWallets from '../components/PassportWallets.vue';
@@ -182,6 +186,7 @@
       OpenDialog,
       UnlockDialog,
       LoginDialog,
+      PaymentDialog,
       ClaimsImportDialog,
       PassportDetails,
       PassportWallets,
@@ -197,6 +202,7 @@
       unlockDialog: false,
       aboutDialog: false,
       loginDialog: false,
+      paymentDialog: false,
       claimsImportDialog: false,
       request: null,
       sender: null,
@@ -262,6 +268,13 @@
         this.request = null;
         this.claimsImportDialog = false;
         this.currentView = "passportDetails";
+      },
+      paymentSent: async function(res){
+        this.sender = null;
+        this.request = null;
+        this.paymentDialog = false;
+        await BridgeExtension.sendPaymentResponse(res.sender, res.response);
+        this.currentView = "passportHome";
       }
     },
     async created () {
@@ -289,6 +302,7 @@
               window.focus();
               app.sender = request.sender;
               app.request = request.paymentRequest;
+              app.paymentDialog = true;
           }
 
           if (request.action === "claimsImport") {
@@ -314,6 +328,7 @@
               window.focus();
               app.sender = request.sender;
               app.request = request.paymentRequest;
+              app.paymentDialog = true;
           }
       }
   }

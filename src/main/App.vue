@@ -51,9 +51,14 @@
       clipped-left
       color="gradient"
     >
-      <v-toolbar-title @click.stop="drawer = !drawer" link>
+      <v-toolbar-title>
         <v-row link>
-          <v-col cols="auto" link><v-icon>mdi-menu</v-icon></v-col>
+          <v-col cols="auto" link ><v-icon @click.stop="drawer = !drawer" link>mdi-menu</v-icon></v-col>
+          <v-col cols="auto" class="subtitle-1 mt-1">
+            <span v-if="isCurrentView('passportDetails')">My Digital Identity</span>
+            <span v-if="isCurrentView('passportWallets')">My Blockchain Wallets</span>
+            <span v-if="isCurrentView('passportApplications')">Bridge Marketplace</span>
+          </v-col>
         </v-row>
       </v-toolbar-title>
 

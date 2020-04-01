@@ -1,10 +1,5 @@
 <template>
-
-<v-container fill-height align-start>
-    <v-container class="mt-0 pt-0 text-left">
-        <h3 inset><v-icon class="mr-2">mdi-wallet</v-icon> My Blockchain Wallets</h3>
-    </v-container>
-    <v-container fill-height align-start>
+    <v-container fill-height align-start class="mx-0 my-0 px-0 py-0">
         <v-alert
             border="left"
             colored-border
@@ -15,12 +10,11 @@
             >
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
-        <v-expansion-panels>
+        <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
             v-for="(wallet,i) in wallets"
             :key="wallet.address"
             @click="walletSelected(wallet)"
-            class="mb-2"
             >
                 <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                     <v-row>
@@ -29,7 +23,7 @@
                             <div class="my-1 title-2" v-text="wallet.networkName"></div>
                             <div class="caption">{{wallet.address}}</div>
                         </v-col>
-                    <v-row>
+                <v-row>
                 </v-expansion-panel-header>
                 <v-expansion-panel-content class="left-border-color-primary">
                     <div class="text-center" v-if="!wallet.loaded">
@@ -84,37 +78,31 @@
                     </div>
                 </v-expansion-panel-content>
             </v-expansion-panel>
+            <v-expansion-panel v-if="wallets.length < 2" flat class="align-start mx-0 mt-1" key="add-wallet">
+                <v-expansion-panel-header>
+                    Add Wallet
+                </v-expansion-panel-header>
+                <v-expansion-panel-content>
+                    <p class="text-left">
+                        If you have an existing wallet you would like to include in your passport, provide the private key below.  If you want to generate a new wallet, simply leave the field blank.
+                    </p>
+                    <v-row dense v-if="!neoWallet">
+                        <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
+                        <v-col cols="10">
+                        <v-text-field v-model="neoPrivateKey" color="secondary" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-row dense v-if="!ethWallet">
+                        <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
+                        <v-col cols="10">
+                        <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-btn text @click="addWallet();" class="text-right" :loading="adding">Add Wallet</v-btn>
+                </v-expansion-panel-content>
+            </v-expansion-panel>
         </v-expansion-panels>
-        <v-container fill-height align-start class="px-0 py-0">
-            <v-expansion-panels v-if="wallets.length < 2" flat class="align-start mx-0 my-0">
-                <v-expansion-panel key="add-wallet">
-                    <v-expansion-panel-header>
-                        Add Wallet
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                        <p class="text-left">
-                            If you have an existing wallet you would like to include in your passport, provide the private key below.  If you want to generate a new wallet, simply leave the field blank.
-                        </p>
-                        <v-row dense v-if="!neoWallet">
-                            <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
-                            <v-col cols="10">
-                            <v-text-field v-model="neoPrivateKey" color="secondary" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
-                            </v-col>
-                        </v-row>
-                        <v-row dense v-if="!ethWallet">
-                            <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
-                            <v-col cols="10">
-                            <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
-                            </v-col>
-                        </v-row>
-                        <v-btn text @click="addWallet();" class="text-right" :loading="adding">Add Wallet</v-btn>
-                    </v-expansion-panel-content>
-                </v-expansion-panel>
-            </v-expansion-panels>
-        </v-container>
     </v-container>
-</v-container>
-
 </template>
 
 <script>
@@ -214,6 +202,7 @@ export default {
         },
         refreshWallets: async function()
         {
+            this.refreshing = true;
             let passportContext = await BridgeExtension.getPassportContext();
             if(passportContext){
                 this.passportId = passportContext.passport.id;
@@ -237,6 +226,7 @@ export default {
                     this.wallets = wallets;
                 }
             }
+            this.refreshing = false;
         },
         walletSelected: async function(wallet){
             if(this.lastSelectedWallet == wallet.address){
@@ -308,6 +298,7 @@ export default {
             ethWallet: null,
             neoPrivateKey: null,
             ethPrivateKey: null,
+            refreshing: true,
             adding: false,
             removing: false,
             wallets: []

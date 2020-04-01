@@ -1,15 +1,23 @@
 <template>
-    <v-container fill-height align-start>
-        <v-container class="mt-0 pt-0 text-left">
-            <h3 inset><v-icon class="mr-2">mdi-shopping</v-icon> Bridge Marketplace Verification Requests</h3>
-        </v-container>
-        <v-container text-center v-if="!applicationsLoaded">
+    <v-container fill-height align-start class="mx-0 my-0 px-0 py-0">
+        <v-container v-if="refreshing" class="mx-0 my-0 px-0 py-0">
             <v-progress-circular
                 indeterminate
                 color="secondary"
             ></v-progress-circular>
         </v-container>
-        <v-container fill-height align-start v-if="applicationsLoaded">
+        <v-container fill-height align-start text-left v-if="!refreshing" class="mt-0 my-0 px-0 py-0">
+            <v-btn
+                absolute
+                dark
+                fab
+                top 
+                right
+                color="accent"
+                class="mt-8 mr-n3"
+                >
+                <v-icon>mdi-plus</v-icon>
+            </v-btn>
             <v-alert
                 border="left"
                 colored-border
@@ -20,14 +28,12 @@
                 >
                 No Bridge Marketplace verification requests found.  Create a verification request to get started.
             </v-alert>
-            <v-expansion-panels>
+            <v-expansion-panels class="mx-0 my-0 px-0 py-0">
                     <v-expansion-panel
                     v-for="(app,i) in applications"
                     :key="app.id"
-                    @click="appSelected(app)"
-                    class="mb-2"
                     >
-                        <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                        <v-expansion-panel-header class="left-border-color-primary">
                             <v-row>
                                 <v-col cols="auto"><v-img :src="app.src" height="40" width="40"></v-img></v-col>
                                 <v-col cols="auto">
@@ -68,7 +74,6 @@
             </v-expansion-panels>
         </v-container>
     </v-container>
-
 </template>
 
 <script>
@@ -77,13 +82,13 @@ export default {
     data: function() {
         return {
             passportId: "",
-            applicationsLoaded: false,
+            refreshing: true,
             applications: []
         }
     },
     methods: {
         init: async function(){
-            this.applicationsLoaded = false;
+            this.refreshing = true;
             this.applications = [];
 
             let passportContext = await BridgeExtension.getPassportContext();
@@ -118,12 +123,9 @@ export default {
                 }
 
                 this.applications = applications;
-                this.applicationsLoaded = true;
+                this.refreshing = false;
             }
-        },
-        appSelected: function(app){
-            
-        },                  
+        },                
         openUrl: function(url){
             this.$emit('openUrl', url);
         }

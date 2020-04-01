@@ -1,17 +1,80 @@
 <template>
-    <v-dialog v-model="visible" persistent max-width="600">
-        <v-card>
-            <v-card-title class="title">New Marketplace Request</v-card-title>
-            <v-card-text>
+    <v-overlay :opacity=".8">
+        <v-dialog v-model="visible" persistent max-width="600">
+            <v-container v-if="loading" fill-height>
+                <v-progress-circular
+                    indeterminate
+                    color="secondary"
+                ></v-progress-circular>
+            </v-container>
+            <v-card v-if="!loading">
+                <v-card-title class="title">New Marketplace Request</v-card-title>
+                <v-card-text>
+                    <p>
+                        Choose a marketplace partner to send a request to verify your personal information and add claims to your digital identity.
+                    </p>
+                    <v-row>
+                        <v-col class="d-flex" cols="12">
+                            <v-select
+                            :items="partners"
+                            label="Marketplace Partner"
+                            outlined
+                            item-text="name"
+                            item-value="id"
+                            color="secondary"
+                            @change="partnerSelected"
+                            class="mb-0"
+                            ></v-select>
+                        </v-col>
+                    </v-row>
 
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn text @click="close()">Cancel</v-btn>
-                <v-btn text @click="create()">Create Request</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+                    <div v-if="selectedPartner != null" class="mt-n10">
+                        <v-subheader class="pl-0 ml-0 caption">Partner Info</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
+                        <v-row >
+                            <v-col cols="3">
+                                Name
+                            </v-col>
+                            <v-col cols="auto">
+                                {{selectedPartner.name}}
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="3">
+                                Info Link
+                            </v-col>
+                            <v-col cols="auto">
+                                <a @click="openUrl(selectedPartner.infoUrl)">{{selectedPartner.infoUrl}}</a>
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="3">
+                                Network Fee
+                            </v-col>
+                            <v-col cols="auto">
+                                {{networkFee}} BRDG
+                            </v-col>
+                        </v-row>
+                        <v-alert
+                            border="left"
+                            colored-border
+                            type="info"
+                            elevation="0"
+                            class="text-left mt-2 caption"
+                            v-if="selectedPartner != null"
+                            >
+                            The Bridge Network fee is non-refundable and does not include additional fees for service that may be required by the selected Bridge Marketplace partner.  Some Bridge Marketplace partners are third party providers that have no affiliation with Bridge Protocol Corporation and may have independent terms, conditions, and fees for service.
+                        </v-alert>
+                    </div>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text @click="close()">Cancel</v-btn>
+                    <v-btn text @click="create()">Create Request</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+    </v-overlay>
 </template>
 
 <script>
@@ -19,7 +82,11 @@ export default {
     name: 'application-create-dialog',
     data: function () {
         return {
-            visible: true
+            visible: true,
+            loading: false,
+            selectedPartner: null,
+            networkFee: 0,
+            partners: []
         }
     },
     methods:{
@@ -29,9 +96,22 @@ export default {
         create: function(){
             this.$emit('created', true);
         },
-        openPage: function(url){
+        partnerSelected: async function(partnerId){
+            if(!partnerId)
+                return;
+
+           this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
+        },
+        openUrl: function(url){
             this.$emit('openUrl', url);
         }
+    },
+    created: async function(){
+        this.loading = true;
+        let passportContext = await BridgeExtension.getPassportContext();
+        this.partners = await BridgeProtocol.Services.Partner.getAllPartners();
+        this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
+        this.loading = false;
     }
 };
 </script>

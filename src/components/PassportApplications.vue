@@ -76,7 +76,7 @@
                 </v-expansion-panels>
             </v-container>
         </v-container>
-        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="init"></application-create-dialog>
+        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="init" @openUrl="openUrl"></application-create-dialog>
     </v-container>
 </template>
 
@@ -91,7 +91,7 @@ export default {
         return {
             passportId: "",
             refreshing: true,
-            mainContainerHeight: 600,
+            mainContainerHeight: 690,
             applicationCreateDialog: false,
             applications: []
         }

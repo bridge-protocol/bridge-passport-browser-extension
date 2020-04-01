@@ -1,103 +1,105 @@
 <template>
-    <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0">
+    <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
         <v-container v-if="refreshing" class="mx-0 my-0 px-0 py-0">
             <v-progress-circular
                 indeterminate
                 color="secondary"
             ></v-progress-circular>
         </v-container>
-        <v-expansion-panels v-if="!refreshing">
-            <v-expansion-panel>
-                <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
-                    <v-row>
-                        <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
-                        <v-col cols="auto">
-                            <div class="mb-1 title-2">Id</div>
-                            <div class="caption" v-text="passportId"></div>
-                        </v-col>
-                    <v-row>
-                </v-expansion-panel-header>
-                <v-expansion-panel-content class="left-border-color-primary">
-                    <v-subheader class="pl-0 ml-0 caption">Passport Details</v-subheader>
-                    <v-divider class="mb-2"></v-divider>
-                    <v-row class="mb-n4">
-                        <v-col cols="2" class="text-left">Version:</v-col>
-                        <v-col cols="auto" class="text-left">{{version}}</v-col>
-                    </v-row>
-                    <v-row class="mb-n4">
-                        <v-col cols="2" class="text-left">Id:</v-col>
-                        <v-col cols="auto" class="text-left">{{passportId}}</v-col>
-                    </v-row>
-                </v-expansion-panel-content>
-            </v-expansion-panel>
-            <v-alert
-                border="left"
-                colored-border
-                type="info"
-                elevation="2"
-                class="text-left mt-2"
-                v-if="claims.length == 0"
-                >
-                No digital identity verified claims found.  To add verified claims, find a verification partner on the Bridge Marketplace.
-            </v-alert>
-            <v-expansion-panel
-            v-for="(claim,i) in claims"
-            :key="i"
-            @click="claimSelected(claim)"
-            >
-                <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
-                    <v-row>
-                        <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
-                        <v-col cols="auto">
-                            <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
-                            <div class="caption" v-text="claim.claimValue"></div>
-                        </v-col>
-                    <v-row>
-                </v-expansion-panel-header>
-                <v-expansion-panel-content class="left-border-color-primary">
-                    <div class="text-center" v-if="!claim.loaded">
-                        <v-progress-circular
-                            indeterminate
-                            color="secondary"
-                        ></v-progress-circular>
-                    </div>
-                    <div v-if="claim.loaded">
-                        <v-subheader class="pl-0 ml-0 caption">Claim Details</v-subheader>
+        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+            <v-expansion-panels>
+                <v-expansion-panel>
+                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                        <v-row>
+                            <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
+                            <v-col cols="auto">
+                                <div class="mb-1 title-2">Id</div>
+                                <div class="caption" v-text="passportId"></div>
+                            </v-col>
+                        <v-row>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content class="left-border-color-primary">
+                        <v-subheader class="pl-0 ml-0 caption">Passport Details</v-subheader>
                         <v-divider class="mb-2"></v-divider>
-                        <v-row dense>
-                            <v-col cols="2" class="text-left">Verified:</v-col>
-                            <v-col cols="auto">{{claim.verifiedOn}}</v-col>
+                        <v-row class="mb-n4">
+                            <v-col cols="2" class="text-left">Version:</v-col>
+                            <v-col cols="auto" class="text-left">{{version}}</v-col>
                         </v-row>
-                        <v-row dense>
-                            <v-col cols="2" class="text-left">Expires:</v-col>
-                            <v-col cols="auto">{{claim.expiresOn}}</v-col>
+                        <v-row class="mb-n4">
+                            <v-col cols="2" class="text-left">Id:</v-col>
+                            <v-col cols="auto" class="text-left">{{passportId}}</v-col>
                         </v-row>
-                        <v-row dense>
-                            <v-col cols="2" class="text-left">Issuer:</v-col>
-                            <v-col cols="auto">{{claim.signedByName}}</v-col>
-                        </v-row>
-                        <div v-if="claim.walletExists">
-                            <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
-                            <v-divider class="mb-2"></v-divider>
-                            <v-row dense v-if="neoWallet">
-                                <v-col cols="auto" class="text-left">
-                                    <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
-                                </v-col>
-                                <v-col cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</v-col>
-                                <v-col cols="auto" v-if="!claim.neoClaim">Not Published</v-col>
-                            </v-row>
-                            <v-row dense v-if="ethWallet">
-                                <v-col cols="auto" class="text-left">
-                                    <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
-                                </v-col>
-                                <v-col cols="auto" v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</v-col>
-                                <v-col cols="auto" v-if="!claim.ethClaim">Not Published</v-col>
-                            </v-row>
+                    </v-expansion-panel-content>
+                </v-expansion-panel>
+                <v-alert
+                    border="left"
+                    colored-border
+                    type="info"
+                    elevation="2"
+                    class="text-left mt-2"
+                    v-if="claims.length == 0"
+                    >
+                    No digital identity verified claims found.  To add verified claims, find a verification partner on the Bridge Marketplace.
+                </v-alert>
+                <v-expansion-panel
+                v-for="(claim,i) in claims"
+                :key="i"
+                @click="claimSelected(claim)"
+                >
+                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                        <v-row>
+                            <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
+                            <v-col cols="auto">
+                                <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
+                                <div class="caption" v-text="claim.claimValue"></div>
+                            </v-col>
+                        <v-row>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content class="left-border-color-primary">
+                        <div class="text-center" v-if="!claim.loaded">
+                            <v-progress-circular
+                                indeterminate
+                                color="secondary"
+                            ></v-progress-circular>
                         </div>
-                    </div>
-                </v-expansion-panel-content>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                        <div v-if="claim.loaded">
+                            <v-subheader class="pl-0 ml-0 caption">Claim Details</v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-row dense>
+                                <v-col cols="2" class="text-left">Verified:</v-col>
+                                <v-col cols="auto">{{claim.verifiedOn}}</v-col>
+                            </v-row>
+                            <v-row dense>
+                                <v-col cols="2" class="text-left">Expires:</v-col>
+                                <v-col cols="auto">{{claim.expiresOn}}</v-col>
+                            </v-row>
+                            <v-row dense>
+                                <v-col cols="2" class="text-left">Issuer:</v-col>
+                                <v-col cols="auto">{{claim.signedByName}}</v-col>
+                            </v-row>
+                            <div v-if="claim.walletExists">
+                                <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
+                                <v-divider class="mb-2"></v-divider>
+                                <v-row dense v-if="neoWallet">
+                                    <v-col cols="auto" class="text-left">
+                                        <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                                    </v-col>
+                                    <v-col cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</v-col>
+                                    <v-col cols="auto" v-if="!claim.neoClaim">Not Published</v-col>
+                                </v-row>
+                                <v-row dense v-if="ethWallet">
+                                    <v-col cols="auto" class="text-left">
+                                        <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
+                                    </v-col>
+                                    <v-col cols="auto" v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</v-col>
+                                    <v-col cols="auto" v-if="!claim.ethClaim">Not Published</v-col>
+                                </v-row>
+                            </div>
+                        </div>
+                    </v-expansion-panel-content>
+                </v-expansion-panel>
+            </v-expansion-panels>
+        </v-container>
     </v-container>
 </template>
 
@@ -167,6 +169,7 @@ export default {
             this.claims = [];
             let passportContext = await BridgeExtension.getPassportContext();
             let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
+
             for(let i=0; i<decryptedClaims.length; i++)
             {   
                 let created = new Date(decryptedClaims[i].createdOn * 1000); 
@@ -200,6 +203,7 @@ export default {
     },
     data: function() {
         return {
+            mainContainerHeight: 690,
             passportId: "",
             version: null,
             publicKey: "",
@@ -213,6 +217,7 @@ export default {
     created: async function(){
         await this.init();
         await this.refreshClaims();
+        this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
     }
 };
 </script>

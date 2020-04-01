@@ -119,6 +119,22 @@
             return { passport, passphrase };
         }
 
+        async savePassportToSyncStorage(passport){
+            return await browser.storage.sync.set({ 'passport': passport });
+        }
+        
+        async loadPassportFromSyncStorage(){
+            var res = await browser.storage.sync.get('passport');
+            if (res && res.passport)
+              return JSON.stringify(res.passport);
+          
+            return null;
+        }
+
+        async removePassportFromSyncStorage() {
+            return await browser.storage.sync.remove('passport');
+        }
+        
         async savePassportToBrowserStorage(passport) {
             return await browser.storage.local.set({ 'passport': passport });
         }

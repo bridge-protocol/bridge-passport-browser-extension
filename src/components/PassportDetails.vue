@@ -56,12 +56,6 @@
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
-                        <div class="text-center" v-if="!claim.loaded">
-                            <v-progress-circular
-                                indeterminate
-                                color="secondary"
-                            ></v-progress-circular>
-                        </div>
                         <div v-if="claim.loaded">
                             <v-subheader class="pl-0 ml-0 caption">Claim Details</v-subheader>
                             <v-divider class="mb-2"></v-divider>
@@ -77,22 +71,42 @@
                                 <v-col cols="2" class="text-left">Issuer:</v-col>
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
-                            <div v-if="claim.walletExists">
+                            <div v-if="neoWallet != null || ethWallet != null">
                                 <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
                                 <v-divider class="mb-2"></v-divider>
-                                <v-row dense v-if="neoWallet">
+                                <v-row dense v-if="neoWallet != null">
                                     <v-col cols="auto" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</v-col>
-                                    <v-col cols="auto" v-if="!claim.neoClaim">Not Published</v-col>
+                                    <v-col cols="auto" v-if="!claim.loading">
+                                        <span cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</span>
+                                        <span cols="auto" v-if="!claim.neoClaim">Not Published</span>
+                                    </v-col>
+                                    <v-col cols="auto" v-if="claim.loading">
+                                        <v-progress-circular
+                                            indeterminate
+                                            color="secondary"
+                                            size="16"
+                                            width="2"
+                                        ></v-progress-circular>
+                                    </v-col>
                                 </v-row>
-                                <v-row dense v-if="ethWallet">
+                                <v-row dense v-if="ethWallet != null">
                                     <v-col cols="auto" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</v-col>
-                                    <v-col cols="auto" v-if="!claim.ethClaim">Not Published</v-col>
+                                    <v-col cols="auto" v-if="!claim.loading">
+                                        <span v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</span>
+                                        <span cols="auto" v-if="!claim.ethClaim">Not Published</span>
+                                    </v-col>
+                                    <v-col cols="auto" v-if="claim.loading">
+                                        <v-progress-circular
+                                            indeterminate
+                                            color="secondary"
+                                            size="16"
+                                            width="2"
+                                        ></v-progress-circular>
+                                    </v-col>
                                 </v-row>
                             </div>
                         </div>
@@ -120,8 +134,8 @@ export default {
                 this.version = BridgeExtension.passportVersion;
             }
 
-            this.neoWallet = passportContext.passport.getWalletForNetwork("neo") != null;
-            this.ethWallet = passportContext.passport.getWalletForNetwork("eth") != null;
+            this.neoWallet = passportContext.passport.getWalletForNetwork("neo");
+            this.ethWallet = passportContext.passport.getWalletForNetwork("eth");
             this.refreshing = false;
         },
         claimSelected: async function(claim){
@@ -130,38 +144,38 @@ export default {
             }
             else{
                 this.lastSelectedClaim = claim.claimTypeId;
+                claim.loaded = true;
                 this.refreshClaim(claim);
             }
         },
         refreshClaim: async function(claim){
-            claim.loaded = false;
+            claim.loading = true;
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
             this.claims.pop();
 
+            let passportContext = await BridgeExtension.getPassportContext();
             try
             {
-                let passportContext = await BridgeExtension.getPassportContext();
-                let neoWallet = passportContext.passport.getWalletForNetwork("neo");
-                let ethWallet = passportContext.passport.getWalletForNetwork("eth");
-                if(neoWallet){
-                    claim.walletExists = true;
-                    claim.neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(neoWallet.network, claim.claimTypeId, neoWallet.address);
+                if(this.neoWallet){
+                    let neoWallet = passportContext.passport.getWalletForNetwork("neo");
+                    claim.neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.neoWallet.network, claim.claimTypeId, this.neoWallet.address);
                 }
-                if(ethWallet){
-                    claim.walletExists = true;
-                    claim.ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(ethWallet.network, claim.claimTypeId, ethWallet.address);
+                if(this.ethWallet){
+                    let ethWallet = passportContext.passport.getWalletForNetwork("eth");
+                    claim.ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
                 }  
             }
             catch(err){
                 alert(err.message);
             }
-            claim.loaded = true;
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
             this.claims.pop();
+
+            claim.loading = false;
         },
         refreshClaims: async function(){
             this.refreshing = true;
@@ -208,8 +222,8 @@ export default {
             version: null,
             publicKey: "",
             lastSelectedClaim: "",
-            neoWallet: false,
-            ethWallet: false,
+            neoWallet: null,
+            ethWallet: null,
             refreshing: true,
             claims: []
         }

@@ -10,6 +10,19 @@
             >
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
+        <v-btn
+            absolute
+            dark
+            fab
+            top 
+            right
+            color="accent"
+            class="mt-8 mr-n3"
+            @click="addDialog = true"
+            v-if="wallets.length < 2"
+        >
+            <v-icon link @click="">mdi-plus</v-icon>
+        </v-btn>
         <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
             v-for="(wallet,i) in wallets"
@@ -23,7 +36,7 @@
                             <div class="my-1 title-2" v-text="wallet.networkName"></div>
                             <div class="caption">{{wallet.address}}</div>
                         </v-col>
-                <v-row>
+                    <v-row>
                 </v-expansion-panel-header>
                 <v-expansion-panel-content class="left-border-color-primary">
                     <div class="text-center" v-if="!wallet.loaded">
@@ -78,11 +91,11 @@
                     </div>
                 </v-expansion-panel-content>
             </v-expansion-panel>
-            <v-expansion-panel v-if="wallets.length < 2" flat class="align-start mx-0 mt-1" key="add-wallet">
-                <v-expansion-panel-header>
-                    Add Wallet
-                </v-expansion-panel-header>
-                <v-expansion-panel-content>
+        </v-expansion-panels>
+        <v-dialog v-model="addDialog" persistent max-width="600px">
+            <v-card>
+                <v-card-title class="title">Add Blockchain Wallet</v-card-title>
+                <v-card-text>
                     <p class="text-left">
                         If you have an existing wallet you would like to include in your passport, provide the private key below.  If you want to generate a new wallet, simply leave the field blank.
                     </p>
@@ -98,10 +111,23 @@
                         <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
-                    <v-btn text @click="addWallet();" class="text-right" :loading="adding">Add Wallet</v-btn>
-                </v-expansion-panel-content>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <div v-if="!adding">
+                        <v-btn text @click="addDialog = false" text-right>Cancel</v-btn>
+                        <v-btn text @click="adding = true, addWallet()" text-right>Add Wallet</v-btn>
+                    </div>
+                    <div v-if="adding" text-right>
+                        <v-progress-circular
+                        indeterminate
+                        color="secondary"
+                        class="mr-2"
+                        ></v-progress-circular>
+                    </div>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -140,6 +166,7 @@ export default {
             }
             
             this.adding = false;
+            this.addDialog = false;
             await this.refreshWallets();
         },
         removeWallet: async function(wallet){
@@ -299,6 +326,7 @@ export default {
             neoPrivateKey: null,
             ethPrivateKey: null,
             refreshing: true,
+            addDialog: false,
             adding: false,
             removing: false,
             wallets: []

@@ -6,7 +6,7 @@
                 color="secondary"
             ></v-progress-circular>
         </v-container>
-        <v-container fill-height align-start text-left v-if="!refreshing" class="mt-0 my-0 px-0 py-0">
+        <v-container fill-height align-start text-left v-if="!refreshing" class="mt-0 my-0 px-0 py-0" ref="mainContainer">
             <v-btn
                 absolute
                 dark
@@ -15,8 +15,9 @@
                 right
                 color="accent"
                 class="mt-8 mr-n3"
-                >
-                <v-icon>mdi-plus</v-icon>
+                @click="applicationCreateDialog = true"
+            >
+                <v-icon link @click="">mdi-plus</v-icon>
             </v-btn>
             <v-alert
                 border="left"
@@ -28,7 +29,8 @@
                 >
                 No Bridge Marketplace verification requests found.  Create a verification request to get started.
             </v-alert>
-            <v-expansion-panels class="mx-0 my-0 px-0 py-0">
+            <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+                <v-expansion-panels>
                     <v-expansion-panel
                     v-for="(app,i) in applications"
                     :key="app.id"
@@ -71,23 +73,32 @@
                             </v-row>
                         </v-expansion-panel-content>
                     </v-expansion-panel>
-            </v-expansion-panels>
+                </v-expansion-panels>
+            </v-container>
         </v-container>
+        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="init"></application-create-dialog>
     </v-container>
 </template>
 
 <script>
+import ApplicationCreateDialog from './PassportApplicationsCreateDialog.vue';
 export default {
     name: 'passport-applications',
+    components: {
+      ApplicationCreateDialog
+    },
     data: function() {
         return {
             passportId: "",
             refreshing: true,
+            mainContainerHeight: 600,
+            applicationCreateDialog: false,
             applications: []
         }
     },
     methods: {
         init: async function(){
+            this.applicationCreateDialog = false;
             this.refreshing = true;
             this.applications = [];
 
@@ -132,9 +143,10 @@ export default {
     },
     created: async function(){
         await this.init();
+        //Update the rendered height
+        this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
     }
 };
-
 
 function makeStringReadable(str) {
 	let camelMatch = /([A-Z])/g;

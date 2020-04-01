@@ -32,7 +32,7 @@
             <v-icon>mdi-shopping</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Bridge Marketplace</v-list-item-title>
+            <v-list-item-title>My Marketplace Requests</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item color="red" link @click="openUrl('https://bridgeprotocol.azurewebsites.net/')">
@@ -40,7 +40,7 @@
             <v-icon>mdi-compass</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Bridge Network Explorer</v-list-item-title>
+            <v-list-item-title>Network Explorer</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -55,9 +55,9 @@
         <v-row link>
           <v-col cols="auto" link ><v-icon @click.stop="drawer = !drawer" link>mdi-menu</v-icon></v-col>
           <v-col cols="auto" class="subtitle-1 mt-1">
-            <span v-if="isCurrentView('passportDetails')">My Digital Identity</span>
-            <span v-if="isCurrentView('passportWallets')">My Blockchain Wallets</span>
-            <span v-if="isCurrentView('passportApplications')">Bridge Marketplace</span>
+            <span v-if="isCurrentView('passportDetails')">Digital Identity</span>
+            <span v-if="isCurrentView('passportWallets')">Blockchain Wallets</span>
+            <span v-if="isCurrentView('passportApplications')">Marketplace Requests</span>
           </v-col>
         </v-row>
       </v-toolbar-title>

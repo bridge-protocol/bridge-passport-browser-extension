@@ -94,7 +94,12 @@
         </v-expansion-panels>
         <v-dialog v-model="addDialog" persistent max-width="600px">
             <v-card>
-                <v-card-title class="title">Add Blockchain Wallet</v-card-title>
+                <v-card-title class="title">
+                    <v-row>
+                        <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                        <v-col cols="10">Add Blockchain Wallet</v-col>
+                    </v-row>
+                </v-card-title>
                 <v-card-text>
                     <p class="text-left">
                         If you have an existing wallet you would like to include in your passport, provide the private key below.  If you want to generate a new wallet, simply leave the field blank.

@@ -58,7 +58,7 @@
                             <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
-                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG  <v-btn v-if="!wallet.unlocked" x-small class="secondary ml-2" @click="showTransactions(wallet)">View Transactions</v-btn></v-col>
                         </v-row>
 
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -133,12 +133,17 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false, transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
     </v-container>
 </template>
 
 <script>
+import TransactionDialog from './PassportWalletsTransactionDialog.vue';
 export default {
     name: 'passport-wallets',
+    components:{
+        TransactionDialog
+    },
     methods: {
         addWallet: async function(){
             this.adding = true;
@@ -275,6 +280,10 @@ export default {
             await wallet.unlock(passportContext.passphrase);
             this.unlocking = false;          
         },
+        showTransactions: function(wallet){
+            this.transactionWallet = wallet;
+            this.transactionDialog = true;
+        },
         refreshWallet: async function(wallet){
             wallet.unlocked = null;
             wallet.loaded = false;
@@ -319,7 +328,10 @@ export default {
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.wallets.push({});
             this.wallets.pop();
-        }   
+        },
+        openUrl: function(url){
+            this.$emit('openUrl', url);
+        }
     },
     data: function() {
         return {
@@ -334,6 +346,8 @@ export default {
             addDialog: false,
             adding: false,
             removing: false,
+            transactionDialog: false,
+            transactionWallet: null,
             wallets: []
         }
     },

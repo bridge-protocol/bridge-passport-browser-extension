@@ -97,6 +97,20 @@ export default {
             this.$emit('close', true);
         },
         create: function(){
+            //Check and see if the passport is registered
+
+            //Register the passport
+
+            //Create the application via API
+
+            //Send a blockchain fee payment
+
+            //Send the fee payment info back to the application API
+
+            //Relay to the partner
+
+            //Redirect / open the partner link?
+
             this.$emit('created', true);
         },
         partnerSelected: async function(partnerId){

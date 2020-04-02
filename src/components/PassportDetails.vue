@@ -79,8 +79,17 @@
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
                                     <v-col cols="auto" v-if="!claim.loading">
-                                        <span cols="auto" v-if="claim.neoClaim">{{JSON.stringify(claim.neoClaim)}}</span>
-                                        <span cols="auto" v-if="!claim.neoClaim">Not Published</span>
+                                        <v-row v-if="claim.neoClaim" class="mt-n3">
+                                            <v-col cols="auto">Date</v-col>
+                                            <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
+                                            <v-col cols="auto" class="ml-2">Value</v-col>
+                                            <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
+                                            <v-col cols="auto"><v-btn @click="unpublishClaim(claim.claimTypeId, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Unpublish</v-btn></v-col>
+                                        </v-row>
+                                        <span cols="auto" v-if="!claim.neoClaim">
+                                            Not Published
+                                            <v-btn @click="publishClaim(claim, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Publish</v-btn>
+                                        </span>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.loading">
                                         <v-progress-circular
@@ -96,10 +105,21 @@
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
                                     <v-col cols="auto" v-if="!claim.loading">
-                                        <span v-if="claim.ethClaim">{{JSON.stringify(claim.ethClaim)}}</span>
-                                        <span cols="auto" v-if="!claim.ethClaim">Not Published</span>
+                                        <span v-if="claim.ethClaim">
+                                           <v-row v-if="claim.neoClaim" class="mt-n3">
+                                                <v-col cols="auto">Date</v-col>
+                                                <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
+                                                <v-col cols="auto" class="ml-2">Value</v-col>
+                                                <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
+                                                <v-col cols="auto"><v-btn @click="unpublishClaim(claim.claimTypeId, 'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Unpublish</v-btn></v-col>
+                                            </v-row>
+                                        </span>
+                                        <span cols="auto" v-if="!claim.ethClaim">
+                                            Not Published
+                                            <v-btn @click="publishClaim(claim,'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Publish</v-btn>
+                                        </span>
                                     </v-col>
-                                    <v-col cols="auto" v-if="claim.loading">
+                                    <v-col cols="auto" v-if="claim.loading || ethLoading">
                                         <v-progress-circular
                                             indeterminate
                                             color="secondary"
@@ -213,6 +233,64 @@ export default {
 
             this.claims = decryptedClaims;
             this.refreshing = false;
+        },
+        async publishClaim(claim, network){
+            if(network.toLowerCase() === "neo")
+                this.neoWait = true;
+            else if(network.toLowerCase() === "eth")
+                this.ethWait = true;
+
+            let passportContext = await BridgeExtension.getPassportContext();
+            let wallet = passportContext.passport.getWalletForNetwork(network);
+            await wallet.unlock(passportContext.passphrase);
+
+            try{
+                //Check and see if it's published
+                console.log("Verifying passport is published");
+                let publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+                //Make sure the passport is published / registered
+                if(!publish)
+                {
+                    console.log("Passport not published, publishing");
+                    await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport);
+                    publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+                    if(!publish)
+                    {
+                        alert("Could not publish passport.");
+                        return;
+                    }
+                }
+
+                console.log("Publishing claim");
+                await BridgeProtocol.Services.Blockchain.addClaim(passportContext.passport, passportContext.passphrase, wallet, claim, false);
+                let res = await BridgeProtocol.Services.Blockchain.getClaim(wallet.network, wallet.address, claim.claimTypeId.toString());
+                this.refreshClaims();
+            }
+            catch(err){
+                console.log("Unable to publish claim: " + err);
+            }
+
+            this.neoWait = false;
+            this.ethWait = false;
+        },
+        getDate(date){
+            date = new Date(date * 1000); 
+            return date.toLocaleDateString();
+        },
+        async unpublishClaim(claimTypeId, network){
+            if(network.toLowerCase() === "neo")
+                this.neoWait = true;
+            else if(network.toLowerCase() === "eth")
+                this.ethWait = true;
+
+            let passportContext = await BridgeExtension.getPassportContext();
+            let wallet = passportContext.passport.getWalletForNetwork(network);
+            await wallet.unlock(passportContext.passphrase);
+            await BridgeProtocol.Services.Blockchain.removeClaim(wallet, claimTypeId);
+            this.refreshClaims();
+
+            this.neoWait = false;
+            this.ethWait = false;
         }
     },
     data: function() {
@@ -224,6 +302,8 @@ export default {
             lastSelectedClaim: "",
             neoWallet: null,
             ethWallet: null,
+            neoWait: false,
+            ethWait: false,
             refreshing: true,
             claims: []
         }

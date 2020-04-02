@@ -84,7 +84,7 @@
                                             <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
                                             <v-col cols="auto" class="ml-2">Value</v-col>
                                             <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
-                                            <v-col cols="auto"><v-btn @click="unpublishClaim(claim.claimTypeId, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Unpublish</v-btn></v-col>
+                                            <v-col cols="auto"><v-btn @click="unpublishClaim(claim, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Unpublish</v-btn></v-col>
                                         </v-row>
                                         <span cols="auto" v-if="!claim.neoClaim">
                                             Not Published
@@ -111,7 +111,7 @@
                                                 <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
                                                 <v-col cols="auto" class="ml-2">Value</v-col>
                                                 <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
-                                                <v-col cols="auto"><v-btn @click="unpublishClaim(claim.claimTypeId, 'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Unpublish</v-btn></v-col>
+                                                <v-col cols="auto"><v-btn @click="unpublishClaim(claim, 'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Unpublish</v-btn></v-col>
                                             </v-row>
                                         </span>
                                         <span cols="auto" v-if="!claim.ethClaim">
@@ -263,8 +263,8 @@ export default {
 
                 console.log("Publishing claim");
                 await BridgeProtocol.Services.Blockchain.addClaim(passportContext.passport, passportContext.passphrase, wallet, claim, false);
-                let res = await BridgeProtocol.Services.Blockchain.getClaim(wallet.network, wallet.address, claim.claimTypeId.toString());
-                this.refreshClaims();
+                
+                this.refreshClaim(claim);
             }
             catch(err){
                 console.log("Unable to publish claim: " + err);
@@ -277,7 +277,7 @@ export default {
             date = new Date(date * 1000); 
             return date.toLocaleDateString();
         },
-        async unpublishClaim(claimTypeId, network){
+        async unpublishClaim(claim, network){
             if(network.toLowerCase() === "neo")
                 this.neoWait = true;
             else if(network.toLowerCase() === "eth")
@@ -286,8 +286,8 @@ export default {
             let passportContext = await BridgeExtension.getPassportContext();
             let wallet = passportContext.passport.getWalletForNetwork(network);
             await wallet.unlock(passportContext.passphrase);
-            await BridgeProtocol.Services.Blockchain.removeClaim(wallet, claimTypeId);
-            this.refreshClaims();
+            await BridgeProtocol.Services.Blockchain.removeClaim(wallet, claim.claimTypeId);
+            this.refreshClaim(claim);
 
             this.neoWait = false;
             this.ethWait = false;

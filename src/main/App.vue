@@ -137,10 +137,10 @@
       <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @openUrl="openUrl"></about-dialog>
 
       <!-- open dialog -->
-      <open-dialog v-if="openDialog" @unlocked="openPassport()"></open-dialog>
+      <open-dialog v-if="openDialog" @unlocked="unlocked()"></open-dialog>
 
       <!-- unlock dialog -->
-      <unlock-dialog v-if="unlockDialog" @unlocked="openPassport()"></unlock-dialog>
+      <unlock-dialog v-if="unlockDialog" @unlocked="unlocked()"></unlock-dialog>
 
       <!-- login dialog -->
       <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login"></login-dialog>
@@ -149,7 +149,7 @@
       <payment-dialog v-if="paymentDialog" :sender="sender" :request="request" @paymentSent="paymentSent"></payment-dialog>
 
       <!-- claims import dialog -->
-      <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @close="closeImport"></claims-import-dialog>
+      <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @cancel="claimsImportDialog = false" @imported="claimsImported"></claims-import-dialog>
 
       <!-- content -->
       <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
@@ -216,8 +216,10 @@
       loginDialog: false,
       paymentDialog: false,
       claimsImportDialog: false,
-      request: null,
+      externalParams: null,
+      externalRequest: null,
       sender: null,
+      request: null,
       drawer: null,
       currentYear: new Date().getFullYear(),
       passportVersion: BridgeExtension.version,
@@ -230,6 +232,13 @@
       openUrl: function(url){
         BridgeExtension.openPage(url);
       },
+      unlocked: async function(){
+        if(this.externalParams != null){
+          this.externalRequest = BridgeExtension.getParamRequest(this.externalParams);
+          this.externalParams = null;
+        }
+        this.openPassport();
+      },
       openPassport: async function(){
         this.unlockDialog = false;
         this.openDialog = false;
@@ -237,25 +246,54 @@
         let passportContext = await BridgeExtension.getPassportContext();
         this.passportLoaded = true;
         this.passportId = passportContext.passport.id;
+
+        //If we were invoked by an external request, route to handle it
+        if(this.externalRequest != null){
+          await this.routeExternalRequest(this.externalRequest);
+          this.externalRequest = null;
+        }
+      },
+      routeExternalRequest: async function(request){
+          if (request.action === "login") {
+              this.sender = request.sender;
+              this.request = request.loginRequest;
+              this.loginDialog = true;
+          }
+          else if (request.action === "payment") {
+              this.sender = request.sender;
+              this.request = request.paymentRequest;
+              this.paymentDialog = true;
+          }
+          else if (request.action === "claimsImport") {
+              this.sender = request.sender;
+              this.request = request.claimsImportRequest;
+              this.claimsImportDialog = true;
+          }
       },
       closePassport: async function(){
           this.currentView = "";
           this.passportId = "";
           await BridgeExtension.closePassport();
-          await this.checkPassportStatus();
+          //Reload to clear any cached external directives
+          BridgeExtension.loadPage("main", null, true);
       },
       removePassport: async function(){
           this.currentView = "";
           this.passportId = "";
           await BridgeExtension.removePassport();
-          await this.checkPassportStatus();
+          //Reload to clear any cached external directives
+          BridgeExtension.loadPage("main", null, true);
       },
       exportPassport: async function(){
           let passportContext = await BridgeExtension.getPassportContext();
           await BridgeExtension.exportPassport(passportContext.passport);
       },
       checkPassportStatus: async function(){
+          //Force focus any time we engage the passport
+          window.focus();
+
           let passportContext = await BridgeExtension.getPassportContext();
+
           //Check to see if we're loaded, unlocked, etc
           if(!passportContext.passport && !passportContext.passphrase){
             this.openDialog = true;
@@ -268,14 +306,13 @@
           }
       },
       login: async function(res){
+        await BridgeExtension.sendLoginResponse(res.sender, res.response);
         this.sender = null;
         this.request = null;
         this.loginDialog = false;
-
-        await BridgeExtension.sendLoginResponse(res.sender, res.response);
         this.currentView = "passportHome";
       },
-      closeImport: async function(){
+      claimsImported: async function(){
         this.sender = null;
         this.request = null;
         this.claimsImportDialog = false;
@@ -298,50 +335,24 @@
 
   async function init(app){
       window.app = this;
-      await app.checkPassportStatus();
+      window.focus();
+
+      //If we got a request from the background page to handle an external request while we were loaded
       window.browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
           if (request.target != "popup")
               return;
 
-          if (request.action === "login") {
-              window.focus();
-              app.sender = request.sender;
-              app.request = request.loginRequest;
-              app.loginDialog = true;
-          }
-
-          if (request.action === "payment") {
-              window.focus();
-              app.sender = request.sender;
-              app.request = request.paymentRequest;
-              app.paymentDialog = true;
-          }
-
-          if (request.action === "claimsImport") {
-              window.focus();
-              app.sender = request.sender;
-              app.request = request.claimsImportRequest;
-              app.claimsImportDialog = true;
-          }
+          app.externalRequest = request;
+          app.checkPassportStatus();
           sendResponse();
       });
 
-      //If we were launched from an external request whille closed, now that we're loaded, handle the request
+      //If we were launched from an external request while closed we get the params from the route
       let params = BridgeExtension.getQueryStringFromLocation();
       if (params) {
-          let request = BridgeExtension.getParamRequest(params);
-          if (request.action === "login") {
-              window.focus();
-              app.sender = request.sender;
-              app.request = request.loginRequest;
-              app.loginDialog = true;
-          }
-          else if (requst.action === "payment") {
-              window.focus();
-              app.sender = request.sender;
-              app.request = request.paymentRequest;
-              app.paymentDialog = true;
-          }
+          app.externalParams = params;
       }
+
+      app.checkPassportStatus();
   }
 </script>

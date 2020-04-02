@@ -124,24 +124,20 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
   }
 
   if (request.action == "openPopup") {
-    console.log("opening popup for " + request.pageName);
     openPopup(request.pageName, request.params);
     return;
   }
 
   if (request.action == "loadPassphrase") {
-    console.log("load passphrase " + _passphrase);
     sendResponse(_passphrase);
   }
 
   if (request.action == "savePassphrase") {
-    console.log("saving passphrase " + request.passphrase);
     _passphrase = request.passphrase;
     sendResponse();
   }
 
   if (request.action == "removePassphrase") {
-    console.log("removing passphrase");
     _passphrase = null;
     sendResponse();
   }

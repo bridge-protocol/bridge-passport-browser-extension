@@ -217,6 +217,49 @@
                 await window.browser.tabs.sendMessage(tab.id, message);
             });
         }
+
+        getReadableDate(date, includeTime){
+            date = new Date(date * 1000); 
+            let res = date.toLocaleDateString();
+            if(includeTime)
+                res += " " + date.toLocaleTimeString();
+            return res;
+        }
+
+        async getFullClaimsInfo(claims){
+             //Update the claims information
+             for(let i=0; i<claims.length; i++)
+                claims[i] = await this.getFullClaimInfo(claims[i]);
+
+             return claims;
+        }
+
+        async getFullClaimInfo(claim){
+             //Assingn a unique id
+             claim.id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+             claim.verifiedOn = this.getReadableDate(claim.createdOn);
+             //Find the expiration date
+             if(claim.expiresOn == 0)
+                 claim.expiresOn = "Never";
+             else{
+                 claim.expiresOn = this.getReadableDate(claim.expiresOn);
+             }
+                 
+             //Set the claim type name
+             claim.claimTypeName = claim.claimTypeId;
+             let claimType = await BridgeProtocol.Services.Claim.getType(claim.claimTypeId);
+             if(claimType)
+                 claim.claimTypeName = claimType.name;
+
+             //Get the id it was signed by
+             claim.signedById = await BridgeProtocol.Utils.Crypto.getPassportIdForPublicKey(claim.signedByKey);
+             claim.signedByName = claim.signedById;
+             let partner = await BridgeProtocol.Services.Partner.getPartner(claim.signedById);
+             if(partner)
+                 claim.signedByName = partner.name;
+
+             return claim;
+        }
     }
 
     //Setup the window

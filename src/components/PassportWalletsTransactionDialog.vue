@@ -13,6 +13,9 @@
                 color="secondary"
                 v-if="loading"
                 ></v-progress-circular>
+                <v-container v-if="!loading && transactions.length == 0">
+                    No recent transactions found.
+                </v-container>
                 <template v-for="(transaction, i) in transactions">
                     <v-row dense>
                         <v-col cols="2">Date</v-col>
@@ -48,6 +51,7 @@ export default {
     data: function () {
         return {
             visible: true,
+            loading: true,
             transactions: []
         }
     },
@@ -59,8 +63,12 @@ export default {
             this.$emit('openUrl', url);
         }
     },
-    created: async function(){
+    mounted: async function(){
         let transactions = await BridgeProtocol.Services.Blockchain.getRecentTransactions(this.wallet.network, this.wallet.address);
+
+        if(!transactions)
+            transactions = [];
+
         for(let i=0; i<transactions.length; i++){
             let date = new Date(transactions[i].timeStamp * 1000); 
             transactions[i].date = date.toLocaleDateString() + " " + date.toLocaleTimeString();
@@ -68,7 +76,9 @@ export default {
             if(transactions[i].amount == 1000000000)
                 transactions[i].amount = 1;
         }
+
         this.transactions = transactions;
+        this.loading = false;
     }
 };
 </script>

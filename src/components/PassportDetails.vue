@@ -43,7 +43,7 @@
                 </v-alert>
                 <v-expansion-panel
                 v-for="(claim,i) in claims"
-                :key="i"
+                :key="claim.id"
                 @click="claimSelected(claim)"
                 >
                     <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
@@ -56,8 +56,59 @@
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
-                        <div v-if="claim.loaded">
-                            <v-subheader class="pl-0 ml-0 caption">Claim Details</v-subheader>
+                        <v-container fluid>
+                            <div class="float-right">
+                                <v-menu close-on-click small bottom left>
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn
+                                                icon
+                                                v-on="on"
+                                                class="ml-12"
+                                            >
+                                                <v-icon small>mdi-dots-vertical</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list dense>
+                                            <v-list-item two-line @click="publishClaim(claim,'neo')" v-if="neoWallet != null && !claim.neoClaim">
+                                                <v-list-item-icon>
+                                                <v-icon>mdi-publish</v-icon>
+                                                </v-list-item-icon>
+                                                <v-list-item-content>
+                                                <v-list-item-title>Publish to NEO</v-list-item-title>
+                                                <v-list-item-subtitle>
+                                                    Publish the claim data to blockchain
+                                                </v-list-item-subtitle>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                            <v-list-item two-line @click="publishClaim(claim,'eth')" v-if="ethWallet != null && !claim.ethClaim">
+                                                <v-list-item-icon>
+                                                <v-icon>mdi-publish</v-icon>
+                                                </v-list-item-icon>
+                                                <v-list-item-content>
+                                                <v-list-item-title>Publish to Ethereum</v-list-item-title>
+                                                <v-list-item-subtitle>
+                                                    Publish the claim data to blockchain
+                                                </v-list-item-subtitle>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                            <v-divider v-if="(neoWallet && !claim.neoClaim) || (ethWallet && !claim.ethClaim)"></v-divider>
+                                            <v-list-item two-line @click="removeClaim(claim)" :disabled="claim.neoClaim != null || claim.ethClaim != null">
+                                                <v-list-item-icon>
+                                                <v-icon>mdi-delete</v-icon>
+                                                </v-list-item-icon>
+                                                <v-list-item-content>
+                                                <v-list-item-title>Delete Claim</v-list-item-title>
+                                                <v-list-item-subtitle>
+                                                    Remove the claim from your passport
+                                                </v-list-item-subtitle>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-list>
+                                </v-menu>
+                            </div>
+                            <v-subheader class="pl-0 ml-0 caption">
+                                Claim Details 
+                            </v-subheader>
                             <v-divider class="mb-2"></v-divider>
                             <v-row dense>
                                 <v-col cols="2" class="text-left">Verified:</v-col>
@@ -78,20 +129,17 @@
                                     <v-col cols="auto" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="!claim.loading">
+                                    <v-col cols="auto" v-if="!claim.neoLoading">
                                         <v-row v-if="claim.neoClaim" class="mt-n3">
-                                            <v-col cols="auto">Date</v-col>
                                             <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
-                                            <v-col cols="auto" class="ml-2">Value</v-col>
                                             <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
-                                            <v-col cols="auto"><v-btn @click="unpublishClaim(claim, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Unpublish</v-btn></v-col>
+                                            <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'neo')" icon x-small :loading="neoWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
                                         <span cols="auto" v-if="!claim.neoClaim">
-                                            Not Published
-                                            <v-btn @click="publishClaim(claim, 'neo')" x-small color="secondary" class="ml-2" :loading="neoWait">Publish</v-btn>
+                                            Not Published 
                                         </span>
                                     </v-col>
-                                    <v-col cols="auto" v-if="claim.loading">
+                                    <v-col cols="auto" v-if="claim.neoLoading">
                                         <v-progress-circular
                                             indeterminate
                                             color="secondary"
@@ -104,22 +152,17 @@
                                     <v-col cols="auto" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="!claim.loading">
-                                        <span v-if="claim.ethClaim">
-                                           <v-row v-if="claim.neoClaim" class="mt-n3">
-                                                <v-col cols="auto">Date</v-col>
-                                                <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
-                                                <v-col cols="auto" class="ml-2">Value</v-col>
-                                                <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
-                                                <v-col cols="auto"><v-btn @click="unpublishClaim(claim, 'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Unpublish</v-btn></v-col>
-                                            </v-row>
-                                        </span>
+                                    <v-col cols="auto" v-if="!claim.ethLoading">
+                                        <v-row v-if="claim.ethClaim" class="mt-n3">
+                                            <v-col cols="auto">{{getDate(claim.ethClaim.date)}}</v-col>
+                                            <v-col cols="auto">{{claim.ethClaim.value}}</v-col>
+                                            <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'eth')" icon x-small :loading="ethWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
+                                        </v-row>
                                         <span cols="auto" v-if="!claim.ethClaim">
-                                            Not Published
-                                            <v-btn @click="publishClaim(claim,'eth')" x-small color="secondary" class="ml-2" :loading="ethWait">Publish</v-btn>
+                                            Not Published                                         
                                         </span>
                                     </v-col>
-                                    <v-col cols="auto" v-if="claim.loading || ethLoading">
+                                    <v-col cols="auto" v-if="claim.ethLoading">
                                         <v-progress-circular
                                             indeterminate
                                             color="secondary"
@@ -129,7 +172,7 @@
                                     </v-col>
                                 </v-row>
                             </div>
-                        </div>
+                        </v-container>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
             </v-expansion-panels>
@@ -164,12 +207,12 @@ export default {
             }
             else{
                 this.lastSelectedClaim = claim.claimTypeId;
-                claim.loaded = true;
                 this.refreshClaim(claim);
             }
         },
         refreshClaim: async function(claim){
-            claim.loading = true;
+            claim.neoLoading = true;
+            claim.ethLoading = true;
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
@@ -181,10 +224,12 @@ export default {
                 if(this.neoWallet){
                     let neoWallet = passportContext.passport.getWalletForNetwork("neo");
                     claim.neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.neoWallet.network, claim.claimTypeId, this.neoWallet.address);
+                    claim.neoLoading = false;
                 }
                 if(this.ethWallet){
                     let ethWallet = passportContext.passport.getWalletForNetwork("eth");
                     claim.ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
+                    claim.ethLoading = false;
                 }  
             }
             catch(err){
@@ -194,8 +239,6 @@ export default {
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
             this.claims.pop();
-
-            claim.loading = false;
         },
         refreshClaims: async function(){
             this.refreshing = true;
@@ -204,34 +247,8 @@ export default {
             let passportContext = await BridgeExtension.getPassportContext();
             let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
 
-            for(let i=0; i<decryptedClaims.length; i++)
-            {   
-                let created = new Date(decryptedClaims[i].createdOn * 1000); 
-                decryptedClaims[i].verifiedOn = created.toLocaleDateString();
-
-                //Find the expiration date
-                if(decryptedClaims[i].expiresOn == 0)
-                    decryptedClaims[i].expiresOn = "Never";
-                else{
-                    let expires = new Date(decryptedClaims[i].expiresOn * 1000); 
-                    decryptedClaims[i].expiresOn = expires.toLocaleDateString();
-                }
-                    
-                //Set the claim type name
-                decryptedClaims[i].claimTypeName = decryptedClaims[i].claimTypeId;
-                let claimType = await BridgeProtocol.Services.Claim.getType(decryptedClaims[i].claimTypeId);
-                if(claimType)
-                    decryptedClaims[i].claimTypeName = claimType.name;
-
-                //Get the id it was signed by
-                decryptedClaims[i].signedById = await BridgeProtocol.Utils.Crypto.getPassportIdForPublicKey(decryptedClaims[i].signedByKey);
-                decryptedClaims[i].signedByName = decryptedClaims[i].signedById;
-                let partner = await BridgeProtocol.Services.Partner.getPartner(decryptedClaims[i].signedById);
-                if(partner)
-                    decryptedClaims[i].signedByName = partner.name;
-            }
-
-            this.claims = decryptedClaims;
+            //Update with all the user friendly info
+            this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
             this.refreshing = false;
         },
         async publishClaim(claim, network){
@@ -263,7 +280,7 @@ export default {
 
                 console.log("Publishing claim");
                 await BridgeProtocol.Services.Blockchain.addClaim(passportContext.passport, passportContext.passphrase, wallet, claim, false);
-                
+
                 this.refreshClaim(claim);
             }
             catch(err){
@@ -273,9 +290,36 @@ export default {
             this.neoWait = false;
             this.ethWait = false;
         },
+        async removeClaim(claim){
+            let publishedClaim = false;
+            let passportContext = await BridgeExtension.getPassportContext();
+
+            if(claim.neoClaim != null || claim.ethClaim != null){
+                alert("Please unpublish the claim from blockchains to continue.");
+                return;
+            }
+
+            //Remove the sourcce claim package from the passport and save
+            let claimPackages = [];
+            for(let i=0; i<passportContext.passport.claims.length; i++){
+                if(passportContext.passport.claims[i].typeId != claim.claimTypeId)
+                    claimPackages.push(passportContext.passport.claims[i]);
+            }
+            passportContext.passport.claims = claimPackages;
+            await BridgeExtension.savePassportToBrowserStorage(passportContext.passport);
+
+            //Remove the decrypted claim from our UI collection to prevent the full refresh
+            let claims = [];
+            for(let i=0; i<this.claims.length; i++){
+                if(this.claims[i].claimTypeId != claim.claimTypeId)
+                    claims.push(this.claims[i]);
+                else
+                    console.log("Excluding " + this.claims[i].typeId + " " + claim.claimTypeId);
+            }
+            this.claims = claims;
+        },
         getDate(date){
-            date = new Date(date * 1000); 
-            return date.toLocaleDateString();
+            return BridgeExtension.getReadableDate(date);
         },
         async unpublishClaim(claim, network){
             if(network.toLowerCase() === "neo")

@@ -46,6 +46,9 @@
                         ></v-progress-circular>
                     </div>
                     <div v-if="wallet.loaded">
+                        <div class="float-right pt-4">
+                            <v-btn x-small class="accent" @click="showTransactions(wallet)">View Transactions</v-btn>
+                        </div>
                         <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row dense>
@@ -58,9 +61,8 @@
                             <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
-                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG  <v-btn v-if="!wallet.unlocked" x-small class="secondary ml-2" @click="showTransactions(wallet)">View Transactions</v-btn></v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                         </v-row>
-
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row dense>
@@ -68,16 +70,6 @@
                                 <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left">{{wallet.address}} 
-                                <v-chip
-                                v-if="wallet.registered"
-                                label
-                                x-small
-                                :color="secondary"
-                                class="ml-2"
-                                >
-                                    Registered
-                                </v-chip>
-                                <v-btn v-if="!wallet.registered" @click="removeWallet(wallet)" x-small color="secondary" class="ml-2" :loading="removing">Remove</v-btn></v-col>
                         </v-row>
                         <v-row dense>
                             <v-col cols="auto" class="text-center">

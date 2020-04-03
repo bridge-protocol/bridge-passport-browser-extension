@@ -254,6 +254,10 @@
         }
       },
       routeExternalRequest: async function(request){
+          this.loginDialog = false;
+          this.paymentDialog = false;
+          this.claimsImportDialog = false;
+
           if (request.action === "login") {
               this.sender = request.sender;
               this.request = request.loginRequest;

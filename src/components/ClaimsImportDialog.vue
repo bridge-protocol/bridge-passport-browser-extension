@@ -13,11 +13,11 @@
             <v-card-title>
                 <span class="headline">Claims Import</span>
             </v-card-title>
-            <v-card-text text-center>
+            <v-card-text text-center class="px-0">
                 <v-container v-if="!claims || claims.length == 0">
                     No claims found to import
                 </v-container>
-                <v-list v-if="claims.length > 0">
+                <v-list v-if="claims.length > 0" class="py-0">
                         <p class="subheading">
                             Please choose the claims to be imported to your passport.  If a specified claim type already exists, it will be replaced by the imported claim.
                         </p>
@@ -25,7 +25,8 @@
                             v-for="(claim, i) in claims"
                             :key="claim.claimTypeId"
                         >
-                        <v-list-item class="left-border-color-primary mb-1">
+                        <v-divider v-if="i == 0"></v-divider>
+                        <v-list-item class="left-border-color-primary mb-0">
                             <template v-slot:default="{ active, toggle }">
                                 <v-list-item-action>
                                     <v-checkbox
@@ -37,10 +38,10 @@
                                         color="secondary"
                                     ></v-checkbox>
                                 </v-list-item-action>
-                                <v-list-item-content class="mt-0 py-0">
+                                <v-list-item-content class="py-0">
                                     <v-expansion-panels>
                                         <v-expansion-panel>
-                                            <v-expansion-panel-header class="pt-1 pb-1">
+                                            <v-expansion-panel-header class="py-0">
                                                 <v-row>
                                                     <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                                                     <v-col cols="auto">
@@ -50,7 +51,6 @@
                                                 <v-row>
                                             </v-expansion-panel-header>
                                             <v-expansion-panel-content>
-                                                <v-container fluid>
                                                     <v-subheader class="pl-0 ml-0 caption">
                                                         Claim Details 
                                                     </v-subheader>
@@ -67,13 +67,13 @@
                                                         <v-col cols="2" class="text-left">Issuer:</v-col>
                                                         <v-col cols="auto">{{claim.signedByName}}</v-col>
                                                     </v-row>
-                                                </v-container>
                                             </v-expansion-panel-content>
                                         </v-expansion-panel>
                                     </v-expansion-panels>
                                 </v-list-item-content>
                             </template>
                         </v-list-item>
+                        <v-divider></v-divider>
                     </template>
                 </v-list>
             </v-card-text>

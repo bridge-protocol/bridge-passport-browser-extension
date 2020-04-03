@@ -1,7 +1,15 @@
 <template>
-<v-overlay :opacity=".5">
-    <v-dialog v-model="visible" persistent fullscreen>
-        <v-card fill-height>
+    <v-dialog v-model="visible" persistent max-width="600px">
+        <v-card v-if="loading" class="py-12">
+            <v-container text-center align-middle>
+                <v-progress-circular
+                    indeterminate
+                    color="secondary"
+                ></v-progress-circular>
+                <v-container>{{loadStatus}}</v-container>
+            </v-container>  
+        </v-card>
+        <v-card fill-height v-if="!loading">
             <v-card-title class="title">
                 <v-row>
                     <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
@@ -9,12 +17,7 @@
                 </v-row>
             </v-card-title>
             <v-card-text>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                    v-if="loading"
-                ></v-progress-circular>
-                <div v-if="!loading">
+                <div>
                     <p>
                         Choose a marketplace partner to send a request to verify your personal information and add claims to your digital identity.
                     </p>
@@ -65,7 +68,17 @@
                             class="text-left mt-2 caption"
                             v-if="selectedPartner != null"
                             >
-                            The Bridge Network fee is non-refundable and does not include additional fees for service that may be required by the selected Bridge Marketplace partner.  Some Bridge Marketplace partners are third party providers that have no affiliation with Bridge Protocol Corporation and may have independent terms, conditions, and fees for service.
+                            The Bridge Network fee and any associated gas cost for the transaction is non-refundable and does not include additional fees for service that may be required by the selected Bridge Marketplace partner.  Some Bridge Marketplace partners are third party providers that have no affiliation with Bridge Protocol Corporation and may have independent terms, conditions, and fees for service.
+                        </v-alert>
+                        <v-alert
+                            border="left"
+                            colored-border
+                            type="error"
+                            elevation="0"
+                            class="text-left caption text-wrap mt-2"
+                            v-if="insufficientBalance"
+                            >
+                            {{insufficientBalanceErrorMessage}}
                         </v-alert>
                     </div>
                 </div>
@@ -73,11 +86,10 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="close()">Cancel</v-btn>
-                <v-btn text @click="create()">Create Request</v-btn>
+                <v-btn text @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
-</v-overlay>
 </template>
 
 <script>
@@ -87,8 +99,12 @@ export default {
         return {
             visible: true,
             loading: false,
+            loadStatus: "Loading marketplace info",
+            passportPublished: false,
             selectedPartner: null,
             networkFee: 0,
+            publishGasCost: 0,
+            paymentGasCost: 0,
             partners: []
         }
     },
@@ -96,28 +112,89 @@ export default {
         close: function(){
             this.$emit('close', true);
         },
-        create: function(){
-            //Check and see if the passport is registered
+        create: async function(){
+            this.loading = true;
+            let passportContext = await BridgeExtension.getPassportContext();
 
-            //Register the passport
+            //Make sure the passport is published / registered
+            if(!this.passportPublished)
+            {
+                this.loadStatus = "Publishing passport to blockchain";
+                console.log("Passport not published, publishing");
+                await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport);
+                publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+                if(!publish)
+                {
+                    alert("Could not publish passport.");
+                    this.loading = false;
+                    return;
+                }
+            }
 
+            this.loadStatus = "Creating marketplace request";
             //Create the application via API
+            let application = await BridgeProtocol.Services.Application.createApplication(passportContext.passport, passportContext.passphrase, this.selectedPartner.id);
+            if(!application){
+                alert("Unable to create marketplace request.");
+                this.loading = false;
+                return;
+            }
+
+            let applicationId = application.id;
+            console.log("Request created: " + applicationId);
 
             //Send a blockchain fee payment
+            this.loadStatus = "Sending network fee transaction";
+            console.log("Sending network fee for " + applicationId);
+            let wallet = passportContext.passport.getWalletForNetwork("neo");
+            await wallet.unlock(passportContext.passphrase);
+
+            let recipient = BridgeProtocol.Constants.bridgeAddress;
+            //Get the transaction id and send to the server and don't wait
+            let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, this.networkFee, recipient, applicationId, false);
 
             //Send the fee payment info back to the application API
+            application = await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, applicationId, wallet.network, wallet.address, transactionId);
+            console.log("Request fee transaction updated: " + JSON.stringify(application));
+
+            this.loadStatus = "Verifying network fee transaction";
+            //Wait for the transaction to be done
+            let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, this.networkFee, applicationId);
+            console.log("Network fee transaction: " + JSON.stringify(status));
 
             //Relay to the partner
-
-            //Redirect / open the partner link?
+            this.loadStatus = "Relaying request to partner";
+            application = await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, applicationId);
 
             this.$emit('created', true);
+            this.loading = false;
         },
         partnerSelected: async function(partnerId){
             if(!partnerId)
                 return;
 
-           this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
+            this.loading = true;
+            this.loadStatus = "Loading partner information";
+
+            let passportContext = await BridgeExtension.getPassportContext();
+            this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
+            this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
+
+            //Verify the balance
+            let wallet = passportContext.passport.getWalletForNetwork("neo");
+            let balances = await BridgeExtension.getWalletBalances(wallet);
+
+            //TODO: Factor in the passport publish fee into the GAS costs if the passport is not published yet
+            if(balances.gas < (this.paymentGasCost + this.publishGasCost)){
+                this.insufficientBalance = true;
+                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + (this.paymentGasCost + this.publishGasCost) + " " + (this.requestNetwork === "neo" ? "GAS":"ETH");
+            }
+            if(balances.brdg < this.networkFee){
+                this.insufficientBalance = true;
+                this.insufficientBalanceErrorMessage = "Insufficient balance for network fees.  This transaction requires " + this.networkFee + " BRDG";
+            }
+
+            this.loading = false;
         },
         openUrl: function(url){
             this.$emit('openUrl', url);
@@ -125,9 +202,17 @@ export default {
     },
     created: async function(){
         this.loading = true;
-        let passportContext = await BridgeExtension.getPassportContext();
         this.partners = await BridgeProtocol.Services.Partner.getAllPartners();
-        this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
+        let passportContext = await BridgeExtension.getPassportContext();
+        let wallet = passportContext.passport.getWalletForNetwork("neo");
+        if(!wallet)
+        {
+            alert("No NEO wallet found.  Please add a NEO wallet and funds.");
+            this.$emit('close', true);
+            return;
+        }
+        let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+        this.passportPublished = published != null;
         this.loading = false;
     }
 };

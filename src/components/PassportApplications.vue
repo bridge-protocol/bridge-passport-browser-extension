@@ -34,6 +34,7 @@
                     <v-expansion-panel
                     v-for="(app,i) in applications"
                     :key="app.id"
+                    @click="applicationSelected(app)"
                     >
                         <v-expansion-panel-header class="left-border-color-primary">
                             <v-row>
@@ -45,32 +46,44 @@
                             </v-row>
                         </v-expansion-panel-header>
                         <v-expansion-panel-content class="left-border-color-primary">
-                            <v-subheader class="pl-0 ml-0 caption">Request Information</v-subheader>
-                            <v-divider class="mb-2"></v-divider>
-                            <v-row dense>
-                                <v-col cols="2" class="text-left">Status</v-col>
-                                <v-col cols="auto">{{ app.status }}</v-col>
-                            </v-row>
-                            <v-row dense>
-                                <v-col cols="2" class="text-left">Partner</v-col>
-                                <v-col cols="auto">{{ app.partnerName }}</v-col>
-                            </v-row>
-                            <v-row dense>
-                                <v-col cols="2" class="text-left">Link</v-col>
-                                <v-col cols="10"  class="text-break text-left">
-                                    <a @click="openUrl(app.url)">{{app.url}}</a>
-                                </v-col>
-                            </v-row>
-                            <v-subheader class="pl-0 ml-0 caption">Payment Transaction</v-subheader>
-                            <v-divider class="mb-2"></v-divider>
-                            <v-row dense>
-                                <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
-                                <v-col cols="auto">{{app.transactionFee}} BRDG</v-col>
-                            </v-row>
-                            <v-row dense>
-                                <v-col cols="2" class="text-left"><v-img :src="'/images/' + app.transactionNetwork.toLowerCase() + '-logo.png'" height="20" width="20"></v-img></v-col>
-                                <v-col cols="10" class="text-break text-left caption"><a @click="openUrl(app.transactionUrl)">{{app.transactionUrl}}</a></v-col>
-                            </v-row>
+                            <v-container class="text-center" v-if="app.loading">
+                                <v-progress-circular
+                                    indeterminate
+                                    color="secondary"
+                                ></v-progress-circular>
+                            </v-container>
+                            <v-container v-if="!app.loading">
+                                <v-subheader class="pl-0 ml-0 caption">Request Information</v-subheader>
+                                <v-divider class="mb-2"></v-divider>
+                                <v-row dense>
+                                    <v-col cols="2" class="text-left">Status</v-col>
+                                    <v-col cols="auto">{{ app.status }}</v-col>
+                                    <v-col cols="auto">
+                                        <v-btn v-if="app.status == 'waitingForNetworkFeePayment'" @click="resendPayment()" x-small color="secondary" :loading="retry">Send Payment</v-btn>
+                                        <v-btn v-if="app.status == 'paymentRecieved' || app.status == 'notTransmittedToPartner'" @click="resendToPartner()" x-small color="secondary" :loading="retry">Retry Send</v-btn>
+                                    </v-col>
+                                </v-row>
+                                <v-row dense>
+                                    <v-col cols="2" class="text-left">Partner</v-col>
+                                    <v-col cols="auto">{{ app.partnerName }}</v-col>
+                                </v-row>
+                                <v-row dense v-if="app.status == 'receivedByPartner'">
+                                    <v-col cols="2" class="text-left">Link</v-col>
+                                    <v-col cols="10"  class="text-break text-left">
+                                        <a @click="openUrl(app.url)">{{app.url}}</a>
+                                    </v-col>
+                                </v-row>
+                                <v-subheader class="pl-0 ml-0 caption" v-if="app.transactionId">Payment Transaction</v-subheader>
+                                <v-divider class="mb-2" v-if="app.transactionId"></v-divider>
+                                <v-row dense v-if="app.transactionId">
+                                    <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
+                                    <v-col cols="auto">{{app.transactionFee}} BRDG</v-col>
+                                </v-row>
+                                <v-row dense v-if="app.transactionId">
+                                    <v-col cols="2" class="text-left"><v-img :src="'/images/' + app.transactionNetwork + '-logo.png'" height="20" width="20"></v-img></v-col>
+                                    <v-col cols="10" class="text-break text-left caption"><a @click="openUrl(app.transactionUrl)">{{app.transactionUrl}}</a></v-col>
+                                </v-row>
+                            </v-container>
                         </v-expansion-panel-content>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -89,54 +102,79 @@ export default {
     },
     data: function() {
         return {
-            passportId: "",
             refreshing: true,
             mainContainerHeight: 690,
             applicationCreateDialog: false,
-            applications: []
+            applications: [],
+            applicationLoading: false,
+            lastSelectedApplication: null,
+            retry: false
         }
     },
     methods: {
         init: async function(){
             this.applicationCreateDialog = false;
             this.refreshing = true;
-            this.applications = [];
 
             let passportContext = await BridgeExtension.getPassportContext();
-            if(passportContext.passport)
-            {
-                let applications = await BridgeProtocol.Services.Application.getActiveApplications(passportContext.passport, passportContext.passphrase);
-                for(let i=0; i<applications.length; i++){
-                    let created = new Date(applications[i].createdOn * 1000); 
-                    applications[i].createdOn = created.toLocaleDateString() + " " + created.toLocaleTimeString();
-
-                    //This will change as more partners get added
-                    applications[i].src = "/images/bridge-token-white.png";
-                    applications[i].partnerName = applications[i].partner;
-
-                    let partner = await BridgeProtocol.Services.Partner.getPartner(applications[i].verificationPartner);
-                    if(partner)
-                        applications[i].partnerName = partner.name; 
-
-                    //Make the status readable
-                    applications[i].status = makeStringReadable(applications[i].status);
-                    
-                    //Legacy transaction amount format
-                    if(applications[i].transactionFee = 1000000000) 
-                        applications[i].transactionFee = 1;
-
-                    if(applications[i].transactionNetwork.toLowerCase() === "neo"){
-                        applications[i].transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + applications[i].transactionId;
-                    }
-                    else if(applications[i].transactionNetwork.toLowerCase() === "eth"){
-                        applications[i].transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + applications[i].transactionId;
-                    }
-                }
-
-                this.applications = applications;
-                this.refreshing = false;
+            let applications = await BridgeProtocol.Services.Application.getActiveApplications(passportContext.passport, passportContext.passphrase);
+            for(let i=0; i<applications.length; i++){
+                let created = new Date(applications[i].createdOn * 1000); 
+                applications[i].createdOn = created.toLocaleDateString() + " " + created.toLocaleTimeString();
+                applications[i].src = "/images/bridge-token-white.png";
+                applications[i].partnerName = applications[i].partner;
+                let partner = await BridgeProtocol.Services.Partner.getPartner(applications[i].verificationPartner);
+                if(partner)
+                    applications[i].partnerName = partner.name; 
             }
-        },                
+            this.applications = applications;
+
+            this.refreshing = false;
+        },
+        applicationSelected: async function(application){
+            if(this.lastSelectedApplication == application.id){
+                this.lastSelectedApplication = "";
+            }
+            else{
+                this.lastSelectedApplication = application.id;
+                await this.refreshApplication(application);
+            }
+        },
+        refreshApplication: async function(application){
+            application.loading = true;
+
+            //Update the application status from the service
+            let passportContext = await BridgeExtension.getPassportContext();
+            application = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
+
+            //Make the status readable
+            application.statusText = makeStringReadable(application.status);
+            
+            //Legacy transaction amount format
+            if(application.transactionFee = 1000000000) 
+                application.transactionFee = 1;
+            
+            if(application.transactionNetwork)
+                application.transactionNetwork = application.transactionNetwork.toLowerCase();
+
+            if(application.transactionNetwork === "neo"){
+                application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + application.transactionId;
+            }
+            else if(application.transactionNetwork === "eth"){
+                application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + application.transactionId;
+            }
+
+            this.applications.push({});
+            this.applications.pop();
+
+            application.loading = false;
+        },
+        resendPayment: async function(){
+
+        },
+        resendToParner: async function(){
+
+        },       
         openUrl: function(url){
             this.$emit('openUrl', url);
         }

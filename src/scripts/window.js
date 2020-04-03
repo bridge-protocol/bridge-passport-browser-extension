@@ -293,6 +293,20 @@
 
              return claim;
         }
+
+        async waitVerifyPayment(network, transactionId, from, to, amount, identifier){
+            return new Promise(function (resolve, reject) {
+                (async function waitForComplete(){
+                    let res = await BridgeProtocol.Services.Blockchain.verifyPayment(network, transactionId, from, to, amount, identifier);
+                    if(res.complete){
+                        console.log("Transaction found and complete");
+                        return resolve(res.success);
+                    }
+                    console.log("Transaction not complete. Waiting and retrying.");
+                    setTimeout(waitForComplete, 15000);
+                })();
+            });
+        }
     }
 
     //Setup the window

@@ -143,7 +143,7 @@
       <unlock-dialog v-if="unlockDialog" @unlocked="unlocked()"></unlock-dialog>
 
       <!-- login dialog -->
-      <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login"></login-dialog>
+      <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login" @cancel="loginDialog = false"></login-dialog>
       
       <!-- Payment dialog -->
       <payment-dialog v-if="paymentDialog" :sender="sender" :request="request" @paymentSent="paymentSent"></payment-dialog>

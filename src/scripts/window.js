@@ -226,6 +226,20 @@
             return res;
         }
 
+        async getClaimType(claimTypeId){
+            return await BridgeProtocol.Services.Claim.getType(claimTypeId);
+        }
+
+        async getClaimTypes(claimTypeIds){
+            let claimTypes = [];
+            for(let i=0; i<claimTypeIds.length; i++){
+                let claimType = await this.getClaimType(claimTypeIds[i]);
+                if(claimType)
+                    claimTypes.push(claimType);
+            }
+            return claimTypes;
+        }
+
         async getFullClaimsInfo(claims){
              //Update the claims information
              for(let i=0; i<claims.length; i++)

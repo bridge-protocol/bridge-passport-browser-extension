@@ -11,6 +11,16 @@
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-card-title>
+                <v-alert
+                    border="left"
+                    colored-border
+                    type="warning"
+                    elevation="0"
+                    class="text-left caption text-wrap mx-n6 mt-n4"
+                    v-if="!messageValid"
+                    >
+                    Request integrity check failed.  This request may be forged, proceed with caution.
+                </v-alert>
                 <v-row>
                     <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
                     <v-col cols="10">Import Claims</v-col>
@@ -98,7 +108,8 @@ export default {
             visible: true,
             loading: true,
             loadStatus: "Claims import request received",
-            importRequest: null,
+            requestMessage: null,
+            messageValid: false,
             claims: [],
             verifiedClaimPackages: [],
             selectedClaimTypes: []
@@ -111,19 +122,21 @@ export default {
             let passportContext = await BridgeExtension.getPassportContext();
 
             //Verify the claims import request
-            let verifiedImportRequest = await BridgeProtocol.Messaging.Claim.verifyClaimsImportRequest(this.importRequest);
+            this.requestMessage = await BridgeProtocol.Messaging.Claim.verifyClaimsImportRequest(this.request);
+            this.messageValid = this.requestMessage.signatureValid;
 
             this.loadStatus = "Verifying claim packages...";
-            this.verifiedClaimPackages = await BridgeProtocol.Utils.Claim.verifyClaimPackagesForImport(passportContext.passport, passportContext.passphrase, verifiedImportRequest.payload.claimPackages);
             let claims = [];
-            for(let i=0; i<this.verifiedClaimPackages.length; i++){
-                let claim = await this.verifiedClaimPackages[i].decrypt(passportContext.passport.privateKey, passportContext.passphrase);
-                if(claim)
-                    claims.push(claim);
+            if(this.requestMessage.payload.claimPackages && this.requestMessage.payload.claimPackages.length > 0){
+                this.verifiedClaimPackages = await BridgeProtocol.Utils.Claim.verifyClaimPackagesForImport(passportContext.passport, passportContext.passphrase, this.requestMessage.payload.claimPackages);
+                for(let i=0; i<this.verifiedClaimPackages.length; i++){
+                    let claim = await this.verifiedClaimPackages[i].decrypt(passportContext.passport.privateKey, passportContext.passphrase);
+                    if(claim)
+                        claims.push(claim);
+                }
+                claims = await BridgeExtension.getFullClaimsInfo(claims);
             }
-
-            //Update with user friendly info
-            this.claims = await BridgeExtension.getFullClaimsInfo(claims);
+            this.claims = claims;
             this.loading = false;
         },
         importClaims: async function(){
@@ -156,7 +169,7 @@ export default {
         }
     },
     async created () {
-        this.importRequest = this.request;
+        this.request;
         await this.verifyClaims();
     }
 };

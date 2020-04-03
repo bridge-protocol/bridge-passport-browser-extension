@@ -288,25 +288,9 @@ export default {
             this.wallets.pop();
 
             try{
-                let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
-                let gas = 0;
-                let brdg = 0;
-                if(balances){
-                    for(let i=0; i<balances.length; i++){
-                        if(balances[i].asset == "GAS"){
-                            gas = balances[i].balance;
-                        }
-                        else if(balances[i].asset == "ETH"){
-                            gas = balances[i].balance;
-                        }
-
-                        if(balances[i].asset == "BRDG"){
-                            brdg = balances[i].balance;
-                        }
-                    }
-                }
-                wallet.brdgBalance = brdg;
-                wallet.gasBalance = gas;
+                let balances = await BridgeExtension.getWalletBalances(wallet);
+                wallet.brdgBalance = balances.brdg;
+                wallet.gasBalance = balances.gas;
 
                 let res = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
                 if(res && res.length > 0)

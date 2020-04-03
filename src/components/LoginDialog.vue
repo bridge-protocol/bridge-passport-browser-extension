@@ -11,6 +11,16 @@
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-card-title>
+                <v-alert
+                    border="left"
+                    colored-border
+                    type="warning"
+                    elevation="0"
+                    class="text-left caption text-wrap mx-n6 mt-n4"
+                    v-if="!messageValid"
+                    >
+                    Request integrity check failed.  This request may be forged, proceed with caution.
+                </v-alert>
                 <v-row>
                     <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
                     <v-col cols="10">Passport Login</v-col>
@@ -31,9 +41,9 @@
                                 </v-col>
                             </v-row>
                         </v-container>
-                        <v-subheader class="pl-0 ml-0 caption" v-if="!requestedClaimTypes || requestedClaimTypes.length == 0">Requested Claims</v-subheader>
+                        <v-subheader class="pl-0 ml-0 caption">Requested Claims</v-subheader>
                         <v-divider class="mb-2"></v-divider>
-                        <v-container fluid class="mx-0 px-0 my-0 py-0">
+                        <v-container fluid class="mx-0 px-0 my-0 py-0" v-if="!requestedClaimTypes || requestedClaimTypes.length == 0">
                             No Claims Requested
                         </v-container>
                         <v-container fluid class="mx-0 px-0 my-0 py-0"
@@ -77,6 +87,7 @@ export default {
             loading: true,
             loadStatus: "Login request received",
             requestMessage: null,
+            messageValid: false,
             requestingPassport: null,
             requestedClaimTypes: [],
             requestedAddresses: [],
@@ -89,8 +100,10 @@ export default {
             let passportContext = await BridgeExtension.getPassportContext();
 
             this.loadStatus = "Verifying login request";
-            //The user verifies the payload and the auth request and gets details about the request
+
             this.requestMessage = await BridgeProtocol.Messaging.Auth.verifyPassportChallengeRequest(this.request);
+            this.messageValid = this.requestMessage.signatureValid;
+
             let requestingPassport = await BridgeProtocol.Services.Passport.getDetails(passportContext.passport, passportContext.passphrase, this.requestMessage.passportId);
             requestingPassport.name = requestingPassport.id;
             requestingPassport.known = false;
@@ -98,8 +111,8 @@ export default {
                 requestingPassport.name = requestingPassport.partnerName;
                 requestingPassport.known = true;
             }
-                
             this.requestingPassport = requestingPassport;
+            
             let requestedClaimTypes = await BridgeExtension.getClaimTypes(this.requestMessage.payload.claimTypes);
             if(requestedClaimTypes){
                 for(let i=0; i<requestedClaimTypes.length; i++){

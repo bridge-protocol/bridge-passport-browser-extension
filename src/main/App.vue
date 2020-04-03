@@ -146,7 +146,7 @@
       <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login" @cancel="loginDialog = false"></login-dialog>
       
       <!-- Payment dialog -->
-      <payment-dialog v-if="paymentDialog" :sender="sender" :request="request" @paymentSent="paymentSent"></payment-dialog>
+      <payment-dialog v-if="paymentDialog" :sender="sender" :request="request" @cancel="paymentDialog = false" @paymentSent="paymentSent" @openUrl="openUrl"></payment-dialog>
 
       <!-- claims import dialog -->
       <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @cancel="claimsImportDialog = false" @imported="claimsImported"></claims-import-dialog>

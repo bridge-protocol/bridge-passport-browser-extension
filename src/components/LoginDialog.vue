@@ -31,8 +31,11 @@
                                 </v-col>
                             </v-row>
                         </v-container>
-                        <v-subheader class="pl-0 ml-0 caption">Requested Claims</v-subheader>
+                        <v-subheader class="pl-0 ml-0 caption" v-if="!requestedClaimTypes || requestedClaimTypes.length == 0">Requested Claims</v-subheader>
                         <v-divider class="mb-2"></v-divider>
+                        <v-container fluid class="mx-0 px-0 my-0 py-0">
+                            No Claims Requested
+                        </v-container>
                         <v-container fluid class="mx-0 px-0 my-0 py-0"
                             v-for="(claimType, i) in requestedClaimTypes"
                             :key="claimType.id">
@@ -41,6 +44,9 @@
 
                         <v-subheader class="pl-0 ml-0 caption">Requested Blockchain Addresses</v-subheader>
                         <v-divider class="mb-2"></v-divider>
+                        <v-container fluid class="mx-0 px-0 my-0 py-0" v-if="!requestedAddresses || requestedAddresses.length == 0">
+                            No Addresses Requested
+                        </v-container>
                         <v-container class="mx-0 px-0 my-0 py-0">
                             <template 
                             v-for="(address, i) in requestedAddresses"
@@ -95,27 +101,31 @@ export default {
                 
             this.requestingPassport = requestingPassport;
             let requestedClaimTypes = await BridgeExtension.getClaimTypes(this.requestMessage.payload.claimTypes);
-            for(let i=0; i<requestedClaimTypes.length; i++){
-                let claim = passportContext.passport.getClaimPackage(requestedClaimTypes[i].id);
-                requestedClaimTypes[i].claim = claim != null;
+            if(requestedClaimTypes){
+                for(let i=0; i<requestedClaimTypes.length; i++){
+                    let claim = passportContext.passport.getClaimPackage(requestedClaimTypes[i].id);
+                    requestedClaimTypes[i].claim = claim != null;
+                }
             }
             this.requestedClaimTypes = requestedClaimTypes;
 
             let networks = [];
-            for(let i=0; i<this.requestMessage.payload.networks.length; i++){
-                let network = this.requestMessage.payload.networks[i];
-                let networkName = this.requestMessage.payload.networks[i];
-                let wallet = passportContext.passport.getWalletForNetwork(network);
-                let address = null;
-                if(wallet)
-                    address = true;
+            if(this.requestMessage.payload.networks){
+                for(let i=0; i<this.requestMessage.payload.networks.length; i++){
+                    let network = this.requestMessage.payload.networks[i];
+                    let networkName = this.requestMessage.payload.networks[i];
+                    let wallet = passportContext.passport.getWalletForNetwork(network);
+                    let address = null;
+                    if(wallet)
+                        address = true;
 
-                if(network.toLowerCase() === "neo")
-                    networkName = "NEO";
-                else if(network.toLowerCase() === "eth")
-                    networkName = "Ethereum";
+                    if(network.toLowerCase() === "neo")
+                        networkName = "NEO";
+                    else if(network.toLowerCase() === "eth")
+                        networkName = "Ethereum";
 
-                networks.push({network, networkName, address});
+                    networks.push({network, networkName, address});
+                }
             }
 
             this.requestedAddresses = networks;

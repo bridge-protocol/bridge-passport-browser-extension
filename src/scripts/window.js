@@ -231,6 +231,9 @@
         }
 
         async getClaimTypes(claimTypeIds){
+            if(!claimTypeIds)
+                return [];
+
             let claimTypes = [];
             for(let i=0; i<claimTypeIds.length; i++){
                 let claimType = await this.getClaimType(claimTypeIds[i]);
@@ -241,6 +244,9 @@
         }
 
         async getFullClaimsInfo(claims){
+             if(!claims)
+                return null;
+
              //Update the claims information
              for(let i=0; i<claims.length; i++)
                 claims[i] = await this.getFullClaimInfo(claims[i]);

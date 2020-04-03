@@ -23,12 +23,20 @@
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
+                            <div class="text-center" v-if="application.loading">
+                                <v-progress-circular
+                                    indeterminate
+                                    color="secondary"
+                                ></v-progress-circular>
+                            </div>
                             <v-container v-if="!application.loading">
                                 <v-subheader class="pl-0 ml-0 caption">Request Information</v-subheader>
                                 <v-divider class="mb-2"></v-divider>
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Status</v-col>
                                     <v-col cols="auto">{{ application.statusText }}</v-col>
+                                    <v-btn v-if="application.status == 'waitingForNetworkFeePayment'" @click="resendPayment()" x-small color="secondary" :loading="retry" class="ml-3">Send Payment</v-btn>
+                                    <v-btn v-if="application.status == 'networkFeePaymentReceived' || application.status == 'notTransmittedToPartner'" @click="resendToPartner()" x-small color="secondary" :loading="retry" class="ml-3">Retry Send</v-btn>
                                 </v-row>
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Partner</v-col>
@@ -115,8 +123,7 @@ export default {
             application.status = appDetails.status;
             application.statusText = makeStringReadable(appDetails.status);
 
-            // console.log(JSON.stringify(appDetails));
-
+            console.log(JSON.stringify(appDetails));
             application.transactionId = appDetails.transactionId;
 
             if(appDetails.transactionFee){
@@ -129,7 +136,7 @@ export default {
             if(appDetails.transactionNetwork)
                 application.transactionNetwork = appDetails.transactionNetwork.toLowerCase();
 
-            if(appDetails.transactionNetwork === "neo"){
+            if(application.transactionNetwork === "neo"){
                 application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + appDetails.transactionId;
             }
             else if(appDetails.transactionNetwork === "eth"){

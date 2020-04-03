@@ -11,14 +11,17 @@
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-card-title>
-                <span class="headline">Claims Import</span>
+                <v-row>
+                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                    <v-col cols="10">Import Claims</v-col>
+                </v-row>
             </v-card-title>
-            <v-card-text text-center class="px-0">
+            <v-card-text text-center class="px-2">
                 <v-container v-if="!claims || claims.length == 0">
                     No claims found to import
                 </v-container>
                 <v-list v-if="claims.length > 0" class="py-0">
-                        <p class="subheading">
+                        <p class="subheading ">
                             Please choose the claims to be imported to your passport.  If a specified claim type already exists, it will be replaced by the imported claim.
                         </p>
                         <template 

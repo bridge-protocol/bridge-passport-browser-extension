@@ -25,11 +25,12 @@
                         <v-col class="d-flex" cols="12">
                             <v-select
                             :items="partners"
-                            label="Marketplace Partner"
+                            hint="Select your marketplace partner"
                             outlined
                             item-text="name"
                             item-value="id"
                             color="secondary"
+                            :label="selectedPartnerName"
                             @change="partnerSelected"
                             class="mb-0"
                             ></v-select>
@@ -56,6 +57,7 @@
                             <v-col cols="3">
                                 Network Fee
                             </v-col>
+                            <v-col cols="1"><v-img src="/images/bridge-token.png" width="20" contain></v-img></v-col>
                             <v-col cols="auto">
                                 {{networkFee}} BRDG
                             </v-col>
@@ -102,6 +104,8 @@ export default {
             loadStatus: "Loading marketplace info",
             passportPublished: false,
             selectedPartner: null,
+            selectedPartnerName: "",
+            network: "eth",
             networkFee: 0,
             publishGasCost: 0,
             paymentGasCost: 0,
@@ -146,10 +150,15 @@ export default {
             //Send a blockchain fee payment
             this.loadStatus = "Sending network fee transaction";
             console.log("Sending network fee for " + applicationId);
-            let wallet = passportContext.passport.getWalletForNetwork("neo");
+            let wallet = passportContext.passport.getWalletForNetwork(this.network);
             await wallet.unlock(passportContext.passphrase);
 
-            let recipient = BridgeProtocol.Constants.bridgeAddress;
+            let recipient = null;
+            if(wallet.network.toLowerCase() === "neo")
+                recipient = BridgeProtocol.Constants.bridgeAddress;
+            else if (wallet.network.toLowerCase() === "eth")
+                recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
+
             //Get the transaction id and send to the server and don't wait
             let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, this.networkFee, recipient, applicationId, false);
 
@@ -167,11 +176,13 @@ export default {
                 //Relay to the partner
                 this.loadStatus = "Relaying request to partner";
                 await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+                alert("success");
             }
             else{
                 alert("Payment verification failed");
             }
 
+            
             this.$emit('created', true);
             this.loading = false;
         },
@@ -184,16 +195,17 @@ export default {
 
             let passportContext = await BridgeExtension.getPassportContext();
             this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
+            this.selectedPartnerName = this.selectedPartner.name;
             this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
 
             //Verify the balance
-            let wallet = passportContext.passport.getWalletForNetwork("neo");
+            let wallet = passportContext.passport.getWalletForNetwork(this.network);
             let balances = await BridgeExtension.getWalletBalances(wallet);
 
             //TODO: Factor in the passport publish fee into the GAS costs if the passport is not published yet
             if(balances.gas < (this.paymentGasCost + this.publishGasCost)){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + (this.paymentGasCost + this.publishGasCost) + " " + (this.requestNetwork === "neo" ? "GAS":"ETH");
+                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + (this.paymentGasCost + this.publishGasCost) + " " + (this.network === "neo" ? "GAS":"ETH");
             }
             if(balances.brdg < this.networkFee){
                 this.insufficientBalance = true;
@@ -210,10 +222,10 @@ export default {
         this.loading = true;
         this.partners = await BridgeProtocol.Services.Partner.getAllPartners();
         let passportContext = await BridgeExtension.getPassportContext();
-        let wallet = passportContext.passport.getWalletForNetwork("neo");
+        let wallet = passportContext.passport.getWalletForNetwork(this.network);
         if(!wallet)
         {
-            alert("No NEO wallet found.  Please add a NEO wallet and funds.");
+            alert("No " + this.network.toUpperCase() + " wallet found.  Please add a wallet and funds.");
             this.$emit('close', true);
             return;
         }

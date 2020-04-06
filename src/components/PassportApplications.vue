@@ -7,7 +7,22 @@
             ></v-progress-circular>
         </v-container>
         <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
-            <v-expansion-panels>
+            <v-btn
+                absolute
+                dark
+                fab
+                top 
+                right
+                color="accent"
+                class="mt-8 mr-n3"
+                @click="applicationCreateDialog = true"
+                v-if="!refreshing" 
+            >
+                <v-icon link @click="">mdi-plus</v-icon>
+            </v-btn>
+            <v-expansion-panels
+                v-model="applicationPanels"
+                multiple>
                 <v-expansion-panel
                 v-for="(application,i) in applications"
                 :key="i"
@@ -17,7 +32,7 @@
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
-                                <div class="mb-1 title-2" v-text="application.verificationPartner"></div>
+                                <div class="mb-1 title-2" v-text="application.partnerName"></div>
                                 <div class="caption" v-text="application.createdOn"></div>
                             </v-col>
                         <v-row>
@@ -63,6 +78,7 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </v-container>
+        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="refreshApplications(0)" @openUrl="openUrl"></application-create-dialog>
         <v-dialog v-model="statusDialog" persistent max-width="600px">
             <v-card class="py-12">
                 <v-container text-center align-middle>
@@ -90,6 +106,7 @@ export default {
             mainContainerHeight: 690,
             applicationCreateDialog: false,
             applications: [],
+            applicationPanels: null,
             applicationLoading: false,
             lastSelectedApplication: null,
             statusDialog: false,
@@ -98,15 +115,16 @@ export default {
         }
     },
     methods: {
-        init: async function(){
+        refreshApplications: async function(openIndex){
+            this.applicationCreateDialog = false;
             this.refreshing = true;
             let passportContext = await BridgeExtension.getPassportContext();
             let applications = await BridgeProtocol.Services.Application.getActiveApplications(passportContext.passport, passportContext.passphrase);
             for(let i=0; i<applications.length; i++){
+                applications[i].index = i;
                 let created = new Date(applications[i].createdOn * 1000); 
                 applications[i].createdOn = created.toLocaleDateString() + " " + created.toLocaleTimeString();
                 applications[i].src = "/images/bridge-token-white.png";
-                applications[i].partnerName = applications[i].partner;
                 applications[i].loading = false;
                 let partner = await BridgeProtocol.Services.Partner.getPartner(applications[i].verificationPartner);
                 if(partner)
@@ -114,6 +132,12 @@ export default {
             }
             this.applications = applications;
             this.refreshing = false;
+            if(openIndex != null){
+                 let application = applications[openIndex];
+                 this.lastSelectedApplication = application.id;
+                 this.applicationPanels = [openIndex];
+                 await this.refreshApplication(application);
+            }
         },
         applicationSelected: async function(application){
             if(this.lastSelectedApplication == application.id){
@@ -134,8 +158,6 @@ export default {
             application.status = appDetails.status;
             application.statusText = makeStringReadable(appDetails.status);
             application.url = appDetails.url;
-
-            console.log(JSON.stringify(appDetails));
             application.transactionId = appDetails.transactionId;
 
             if(appDetails.transactionFee){
@@ -151,7 +173,7 @@ export default {
             if(application.transactionNetwork === "neo"){
                 application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + appDetails.transactionId;
             }
-            else if(appDetails.transactionNetwork === "eth"){
+            else if(application.transactionNetwork === "eth"){
                 application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + appDetails.transactionId;
             }
 
@@ -209,7 +231,7 @@ export default {
         }
     },
     created: async function(){
-        await this.init();
+        await this.refreshApplications(null);
         //Update the rendered height
         this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
     }

@@ -96,11 +96,7 @@
         //Passport context management
         async getPassportContext(){
             let passphrase = await this.loadPassphrase();
-            console.log("passphrase retrieved: "+ passphrase);
-
             let passportContent = await this.loadPassportFromBrowserStorage();
-            console.log("passport content: "+ passportContent);
-
             let passport;
 
             if(passportContent != null)

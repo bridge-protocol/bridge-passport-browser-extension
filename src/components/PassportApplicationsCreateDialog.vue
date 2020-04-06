@@ -162,9 +162,15 @@ export default {
             let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, this.networkFee, applicationId);
             console.log("Network fee transaction: " + JSON.stringify(status));
 
-            //Relay to the partner
-            this.loadStatus = "Relaying request to partner";
-            application = await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, applicationId);
+            if(status)
+            {
+                //Relay to the partner
+                this.loadStatus = "Relaying request to partner";
+                await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+            }
+            else{
+                alert("Payment verification failed");
+            }
 
             this.$emit('created', true);
             this.loading = false;

@@ -42,7 +42,7 @@
                                     <v-col cols="2" class="text-left">Partner</v-col>
                                     <v-col cols="auto">{{ application.partnerName }}</v-col>
                                 </v-row>
-                                <v-row dense v-if="application.statusText == 'sentSuccessfully'">
+                                <v-row dense v-if="application.status == 'sentSuccessfully'">
                                     <v-col cols="2" class="text-left">Link</v-col>
                                     <v-col cols="10"  class="text-break text-left">
                                         <a @click="openUrl(application.url)">{{application.url}}</a>
@@ -130,11 +130,10 @@ export default {
             let passportContext = await BridgeExtension.getPassportContext();
             let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
 
-            //application = appDetails;
-
             //Make the status readable
             application.status = appDetails.status;
             application.statusText = makeStringReadable(appDetails.status);
+            application.url = appDetails.url;
 
             console.log(JSON.stringify(appDetails));
             application.transactionId = appDetails.transactionId;
@@ -184,9 +183,16 @@ export default {
             let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, networkFee, application.id);
             console.log("Network fee transaction: " + JSON.stringify(status));
 
-            //Relay to the partner
-            this.loadStatus = "Relaying request to partner";
-            await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+            if(status)
+            {
+                //Relay to the partner
+                this.loadStatus = "Relaying request to partner";
+                await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+            }
+            else{
+                alert("Payment verification failed");
+                this.statusDialog = false;
+            }
 
             this.refreshApplication(application);
             this.statusDialog = false;

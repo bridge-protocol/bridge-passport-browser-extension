@@ -35,8 +35,8 @@
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Status</v-col>
                                     <v-col cols="auto">{{ application.statusText }}</v-col>
-                                    <v-btn v-if="application.status == 'waitingForNetworkFeePayment'" @click="resendPayment()" x-small color="secondary" :loading="retry" class="ml-3">Send Payment</v-btn>
-                                    <v-btn v-if="application.status == 'networkFeePaymentReceived' || application.status == 'notTransmittedToPartner'" @click="resendToPartner()" x-small color="secondary" :loading="retry" class="ml-3">Retry Send</v-btn>
+                                    <v-btn v-if="application.status == 'waitingForNetworkFeePayment'" @click="resendPaymentAndSend(application)" x-small color="secondary" class="ml-3">Send Payment</v-btn>
+                                    <v-btn v-if="application.status == 'networkFeePaymentReceived' || application.status == 'notTransmittedToPartner'" @click="resendPartner(application)" x-small color="secondary" :loading="retry" class="ml-3">Retry Send</v-btn>
                                 </v-row>
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Partner</v-col>
@@ -63,6 +63,17 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </v-container>
+        <v-dialog v-model="statusDialog" persistent max-width="600px">
+            <v-card class="py-12">
+                <v-container text-center align-middle>
+                    <v-progress-circular
+                        indeterminate
+                        color="secondary"
+                    ></v-progress-circular>
+                    <v-container>{{loadStatus}}</v-container>
+                </v-container>  
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -81,6 +92,8 @@ export default {
             applications: [],
             applicationLoading: false,
             lastSelectedApplication: null,
+            statusDialog: false,
+            loadStatus: "Please wait",
             retry: false
         }
     },
@@ -147,11 +160,43 @@ export default {
             this.applications.pop();
             application.loading = false;
         },
-        resendPayment: async function(){
+        resendPaymentAndSend: async function(application){
+            this.statusDialog = true;
+            let passportContext = await BridgeExtension.getPassportContext();
+            let networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
 
+            //Send a blockchain fee payment
+            this.loadStatus = "Sending network fee transaction";
+            console.log("Sending network fee for " + application.id);
+            let wallet = passportContext.passport.getWalletForNetwork("neo");
+            await wallet.unlock(passportContext.passphrase);
+
+            let recipient = BridgeProtocol.Constants.bridgeAddress;
+            //Get the transaction id and send to the server and don't wait
+            let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, networkFee, recipient, application.id, false);
+
+            //Send the fee payment info back to the application API
+            await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, application.id, wallet.network, wallet.address, transactionId);
+            console.log("Request fee transaction updated: " + JSON.stringify(application));
+
+            this.loadStatus = "Verifying network fee transaction";
+            //Wait for the transaction to be done
+            let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, networkFee, application.id);
+            console.log("Network fee transaction: " + JSON.stringify(status));
+
+            //Relay to the partner
+            this.loadStatus = "Relaying request to partner";
+            await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+
+            this.refreshApplication(application);
+            this.statusDialog = false;
         },
-        resendToParner: async function(){
-
+        resendPartner: async function(application){
+            this.retry = true;
+            let passportContext = await BridgeExtension.getPassportContext();
+            await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+            this.refreshApplication(application);
+            this.retry = false;
         },       
         openUrl: function(url){
             this.$emit('openUrl', url);

@@ -176,7 +176,6 @@ export default {
                 //Relay to the partner
                 this.loadStatus = "Relaying request to partner";
                 await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
-                alert("success");
             }
             else{
                 alert("Payment verification failed");

@@ -18,8 +18,18 @@
                 @click="applicationCreateDialog = true"
                 v-if="!refreshing" 
             >
-                <v-icon link @click="">mdi-plus</v-icon>
+                <v-icon link>mdi-plus</v-icon>
             </v-btn>
+            <v-alert
+                border="left"
+                colored-border
+                type="info"
+                elevation="2"
+                class="text-left mt-8"
+                v-if="applications.length == 0 && !refreshing"
+                >
+                No marketplace requests found.  Get started by creating a new marketplace request by clicking the + button.
+            </v-alert>
             <v-expansion-panels
                 v-model="applicationPanels"
                 multiple>

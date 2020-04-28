@@ -62,6 +62,15 @@
                                 {{networkFee}} BRDG
                             </v-col>
                         </v-row>
+                        <v-row>
+                            <v-col cols="3">
+                                GAS Cost
+                            </v-col>
+                            <v-col cols="1"><v-img src="/images/eth-logo.png" width="20" contain></v-img></v-col>
+                            <v-col cols="auto">
+                                {{totalGasCost}} ETH
+                            </v-col>
+                        </v-row>
                         <v-alert
                             border="left"
                             colored-border
@@ -109,6 +118,7 @@ export default {
             networkFee: 0,
             publishGasCost: 0,
             paymentGasCost: 0,
+            totalGasCost: 0,
             partners: []
         }
     },
@@ -117,73 +127,77 @@ export default {
             this.$emit('close', true);
         },
         create: async function(){
-            this.loading = true;
-            let passportContext = await BridgeExtension.getPassportContext();
+            let app = this;
+            app.loading = true;
+            app.loadStatus = "Please wait";
+            window.setTimeout(async function(){
+                let passportContext = await BridgeExtension.getPassportContext();
+                let wallet = passportContext.passport.getWalletForNetwork(app.network);
+                await wallet.unlock(passportContext.passphrase);
 
-            //Make sure the passport is published / registered
-            if(!this.passportPublished)
-            {
-                this.loadStatus = "Publishing passport to blockchain";
-                console.log("Passport not published, publishing");
-                await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport);
-                publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-                if(!publish)
+                //Make sure the passport is published / registered
+                if(!app.passportPublished)
                 {
-                    alert("Could not publish passport.");
-                    this.loading = false;
+                    app.loadStatus = "Publishing passport to blockchain";
+                    console.log("Passport not published, publishing");
+                    
+                    await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport);
+                    let publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+                    if(!publish)
+                    {
+                        alert("Could not publish passport.");
+                        app.loading = false;
+                        return;
+                    }
+                }
+
+                app.loadStatus = "Creating marketplace request";
+                //Create the application via API
+                let application = await BridgeProtocol.Services.Application.createApplication(passportContext.passport, passportContext.passphrase, app.selectedPartner.id);
+                if(!application){
+                    alert("Unable to create marketplace request.");
+                    app.loading = false;
                     return;
                 }
-            }
 
-            this.loadStatus = "Creating marketplace request";
-            //Create the application via API
-            let application = await BridgeProtocol.Services.Application.createApplication(passportContext.passport, passportContext.passphrase, this.selectedPartner.id);
-            if(!application){
-                alert("Unable to create marketplace request.");
-                this.loading = false;
-                return;
-            }
+                let applicationId = application.id;
+                console.log("Request created: " + applicationId);
 
-            let applicationId = application.id;
-            console.log("Request created: " + applicationId);
+                //Send a blockchain fee payment
+                app.loadStatus = "Sending network fee transaction";
+                console.log("Sending network fee for " + applicationId);
 
-            //Send a blockchain fee payment
-            this.loadStatus = "Sending network fee transaction";
-            console.log("Sending network fee for " + applicationId);
-            let wallet = passportContext.passport.getWalletForNetwork(this.network);
-            await wallet.unlock(passportContext.passphrase);
+                let recipient = null;
+                if(wallet.network.toLowerCase() === "neo")
+                    recipient = BridgeProtocol.Constants.bridgeAddress;
+                else if (wallet.network.toLowerCase() === "eth")
+                    recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
 
-            let recipient = null;
-            if(wallet.network.toLowerCase() === "neo")
-                recipient = BridgeProtocol.Constants.bridgeAddress;
-            else if (wallet.network.toLowerCase() === "eth")
-                recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
+                //Get the transaction id and send to the server and don't wait
+                let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, app.networkFee, recipient, applicationId, false);
 
-            //Get the transaction id and send to the server and don't wait
-            let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, this.networkFee, recipient, applicationId, false);
+                //Send the fee payment info back to the application API
+                application = await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, applicationId, wallet.network, wallet.address, transactionId);
+                console.log("Request fee transaction updated: " + JSON.stringify(application));
 
-            //Send the fee payment info back to the application API
-            application = await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, applicationId, wallet.network, wallet.address, transactionId);
-            console.log("Request fee transaction updated: " + JSON.stringify(application));
+                app.loadStatus = "Verifying network fee transaction";
+                //Wait for the transaction to be done
+                let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, app.networkFee, applicationId);
+                console.log("Network fee transaction: " + JSON.stringify(status));
 
-            this.loadStatus = "Verifying network fee transaction";
-            //Wait for the transaction to be done
-            let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, this.networkFee, applicationId);
-            console.log("Network fee transaction: " + JSON.stringify(status));
+                if(status)
+                {
+                    //Relay to the partner
+                    app.loadStatus = "Relaying request to partner";
+                    await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
+                }
+                else{
+                    alert("Payment verification failed");
+                }
 
-            if(status)
-            {
-                //Relay to the partner
-                this.loadStatus = "Relaying request to partner";
-                await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
-            }
-            else{
-                alert("Payment verification failed");
-            }
-
-            
-            this.$emit('created', true);
-            this.loading = false;
+                app.$emit('created', true);
+                app.loading = false;
+            },100);
         },
         partnerSelected: async function(partnerId){
             if(!partnerId)
@@ -191,20 +205,27 @@ export default {
 
             this.loading = true;
             this.loadStatus = "Loading partner information";
-
             let passportContext = await BridgeExtension.getPassportContext();
             this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
             this.selectedPartnerName = this.selectedPartner.name;
-            this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
-
+            
             //Verify the balance
             let wallet = passportContext.passport.getWalletForNetwork(this.network);
             let balances = await BridgeExtension.getWalletBalances(wallet);
 
+            //Get the costs
+            await wallet.unlock(passportContext.passphrase);
+            this.paymentGasCost = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, 1, BridgeProtocol.Constants.bridgeEthereumAddress, "identifier", false, true); //Get the transfer GAS cost
+            this.totalGasCost = this.paymentGasCost;
+            if(!this.passportPublished){
+                this.publishGasCost = await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport, true); //Need to also include the passport publish GAS cost
+                this.totalGasCost = parseFloat(this.publishGasCost) + parseFloat(this.paymentGasCost);
+            }
+
             //TODO: Factor in the passport publish fee into the GAS costs if the passport is not published yet
-            if(balances.gas < (this.paymentGasCost + this.publishGasCost)){
+            if(balances.gas < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + (this.paymentGasCost + this.publishGasCost) + " " + (this.network === "neo" ? "GAS":"ETH");
+                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + (this.network === "neo" ? "GAS":"ETH");
             }
             if(balances.brdg < this.networkFee){
                 this.insufficientBalance = true;
@@ -229,7 +250,8 @@ export default {
             return;
         }
         let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-        this.passportPublished = published != null;
+        this.passportPublished = published != null && published.length > 0;
+        this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
         this.loading = false;
     }
 };

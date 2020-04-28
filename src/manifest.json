@@ -24,8 +24,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*/*",
-        "https://bridgeprotocol.azurewebsites.net/*"
+        "https://bridge-protocol.azurewebsites.net/*"
       ],
       "js": [
         "scripts/contentscript.js"

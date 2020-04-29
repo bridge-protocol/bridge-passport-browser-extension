@@ -47,7 +47,7 @@
                     </div>
                     <div v-if="wallet.loaded">
                         <div class="float-right pt-4">
-                            <v-btn x-small class="accent" @click="showTransactions(wallet)">View Transactions</v-btn>
+                            <v-btn x-small class="secondary" @click="showTransactions(wallet)">View Transactions</v-btn>
                         </div>
                         <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>

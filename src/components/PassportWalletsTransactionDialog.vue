@@ -1,20 +1,20 @@
 <template>
-    <v-dialog v-model="visible" overlay-opacity=".8">
-        <v-card>
-            <v-card-text fill-height align-middle class="mx-0 px-0 my-0 py-0">
+    <v-dialog v-model="visible" persistent scrollable overlay-opacity=".8">
+        <v-card dark>
+            <v-toolbar
+                v-if="!loading"
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">Recent Transactions</v-toolbar-title>
+            </v-toolbar>
+            <v-card-text class="pt-2">
                 <v-progress-circular
                 indeterminate
                 color="secondary"
                 style="margin-left:50%;"
                 v-if="loading"
                 ></v-progress-circular>
-                <v-toolbar
-                    v-if="!loading"
-                    color="gradient"
-                    dark
-                    >
-                    <v-toolbar-title class="subtitle-1">Recent Transactions</v-toolbar-title>
-                </v-toolbar>
                 <v-container v-if="!loading && transactions.length == 0">
                     No recent transactions found.
                 </v-container>
@@ -38,9 +38,11 @@
                     <v-divider v-if="i + 1 < transactions.length"></v-divider>
                 </template>
             </v-card-text>
+            <v-divider></v-divider>
             <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn text @click="close()">Close</v-btn>
+                <v-container text-center>
+                    <v-btn color="secondary" @click="close()">Close</v-btn>
+                </v-container>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -67,7 +69,6 @@ export default {
     },
     mounted: async function(){
         let transactions = await BridgeProtocol.Services.Blockchain.getRecentTransactions(this.wallet.network, this.wallet.address);
-
         if(!transactions)
             transactions = [];
 

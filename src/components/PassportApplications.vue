@@ -26,10 +26,10 @@
                 colored-border
                 type="info"
                 elevation="2"
-                class="caption text-left"
+                class="caption text-left pr-12"
                 v-if="applications.length == 0 && !refreshing"
                 >
-                No Bridge Marketplace verification requests found.  Get started by creating a new request.
+                No Bridge Marketplace verification requests found.  Get started by creating a new marketplace request.
             </v-alert>
             <v-expansion-panels
                 v-model="applicationPanels"

@@ -1,9 +1,10 @@
 <template>
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
-        <v-container v-if="refreshing" class="mx-0 my-0 px-0 py-0">
+        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-0 px-0 py-0">
             <v-progress-circular
                 indeterminate
                 color="secondary"
+                style="margin-left: 50%;"
             ></v-progress-circular>
         </v-container>
         <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
@@ -25,10 +26,10 @@
                 colored-border
                 type="info"
                 elevation="2"
-                class="text-left mt-8"
+                class="caption text-left"
                 v-if="applications.length == 0 && !refreshing"
                 >
-                No marketplace requests found.  Get started by creating a new marketplace request by clicking the + button.
+                No Bridge Marketplace verification requests found.  Get started by creating a new request.
             </v-alert>
             <v-expansion-panels
                 v-model="applicationPanels"

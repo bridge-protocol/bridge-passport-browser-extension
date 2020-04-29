@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="visible" persistent max-width="600px">
+    <v-dialog v-model="visible" persistent overlay-opacity=".8">
         <v-card v-if="loading" class="py-12">
             <v-container text-center align-middle>
                 <v-progress-circular
@@ -10,24 +10,24 @@
             </v-container>  
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
-            <v-card-title>
-                <v-alert
-                    border="left"
-                    colored-border
-                    type="warning"
-                    elevation="0"
-                    class="text-left caption text-wrap mx-n6 mt-n4"
-                    v-if="!messageValid"
-                    >
-                    Request integrity check failed.  This request may be forged, proceed with caution.
-                </v-alert>
-                <v-row>
-                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                    <v-col cols="10">Passport Login</v-col>
-                </v-row>
-            </v-card-title>
+            <v-toolbar
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">Passport Login</v-toolbar-title>
+            </v-toolbar>
+            <v-alert
+                border="left"
+                colored-border
+                type="warning"
+                elevation="0"
+                class="text-left caption text-wrap mx-n6 mt-n4"
+                v-if="!messageValid"
+                >
+                Request integrity check failed.  This request may be forged, proceed with caution.
+            </v-alert>
             <v-card-text>
-                <p class="subheading">
+                <p class="subheading mt-4">
                     You have been asked to login and provide information about your identity.  Select the information you want to include in your response by checking the boxes.
                 </p>
                 <template>
@@ -41,7 +41,7 @@
                                 </v-col>
                             </v-row>
                         </v-container>
-                        <v-subheader class="pl-0 ml-0 caption">Requested Claims</v-subheader>
+                        <v-subheader class="pl-0 ml-0 mt-4 caption">Requested Claims</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-container fluid class="mx-0 px-0 my-0 py-0" v-if="!requestedClaimTypes || requestedClaimTypes.length == 0">
                             No Claims Requested
@@ -52,7 +52,7 @@
                                 <v-checkbox v-model="selectedClaimTypes" :label="claimType.name" :value="claimType.id" :disabled="!claimType.claim" class="px-0 mb-n4 mt-0 py-0"></v-checkbox>
                         </v-container>
 
-                        <v-subheader class="pl-0 ml-0 caption">Requested Blockchain Addresses</v-subheader>
+                        <v-subheader class="pl-0 ml-0 mt-4 caption">Requested Blockchain Addresses</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-container fluid class="mx-0 px-0 my-0 py-0" v-if="!requestedAddresses || requestedAddresses.length == 0">
                             No Addresses Requested
@@ -71,7 +71,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn text @click="login()">Login with Passport</v-btn>
+                <v-btn color="secondary" @click="login()">Login with Passport</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -170,7 +170,7 @@ export default {
         }
     },
     async created () {
-        this.verify();
+        window.setTimeout(this.verify(), 1000);
     }
 };
 </script>

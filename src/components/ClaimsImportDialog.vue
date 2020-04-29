@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="visible" persistent max-width="600px">
+    <v-dialog v-model="visible" persistent overlay-opacity=".8">
         <v-card v-if="loading" class="py-12">
             <v-container text-center align-middle>
                 <v-progress-circular
@@ -10,22 +10,23 @@
             </v-container>  
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
-            <v-card-title>
-                <v-alert
-                    border="left"
-                    colored-border
-                    type="warning"
-                    elevation="0"
-                    class="text-left caption text-wrap mx-n6 mt-n4"
-                    v-if="!messageValid"
-                    >
-                    Request integrity check failed.  This request may be forged, proceed with caution.
-                </v-alert>
-                <v-row>
-                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                    <v-col cols="10">Import Claims</v-col>
-                </v-row>
-            </v-card-title>
+            <v-toolbar
+                v-if="!loading"
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">Import Claims</v-toolbar-title>
+            </v-toolbar>
+            <v-alert
+                border="left"
+                colored-border
+                type="warning"
+                elevation="0"
+                class="text-left caption text-wrap mx-n6 mt-n4"
+                v-if="!messageValid"
+                >
+                Request integrity check failed.  This request may be forged, proceed with caution.
+            </v-alert>
             <v-card-text text-center class="px-2">
                 <v-container v-if="!claims || claims.length == 0">
                     No claims found to import
@@ -90,10 +91,10 @@
                     </template>
                 </v-list>
             </v-card-text>
-            <v-card-actions v-if="!loading && claims.length > 0">
+            <v-card-actions v-if="!loading">
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn text @click="importClaims()">Import Claim(s)</v-btn>
+                <v-btn color="secondary" @click="importClaims()" v-if="claims.length > 0">Import Claim(s)</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

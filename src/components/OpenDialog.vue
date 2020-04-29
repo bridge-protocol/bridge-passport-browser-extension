@@ -1,10 +1,12 @@
 <template>
     <v-overlay :opacity="1">
-        <v-dialog v-model="visible" persistent max-width="600px">
+        <v-dialog v-model="visible" persistent overlay-opacity=".8">
             <v-tabs
                 v-model="tab"
+                background-color="gradient"
+                color="white"
+                class="elevation-2"
                 dark
-                color="secondary"
                 >
                 <v-tab>
                     Create New
@@ -14,13 +16,13 @@
                 </v-tab>
                 <v-tab-item>
                     <v-card>
-                        <v-card-title class="pb-0">
-                            <v-row>
-                                <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                                <v-col cols="10">Create a New Passport</v-col>
-                            </v-row>
-                        </v-card-title>
                         <v-card-text>
+                            <v-container>
+                                <v-row>
+                                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                                    <v-col cols="auto" class="headline ml-0">Create a New Passport</v-col>
+                                </v-row>
+                            </v-container>
                             <v-container>
                                 <p>
                                     Create a password to be used to encrypt your Bridge Passport and any associated blockchain wallets when exported or not in use.  This should be a complex password or passphrase only you know.  Be sure to save this password as you will be unable to access your passport without it.
@@ -41,9 +43,11 @@
                                             Import Existing Blockchain Wallets
                                         </v-expansion-panel-header>
                                         <v-expansion-panel-content class="mx-n5">
-                                            <p class="body-2 mb-8">
-                                                 If you have existing NEO or Ethereum wallets you would like to include in your passport, provide the private keys below.  If you want to generate one or more new wallets, simply leave the field(s) blank.
-                                            </p>
+                                            <v-row dense>
+                                                <v-container class="text-justify caption px-0 py-0 mx-0 mt-n2 mb-4" style="color: rgba(255, 255, 255, 0.7);">
+                                                    If you have existing NEO or Ethereum wallets you would like to include in your passport, provide the private keys below.  If you want to generate one or more new wallets, simply leave the field(s) blank.
+                                                </v-container>
+                                            </v-row>
                                             <v-row dense>
                                                 <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
                                                 <v-col cols="11">
@@ -63,22 +67,22 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text @click="createPassport();" :loading="wait">Create Passport</v-btn>
+                            <v-btn color="secondary" @click="createPassport();" :loading="wait">Create Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>
                 <v-tab-item>
                     <v-card>
-                        <v-card-title class="pb-0">
-                            <v-row>
-                                <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                                <v-col cols="10">Import Passport</v-col>
-                            </v-row>
-                        </v-card-title>
                         <v-card-text>
-                            <p>
+                            <v-container>
+                                <v-row>
+                                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
+                                    <v-col cols="auto" class="headline ml-0">Import an Existing Passport</v-col>
+                                </v-row>
+                            </v-container>
+                            <v-container class="text-justivy caption">
                                 If you have an existing Bridge Passport you would like to import, simply select the exported passport file and enter the password you created when you created the passport.
-                            </p>
+                            </v-container>
                             <v-row dense>
                                 <v-col cols="12">
                                     <v-file-input v-model="importFile" :error="importFileErrorMessages != null" :errorMessages="importFileErrorMessages" color="secondary" accept=".json" label="Passport File" placeholder="Select passport file" required outlined dense prepend-icon=""></v-file-input>
@@ -92,7 +96,7 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text @click="importPassport();" :loading="wait">Import Passport</v-btn>
+                            <v-btn color="secondary" @click="importPassport();" :loading="wait">Import Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>

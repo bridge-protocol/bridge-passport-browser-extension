@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="visible" persistent max-width="600px">
+    <v-dialog v-model="visible" persistent overlay-opacity=".8">
         <v-card v-if="loading" class="py-12">
             <v-container text-center align-middle>
                 <v-progress-circular
@@ -10,24 +10,24 @@
             </v-container>  
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
-            <v-card-title>
-                <v-alert
-                    border="left"
-                    colored-border
-                    type="warning"
-                    elevation="0"
-                    class="text-left caption text-wrap mx-n6 mt-n4"
-                    v-if="!messageValid"
-                    >
-                    Request integrity check failed.  This request may be forged, proceed with caution.
-                </v-alert>
-                <v-row>
-                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                    <v-col cols="10">Token Payment</v-col>
-                </v-row>
-            </v-card-title>
+            <v-toolbar
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">Token Payment Request</v-toolbar-title>
+            </v-toolbar>
+            <v-alert
+                border="left"
+                colored-border
+                type="warning"
+                elevation="0"
+                class="text-left caption text-wrap mx-n6 mt-n4"
+                v-if="!messageValid"
+                >
+                Request integrity check failed.  This request may be forged, proceed with caution.
+            </v-alert>
             <v-card-text>
-                <p class="subheading">
+                <p class="subheading mt-4">
                     You have been asked make a BRDG token payment.  Please review the payment information.
                 </p>
                 <v-container fluid class="px-0 mt-n6">
@@ -40,7 +40,7 @@
                             </v-col>
                         </v-row>
                     </v-container>
-                    <v-subheader class="pl-0 ml-0 caption">Payment Information</v-subheader>
+                    <v-subheader class="pl-0 ml-0 mt-4 caption">Payment Information</v-subheader>
                     <v-divider class="mb-2"></v-divider>
                     <v-container fluid class="mx-0 px-0 my-n2 py-0">
                         <v-row>
@@ -70,7 +70,7 @@
                                 <v-img src="/images/bridge-token.png" width="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="pl-0">
-                                {{requestAmount}} BRDG
+                                {{requestAmount}} BRDG ({{brdgBalance}} available)
                             </v-col>
                         </v-row>
                         <v-row v-if="requestNetwork === 'eth'">
@@ -81,7 +81,7 @@
                                 <v-img src="/images/eth-logo.png" width="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="pl-0">
-                                {{requestGas}} ETH
+                                {{requestGas}} ETH ({{gasBalance}} available)
                             </v-col>
                         </v-row>
                     </v-container>
@@ -100,7 +100,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel();">Cancel</v-btn>
-                <v-btn text @click="pay();" :disabled="insufficientBalance">Make Payment</v-btn>
+                <v-btn color="secondary" @click="pay();" :disabled="insufficientBalance">Make Payment</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -122,10 +122,12 @@ export default {
             requestNetwork: null,
             requestNetworkName: null,
             requestAmount: null,
-            requestGas: 0.00,
+            requestGas: 0,
             requestAddress: null,
             requestAddressUrl: null,
             requestIdentifier: null,
+            brdgBalance: 0,
+            gasBalance: 0,
             insufficientBalance: false,
             insufficientBalanceErrorMessage: "Insufficient balance to make payment"
         }
@@ -164,7 +166,13 @@ export default {
 
             //Check the balances
             let wallet = passportContext.passport.getWalletForNetwork(this.requestNetwork);
+            await wallet.unlock(passportContext.passphrase);
+
             let balances = await BridgeExtension.getWalletBalances(wallet);
+            this.requestGas = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, this.requestAmount, this.requestAddress, this.requestIdentifier, false, true); //Get the transfer GAS cost
+            this.brdgBalance = balances.brdg;
+            this.gasBalance = balances.gas;
+
             if(balances.gas < this.requestGas){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient balance for payment.  This transaction requires " + this.requestGas + " " + this.requestNetwork === "neo" ? "GAS":"ETH";
@@ -177,26 +185,29 @@ export default {
             this.loading = false;
         },
         pay: async function(){
-            this.loading = true;
-            this.loadStatus = "Creating and sending payment transaction";
+            let app = this;
+            app.loading = true;
+            app.loadStatus = "Creating and sending payment transaction";
+            //Allow UI to refresh with spinner
+            window.setTimeout(async function(){
+                let passportContext = await BridgeExtension.getPassportContext();
 
-            let passportContext = await BridgeExtension.getPassportContext();
-
-            //Unlock the wallet
-            let wallet = passportContext.passport.getWalletForNetwork(this.requestNetwork);
-            await wallet.unlock(passportContext.passphrase);
-            
-            //Transmit the transaction
-            let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, this.requestAmount, this.requestAddress, this.requestIdentifier, false);
-            if(!transactionId){
-               alert("Transaction failed. See console for details.");
-               return;
-            }
-            
-            this.loadStatus = "Transaction " + transactionId + " sent successfully";
-            //Create response message
-            let response = await BridgeProtocol.Messaging.Payment.createPaymentResponse(passportContext.passport, passportContext.passphrase, this.requestNetwork, wallet.address, this.requestAmount, this.requestAddress, this.requestIdentifier, transactionId, this.requestPublicKey);
-            this.$emit('paymentSent', { sender: this.sender, response });
+                //Unlock the wallet
+                let wallet = passportContext.passport.getWalletForNetwork(app.requestNetwork);
+                await wallet.unlock(passportContext.passphrase);
+                
+                //Transmit the transaction
+                let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, app.requestAmount, app.requestAddress, app.requestIdentifier, false);
+                if(!transactionId){
+                alert("Transaction failed. See console for details.");
+                return;
+                }
+                
+                app.loadStatus = "Transaction " + transactionId + " sent successfully";
+                //Create response message
+                let response = await BridgeProtocol.Messaging.Payment.createPaymentResponse(passportContext.passport, passportContext.passphrase, app.requestNetwork, wallet.address, app.requestAmount, app.requestAddress, app.requestIdentifier, transactionId, app.requestPublicKey);
+                app.$emit('paymentSent', { sender: app.sender, response });
+            },100);
         },
         openUrl: function(url){
             this.$emit('openUrl', url);

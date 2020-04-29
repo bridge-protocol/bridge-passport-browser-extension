@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="visible" persistent max-width="600px">
+    <v-dialog v-model="visible" persistent overlay-opacity=".8">
         <v-card v-if="loading" class="py-12">
             <v-container text-center align-middle>
                 <v-progress-circular
@@ -10,22 +10,20 @@
             </v-container>  
         </v-card>
         <v-card fill-height v-if="!loading">
-            <v-card-title class="title">
-                <v-row>
-                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                    <v-col cols="10">New Marketplace Request</v-col>
-                </v-row>
-            </v-card-title>
+            <v-toolbar
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">New Bridge Marketplace Request</v-toolbar-title>
+            </v-toolbar>
             <v-card-text>
-                <div>
-                    <p>
+                    <p class="mt-4">
                         Choose a marketplace partner to send a request to verify your personal information and add claims to your digital identity.
                     </p>
                     <v-row>
                         <v-col class="d-flex" cols="12">
                             <v-select
                             :items="partners"
-                            hint="Select your marketplace partner"
                             outlined
                             item-text="name"
                             item-value="id"
@@ -59,7 +57,7 @@
                             </v-col>
                             <v-col cols="1"><v-img src="/images/bridge-token.png" width="20" contain></v-img></v-col>
                             <v-col cols="auto">
-                                {{networkFee}} BRDG
+                                {{networkFee}} BRDG ({{brdgBalance}} Available)
                             </v-col>
                         </v-row>
                         <v-row>
@@ -68,36 +66,33 @@
                             </v-col>
                             <v-col cols="1"><v-img src="/images/eth-logo.png" width="20" contain></v-img></v-col>
                             <v-col cols="auto">
-                                {{totalGasCost}} ETH
+                                {{totalGasCost}} ETH ({{gasBalance}} Available)
                             </v-col>
                         </v-row>
                         <v-alert
-                            border="left"
-                            colored-border
+                            outlined
+                            color="primary"
                             type="info"
-                            elevation="0"
-                            class="text-left mt-2 caption"
-                            v-if="selectedPartner != null"
+                            class="mt-2 caption text-justify"
+                            v-if="!insufficientBalance && selectedPartner != null"
                             >
                             The Bridge Network fee and any associated gas cost for the transaction is non-refundable and does not include additional fees for service that may be required by the selected Bridge Marketplace partner.  Some Bridge Marketplace partners are third party providers that have no affiliation with Bridge Protocol Corporation and may have independent terms, conditions, and fees for service.
                         </v-alert>
                         <v-alert
-                            border="left"
-                            colored-border
+                            outlined
+                            color="primary"
                             type="error"
-                            elevation="0"
-                            class="text-left caption text-wrap mt-2"
+                            class="mt-2 caption text-justify"
                             v-if="insufficientBalance"
                             >
                             {{insufficientBalanceErrorMessage}}
                         </v-alert>
                     </div>
-                </div>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="close()">Cancel</v-btn>
-                <v-btn text @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
+                <v-btn color="secondary" @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -116,6 +111,8 @@ export default {
             selectedPartnerName: "",
             network: "eth",
             networkFee: 0,
+            gasBalance: 0,
+            brdgBalance: 0,
             publishGasCost: 0,
             paymentGasCost: 0,
             totalGasCost: 0,
@@ -130,6 +127,8 @@ export default {
             let app = this;
             app.loading = true;
             app.loadStatus = "Please wait";
+
+            //Allow UI to refresh with spinner
             window.setTimeout(async function(){
                 let passportContext = await BridgeExtension.getPassportContext();
                 let wallet = passportContext.passport.getWalletForNetwork(app.network);
@@ -212,6 +211,8 @@ export default {
             //Verify the balance
             let wallet = passportContext.passport.getWalletForNetwork(this.network);
             let balances = await BridgeExtension.getWalletBalances(wallet);
+            this.gasBalance = balances.gas;
+            this.brdgBalance = balances.brdg;
 
             //Get the costs
             await wallet.unlock(passportContext.passphrase);

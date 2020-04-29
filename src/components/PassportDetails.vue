@@ -1,9 +1,10 @@
 <template>
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
-        <v-container v-if="refreshing" class="mx-0 my-0 px-0 py-0">
+        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-0 px-0 py-0">
             <v-progress-circular
                 indeterminate
                 color="secondary"
+                style="margin-left: 50%;"
             ></v-progress-circular>
         </v-container>
         <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
@@ -36,10 +37,10 @@
                     colored-border
                     type="info"
                     elevation="2"
-                    class="text-left mt-2"
+                    class="caption text-left mt-2"
                     v-if="claims.length == 0"
                     >
-                    No digital identity verified claims found.  To add verified claims, find a verification partner on the Bridge Marketplace.
+                    No digital identity verified claims found.  To add verified claims, create a Bridge Marketplace request. <a @click="navigateToMarketplace">Go to My Marketplace Requests</a>
                 </v-alert>
                 <v-expansion-panel
                 v-for="(claim,i) in claims"
@@ -335,6 +336,9 @@ export default {
 
             this.neoWait = false;
             this.ethWait = false;
+        },
+        navigateToMarketplace(){
+            this.$emit('showMarketplace', true);
         }
     },
     data: function() {

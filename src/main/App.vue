@@ -140,7 +140,7 @@
       <open-dialog v-if="openDialog" @unlocked="unlocked()"></open-dialog>
 
       <!-- unlock dialog -->
-      <unlock-dialog v-if="unlockDialog" @unlocked="unlocked()"></unlock-dialog>
+      <unlock-dialog v-if="unlockDialog" @unlocked="unlocked()" @unload="removePassport()"></unlock-dialog>
 
       <!-- login dialog -->
       <login-dialog v-if="loginDialog" :sender="sender" :request="request" @login="login" @cancel="loginDialog = false"></login-dialog>
@@ -152,7 +152,7 @@
       <claims-import-dialog v-if="claimsImportDialog" :sender="sender" :request="request" @cancel="claimsImportDialog = false" @imported="claimsImported"></claims-import-dialog>
 
       <!-- content -->
-      <passport-details v-if="isCurrentView('passportDetails')"></passport-details>
+      <passport-details v-if="isCurrentView('passportDetails')" @showMarketplace="currentView = 'passportApplications'"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
       <passport-applications v-if="isCurrentView('passportApplications')" @openUrl="openUrl"></passport-applications>
 

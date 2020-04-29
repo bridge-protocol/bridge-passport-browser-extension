@@ -21,7 +21,7 @@
             @click="addDialog = true"
             v-if="wallets.length < 2"
         >
-            <v-icon link @click="">mdi-plus</v-icon>
+            <v-icon link>mdi-plus</v-icon>
         </v-btn>
         <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
@@ -62,6 +62,9 @@
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                            <v-col cols="auto">
+                                <v-btn v-if="wallet.brdgBalance == 0 && wallet.network.toLowerCase() === 'neo'" @click="openUrl('https://bridge-protocol.github.io/bridge-protocol-token-swap/')" x-small color="secondary">Swap Tokens</v-btn>
+                            </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
                         <v-divider class="mb-2"></v-divider>

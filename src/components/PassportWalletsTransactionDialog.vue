@@ -1,18 +1,20 @@
 <template>
-    <v-dialog v-model="visible" max-width="600px">
+    <v-dialog v-model="visible" overlay-opacity=".8">
         <v-card>
-            <v-card-title class="title">
-                <v-row>
-                    <v-col cols="auto"><v-img src="../images/bridge-token.png" width="36"></v-img></v-col>
-                    <v-col cols="10">Recent Transactions</v-col>
-                </v-row>
-            </v-card-title>
-            <v-card-text style="mx-0 px-0 my-0 py-0">
+            <v-card-text fill-height align-middle class="mx-0 px-0 my-0 py-0">
                 <v-progress-circular
                 indeterminate
                 color="secondary"
+                style="margin-left:50%;"
                 v-if="loading"
                 ></v-progress-circular>
+                <v-toolbar
+                    v-if="!loading"
+                    color="gradient"
+                    dark
+                    >
+                    <v-toolbar-title class="subtitle-1">Recent Transactions</v-toolbar-title>
+                </v-toolbar>
                 <v-container v-if="!loading && transactions.length == 0">
                     No recent transactions found.
                 </v-container>

@@ -70,25 +70,14 @@
                                             </v-btn>
                                         </template>
                                         <v-list dense>
-                                            <v-list-item two-line @click="publishClaim(claim,'neo')" v-if="neoWallet != null && !claim.neoClaim">
+                                            <v-list-item two-line @click="showPublishClaimDialog(claim)">
                                                 <v-list-item-icon>
                                                 <v-icon>mdi-publish</v-icon>
                                                 </v-list-item-icon>
                                                 <v-list-item-content>
-                                                <v-list-item-title>Publish to NEO</v-list-item-title>
+                                                <v-list-item-title>Publish to Blockchain</v-list-item-title>
                                                 <v-list-item-subtitle>
-                                                    Publish the claim data to blockchain
-                                                </v-list-item-subtitle>
-                                                </v-list-item-content>
-                                            </v-list-item>
-                                            <v-list-item two-line @click="publishClaim(claim,'eth')" v-if="ethWallet != null && !claim.ethClaim">
-                                                <v-list-item-icon>
-                                                <v-icon>mdi-publish</v-icon>
-                                                </v-list-item-icon>
-                                                <v-list-item-content>
-                                                <v-list-item-title>Publish to Ethereum</v-list-item-title>
-                                                <v-list-item-subtitle>
-                                                    Publish the claim data to blockchain
+                                                    Publish the claim data or hash to the blockchain
                                                 </v-list-item-subtitle>
                                                 </v-list-item-content>
                                             </v-list-item>
@@ -178,12 +167,17 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </v-container>
+        <blockchain-publish-dialog v-if="publishDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishDialog = false"></blockchain-publish-dialog>
     </v-container>
 </template>
 
 <script>
+import BlockchainPublishDialog from '../components/PassportBlockchainPublishDialog.vue';
 export default {
     name: 'passport-details',
+     components: {
+         BlockchainPublishDialog
+    },
     methods: {
         init: async function(){
             this.refreshing = true;
@@ -252,45 +246,6 @@ export default {
             this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
             this.refreshing = false;
         },
-        async publishClaim(claim, network){
-            if(network.toLowerCase() === "neo")
-                this.neoWait = true;
-            else if(network.toLowerCase() === "eth")
-                this.ethWait = true;
-
-            let passportContext = await BridgeExtension.getPassportContext();
-            let wallet = passportContext.passport.getWalletForNetwork(network);
-            await wallet.unlock(passportContext.passphrase);
-
-            try{
-                //Check and see if it's published
-                console.log("Verifying passport is published");
-                let publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-                //Make sure the passport is published / registered
-                if(!publish)
-                {
-                    console.log("Passport not published, publishing");
-                    await BridgeProtocol.Services.Blockchain.publishPassport(wallet, passportContext.passport);
-                    publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-                    if(!publish)
-                    {
-                        alert("Could not publish passport.");
-                        return;
-                    }
-                }
-
-                console.log("Publishing claim");
-                await BridgeProtocol.Services.Blockchain.addClaim(passportContext.passport, passportContext.passphrase, wallet, claim, false);
-
-                this.refreshClaim(claim);
-            }
-            catch(err){
-                console.log("Unable to publish claim: " + err);
-            }
-
-            this.neoWait = false;
-            this.ethWait = false;
-        },
         async removeClaim(claim){
             let publishedClaim = false;
             let passportContext = await BridgeExtension.getPassportContext();
@@ -339,6 +294,16 @@ export default {
         },
         navigateToMarketplace(){
             this.$emit('showMarketplace', true);
+        },
+        async showPublishClaimDialog(claim){
+            this.publishClaim = claim;
+            this.publishDialog = true;
+        },
+        claimPublished(){
+            let claim = this.publishClaim;
+            this.publishClaim = null;
+            this.publishDialog = false;
+            this.refreshClaim(claim);
         }
     },
     data: function() {
@@ -353,7 +318,9 @@ export default {
             neoWait: false,
             ethWait: false,
             refreshing: true,
-            claims: []
+            claims: [],
+            publishClaim: null,
+            publishDialog: false
         }
     },
     created: async function(){

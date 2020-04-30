@@ -17,7 +17,7 @@
                 <v-toolbar-title class="subtitle-1">Publish Claim to Blockchain</v-toolbar-title>
             </v-toolbar>
             <v-card-text>
-                    <p class="mt-4">
+                    <p class="mt-4 mb-0">
                         Choose the blockchain and method of publishing the claim below
                     </p>
                     <v-row>
@@ -28,7 +28,7 @@
                             item-text="name"
                             item-value="id"
                             color="secondary"
-                            label="Blockchain"
+                            :label="networkName"
                             @change="networkSelected"
                             class="mb-0"
                             ></v-select>
@@ -36,12 +36,44 @@
                     </v-row>
                     <div v-if="network != null" class="mt-n10">
                         <v-row>
-                            <v-col cols="3">
+                            <v-col cols="2">
+                                Claim Type
+                            </v-col>
+                            <v-col cols="auto">
+                                {{claimTypeName}}
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="2">
+                                Claim Date
+                            </v-col>
+                            <v-col cols="auto">
+                                {{claimDate}}
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="2">
+                                Claim Value
+                            </v-col>
+                            <v-col cols="10" class="text-break text-left">
+                                {{claimValue}}
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="2">
+
+                            </v-col>
+                            <v-col cols="auto" class="mt-n4">
+                                <input type="checkbox" v-model="hashOnly"></input> Publish hash only
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="2">
                                 GAS Cost
                             </v-col>
-                            <v-col cols="1"><v-img src="/images/eth-logo.png" width="20" contain></v-img></v-col>
-                            <v-col cols="auto">
-                                {{totalGasCost}} ETH ({{gasBalance}} Available)
+                            <v-col cols="auto"><v-img :src="'/images/' + network + '-logo.png'" width="20" contain></v-img></v-col>
+                            <v-col cols="8" class="ml-n5">
+                                {{totalGasCost}} {{gasLabel}} ({{gasBalance}} Available)
                             </v-col>
                         </v-row>
                         <v-alert
@@ -58,7 +90,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="secondary" @click="publish()">Publish to Blockchain</v-btn>
+                <v-btn color="secondary" @click="publish()" v-if="!insufficientBalance">Publish to Blockchain</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -73,11 +105,16 @@ export default {
             visible: true,
             loading: false,
             loadingMessage: "Please wait",
-            networks: [{ id:"eth", name:"Ethereum" },{ id:"neo", name:"NEO" }],
+            networks: [],
             network: null,
+            networkName: null,
             passportContext: null,
-            ethWallet: null,
-            neoWallet: null,
+            claimTypeName: null,
+            claimDate: null,
+            claimValue: null,
+            hashOnly: false,
+            wallet: null,
+            gasLabel: null,
             totalGasCost: 0,
             gasBalance: 0,
             insufficientBalance: false,
@@ -86,17 +123,38 @@ export default {
         }
     },
     methods:{
-        networkSelected: async function(obj){
-            alert(JSON.stringify(obj));
+        networkSelected: async function(network){
+            this.loading = true;
+            this.network = network;
+            this.networkName = network === "eth" ? "Ethereum" : "NEO";
+
+            this.wallet = this.passportContext.passport.getWalletForNetwork(network);
+            this.gasLabel = network === "eth" ? "ETH" : "GAS";
 
             let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
             this.passportPublished = published != null && published.length > 0;
+
+            let passportPublishCost = 0;
+            if(!this.passportPublished){
+                passportPublishCost = await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport, true);
+            }
+            let claimPublishCost = await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false, true);
+            this.totalGasCost = parseFloat(passportPublishCost) + parseFloat(claimPublishCost);
+
+            let balances = await BridgeExtension.getWalletBalances(this.wallet);
+            this.gasBalance = balances.gas;
+
+            if(this.gasBalance < this.totalGasCost){
+                this.insufficientBalance = true;
+                this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
+            }
+            this.loading = false;
         },
         publish: async function(){
             this.loading = true;
             try
             {
-                this.loadingMessage = "Preparing to publish claim";
+                this.loadingMessage = "Publishing claim";
                 this.wallet = this.passportContext.passport.getWalletForNetwork(this.network);
                 if(!this.wallet)
                 {
@@ -107,7 +165,7 @@ export default {
                 await this.wallet.unlock(this.passportContext.passphrase);
 
                 //Make sure the passport is published / registered
-                if(!this.published)
+                if(!this.passportPublished)
                 {
                     console.log("Passport not published, publishing");
                     await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport);
@@ -122,7 +180,7 @@ export default {
 
                 this.loadingMessage = "Publishing claim transaction";
                 console.log("Publishing claim");
-                await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false);
+                await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, this.hashOnly);
                 this.$emit('published', true);
                 this.loading = false;
              }
@@ -142,8 +200,20 @@ export default {
     mounted: async function(){
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
-        this.ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
-        this.neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+
+        //Setup the available networks
+        let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
+        let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        if(ethWallet)
+            this.networks.push({ id:"eth", name:"Ethereum" });
+        if(neoWallet)
+            this.networks.push({ id:"neo", name:"NEO" });
+
+        let claimType = await BridgeExtension.getFullClaimInfo(this.claim);
+        this.claimTypeName = claimType.claimTypeName;
+        this.claimDate = claimType.verifiedOn;
+        this.claimValue = this.claim.claimValue;
+
         this.loading = false;
     }
 };

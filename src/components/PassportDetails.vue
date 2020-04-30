@@ -116,18 +116,18 @@
                                 <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
                                 <v-divider class="mb-2"></v-divider>
                                 <v-row dense v-if="neoWallet != null">
-                                    <v-col cols="auto" class="text-left">
+                                    <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="!claim.neoLoading">
+                                    <v-col cols="11" v-if="!claim.neoLoading">
                                         <v-row v-if="claim.neoClaim" class="mt-n3">
-                                            <v-col cols="auto">{{getDate(claim.neoClaim.date)}}</v-col>
-                                            <v-col cols="auto">{{claim.neoClaim.value}}</v-col>
+                                            <v-col cols="2">{{getDate(claim.neoClaim.date)}}</v-col>
+                                            <v-col cols="9" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
                                             <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'neo')" icon x-small :loading="neoWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
-                                        <span cols="auto" v-if="!claim.neoClaim">
+                                        <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.neoClaim">
                                             Not Published 
-                                        </span>
+                                        </v-container>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.neoLoading">
                                         <v-progress-circular
@@ -139,18 +139,18 @@
                                     </v-col>
                                 </v-row>
                                 <v-row dense v-if="ethWallet != null">
-                                    <v-col cols="auto" class="text-left">
+                                    <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="auto" v-if="!claim.ethLoading">
+                                    <v-col cols="11" v-if="!claim.ethLoading">
                                         <v-row v-if="claim.ethClaim" class="mt-n3">
-                                            <v-col cols="auto">{{getDate(claim.ethClaim.date)}}</v-col>
-                                            <v-col cols="auto">{{claim.ethClaim.value}}</v-col>
+                                            <v-col cols="2">{{getDate(claim.ethClaim.date)}}</v-col>
+                                            <v-col cols="9" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
                                             <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'eth')" icon x-small :loading="ethWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
-                                        <span cols="auto" v-if="!claim.ethClaim">
+                                        <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.ethClaim">
                                             Not Published                                         
-                                        </span>
+                                        </v-container>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.ethLoading">
                                         <v-progress-circular

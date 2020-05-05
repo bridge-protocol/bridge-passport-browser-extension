@@ -63,7 +63,7 @@
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                             <v-col cols="auto">
-                                <v-btn v-if="wallet.brdgBalance == 0 && wallet.network.toLowerCase() === 'neo'" @click="openUrl('https://bridge-protocol.github.io/bridge-protocol-token-swap/')" x-small color="secondary">Swap Tokens</v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="secondary">Swap Tokens</v-btn>
                             </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -128,16 +128,19 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false, transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
+        <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false; transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
+        <token-swap-dialog v-if="tokenSwapDialog" :from="swapFrom" :to="swapTo" @close="tokenSwapDialog = false; swapFrom = null; swapTo = null;"></token-swap-dialog>
     </v-container>
 </template>
 
 <script>
 import TransactionDialog from './PassportWalletsTransactionDialog.vue';
+import TokenSwapDialog from './TokenSwapDialog.vue';
 export default {
     name: 'passport-wallets',
     components:{
-        TransactionDialog
+        TransactionDialog,
+        TokenSwapDialog
     },
     methods: {
         addWallet: async function(){
@@ -308,6 +311,22 @@ export default {
             this.wallets.push({});
             this.wallets.pop();
         },
+        tokenSwap: async function(network){
+            network = network.toLowerCase();
+            let passportContext = await BridgeExtension.getPassportContext();
+            if(network === "neo"){
+                this.swapFrom = passportContext.passport.getWalletForNetwork("neo");
+                this.swapTo = passportContext.passport.getWalletForNetwork("eth");
+            }
+            else{
+                this.swapFrom = passportContext.passport.getWalletForNetwork("eth");
+                this.swapTo = passportContext.passport.getWalletForNetwork("neo");
+            }
+            this.tokenSwapDialog = true;
+            //HACK: there has to be a better way to force the refresh
+            this.wallets.push({});
+            this.wallets.pop();
+        },
         openUrl: function(url){
             this.$emit('openUrl', url);
         }
@@ -327,7 +346,9 @@ export default {
             removing: false,
             transactionDialog: false,
             transactionWallet: null,
-            wallets: []
+            wallets: [],
+            swapFrom: null,
+            swapTo: null
         }
     },
     created: async function(){

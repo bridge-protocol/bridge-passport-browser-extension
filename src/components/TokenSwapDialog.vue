@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
+    <v-dialog v-model="visible" persistent overlay-opacity=".8" max-width="600">
         <v-card v-if="loading" class="py-12">
             <v-container text-center align-middle>
                 <v-progress-circular
@@ -16,15 +16,86 @@
                 >
                 <v-toolbar-title class="subtitle-1">Token Swap</v-toolbar-title>
             </v-toolbar>
+            <v-card-text>    
+                <v-row dense class="mt-4 px-0 mx-0">
+                    <v-col cols="5" class="mt-6">
+                        <v-img :src="'../images/' + from.network + '-logo.png'" height="30" contain></v-img>
+                    </v-col>
+                    <v-col cols="2" class="text-center mt-0">
+                        <v-img src="../images/bridge-token-lg.png" height="40" contain></v-img>
+                    </v-col>
+                    <v-col cols="5" class="mt-6">
+                        <v-img :src="'../images/' + to.network + '-logo.png'" height="30" contain></v-img>
+                    </v-col>
+                </v-row>
+                <v-row dense class="px-0 mx-0">
+                    <v-col cols="5" class="text-center text-truncate px-0 mx-0" style="font-size:11px;">
+                        {{from.address}}
+                    </v-col>
+                    <v-col cols="2" class="text-center pa-0 mb-0 mt-n1"><v-icon large color="grey">mdi-arrow-right-bold</v-icon></v-col>
+                    <v-col cols="5" class="text-center text-truncate px-0 mx-0" style="font-size:11px;">
+                        {{to.address}}  
+                    </v-col>
+                </v-row>
+                <v-row dense class="px-0 mx-0 mt-4">
+                    <v-col cols="4" class="pt-9 text-right">
+                        Swap Amount
+                    </v-col>
+                    <v-col cols="4" class="text-center">
+                        <div style="font-size:10px;">{{brdgBalance}} Available</div>
+                        <v-text-field
+                            v-model="brdgAmount"
+                            name="brdgAmount"
+                            outlined
+                            dense
+                            color="secondary"
+                            required
+                            :rules="[rules.required, rules.gtzero, rules.ltbalance]"
+                        >
+                        </v-text-field>
+                    </v-col>
+                    <v-col cols="4" class="ml-n5">
+                        <v-btn text color="secondary" class="pt-9" @click="setMax()">Max</v-btn>
+                    </v-col>
+                <v-row>
+                <v-row dense class="px-0 mx-0 my-n2">
+                    <v-col cols="4" class="pt-9 text-right">
+                        ETH Required
+                    </v-col>
+                    <v-col cols="4" class="text-center">
+                        <div style="font-size:10px;">{{gasBalance}} Available</div>
+                        <v-text-field
+                            v-model="totalGasCost"
+                            name="totalGasCost"
+                            outlined
+                            dense
+                            color="secondary"
+                            disabled
+                        >
+                        </v-text-field>
+                    </v-col>
+                    <v-col cols="4" class="ml-n6">
+                    </v-col>
+                <v-row>
+            </v-card-text>
             <v-card-text>
-                    <p class="mt-4 mb-0">
-                        TOKEN SWAP FROM {{this.from.network}}:{{this.from.address}} to {{this.to.network}}:{{this.to.address}}
-                    </p>
+                <v-alert
+                    outlined
+                    color="primary"
+                    type="error"
+                    class="mt-2 caption text-justify"
+                    v-if="insufficientBalance"
+                    >
+                    {{insufficientBalanceErrorMessage}}
+                </v-alert>
+            </v-card-text>
+            <v-card-text class="mx-0 mt-n2 text-justify" style="font-size:11px;">
+                Before continuing, be sure to review all transaction information and ensure that the target Ethereum address is correct.  Bridge Protocol Corporation will not be held liable for any loss arising from the use of this software, including but not limited to providing an incorrect Ethereum wallet address.  By clicking below, you agree that you have reviewed all transaction amounts, wallet addresses, and agree to assume responsibility for this transaction.
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="secondary" @click="swap()" v-if="!insufficientBalance">Send Token Swap Request</v-btn>
+                <v-btn color="secondary"  @click="swap()" v-if="!insufficientBalance && !error">Send Token Swap Request</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -40,12 +111,36 @@ export default {
             loading: false,
             loadingMessage: "Please wait",
             passportContext: null,
-            wallet: null,
-            gasLabel: null,
+            brdgBalance: 0,
+            brdgAmount: 0,
             totalGasCost: 0,
             gasBalance: 0,
             insufficientBalance: false,
-            insufficientBalanceErrorMessage: ""
+            insufficientBalanceErrorMessage: "",
+            error: false,
+            rules: {
+                required: value => !!value || 'Swap amount required',
+                gtzero: value => {
+                    let amt = parseFloat(value);
+                    if(amt > 0){
+                        this.error = false;
+                        return true;
+                    }
+                        
+                    this.error = true;
+                    return 'Swap amount must be greater than zero';
+                },
+                ltbalance: value => {
+                    let amt = parseFloat(value);
+                    if(amt <= this.brdgBalance){
+                        this.error = false;
+                        return true;
+                    }
+                    
+                    this.error = true;
+                    return 'Swap amount must be less than available balance';
+                }
+            }
         }
     },
     methods:{
@@ -63,13 +158,33 @@ export default {
                 this.$emit('close', true);
             }
         },
+        setMax: function(){
+            this.brdgAmount = this.brdgBalance;
+        },
         cancel: function(){
             this.$emit('close', true);
         }
     },
-    created: async function(){
+    mounted: async function(){
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
+        let fromBalances = await BridgeExtension.getWalletBalances(this.from);
+        let toBalances = await BridgeExtension.getWalletBalances(this.to);
+
+        //Calculate the GAS cost
+        this.brdgBalance = fromBalances.brdg;
+        if(this.from.network.toLowerCase() === "neo"){
+            this.gasBalance = toBalances.gas;
+        }
+        else{
+            this.gasBalance = fromBalances.gas;
+        }
+        this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendSwapRequest(this.from, this.to, 1, true);
+        if(this.gasBalance < this.totalGasCost){
+            this.insufficientBalance = true;
+            this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
+        }
+
         this.loading = false;
     }
 };

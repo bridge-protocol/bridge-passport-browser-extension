@@ -322,6 +322,12 @@ export default {
                 this.swapFrom = passportContext.passport.getWalletForNetwork("eth");
                 this.swapTo = passportContext.passport.getWalletForNetwork("neo");
             }
+
+            if(!this.swapFrom || !this.swapTo){
+                alert("You must have both a NEO and Ethereum wallet in your passport to swap tokens.");
+                return;
+            }
+
             this.tokenSwapDialog = true;
             //HACK: there has to be a better way to force the refresh
             this.wallets.push({});

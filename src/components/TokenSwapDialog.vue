@@ -149,9 +149,16 @@ export default {
             this.loadingMessage = "Sending token swap";
             try
             {
-                this.$emit('close', true);
+                //Unlock the wallets
+                await this.from.unlock(this.passportContext.passphrase);
+                await this.to.unlock(this.passportContext.passphrase);
+
+                let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(this.from, this.to, this.brdgAmount, false);
+                console.log(res);
+                alert("sent");
+                //this.$emit('close', true);
                 this.loading = false;
-             }
+            }
             catch(err){
                 alert("Unable to publish claim: " + err.message);
                 console.log(err);
@@ -170,7 +177,6 @@ export default {
         this.passportContext = await BridgeExtension.getPassportContext();
         let fromBalances = await BridgeExtension.getWalletBalances(this.from);
         let toBalances = await BridgeExtension.getWalletBalances(this.to);
-
         //Calculate the GAS cost
         this.brdgBalance = fromBalances.brdg;
         if(this.from.network.toLowerCase() === "neo"){

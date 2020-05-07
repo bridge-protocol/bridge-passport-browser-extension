@@ -19,23 +19,28 @@
                     No recent transactions found.
                 </v-container>
                 <template v-for="(transaction, i) in transactions">
-                    <v-row dense>
-                        <v-col cols="2">Date</v-col>
-                        <v-col cols="10" class="caption">{{transaction.date}}</v-col>
-                    </v-row>
-                    <v-row dense>
-                        <v-col cols="2">Amount</v-col>
-                        <v-col cols="10" class="caption">{{transaction.amount}} BRDG</v-col>
-                    </v-row>
-                    <v-row dense>
-                        <v-col cols="2">To</v-col>
-                        <v-col cols="10" class="caption">{{transaction.to}}</v-col>
-                    </v-row>
-                    <v-row dense>
-                        <v-col cols="2">Link</v-col>
-                        <v-col cols="10" class="caption"><a @click="openUrl(transaction.url)">{{transaction.url}}</a></v-col>
-                    </v-row>
-                    <v-divider v-if="i + 1 < transactions.length"></v-divider>
+                    <div :class="transaction.class" style="padding-left:6px;">
+                        <v-row dense>
+                            <v-col cols="2">Date</v-col>
+                            <v-col cols="10" class="caption">{{transaction.date}}</v-col>
+                        </v-row>
+                        <v-row dense>
+                            <v-col cols="2">{{transaction.send ? "To" : "From"}}</v-col>
+                            <v-col cols="auto" class="mx-0">
+                                <v-icon small color="secondary" class="ma-0 pa-0">{{transaction.send ? "mdi-arrow-right-bold":"mdi-arrow-left-bold"}}</v-icon>
+                            </v-col>
+                            <v-col cols="auto" class="caption">{{transaction.address}}</v-col>
+                        </v-row>
+                        <v-row dense>
+                            <v-col cols="2">Amount</v-col>
+                            <v-col cols="9" class="caption">{{transaction.amount}} BRDG</v-col>
+                        </v-row>
+                        <v-row dense>
+                            <v-col cols="2">Link</v-col>
+                            <v-col cols="10" class="caption"><a @click="openUrl(transaction.url)">{{transaction.url}}</a></v-col>
+                        </v-row>
+                        <v-divider v-if="i + 1 < transactions.length"></v-divider>
+                    </div>  
                 </template>
             </v-card-text>
             <v-divider></v-divider>
@@ -78,6 +83,20 @@ export default {
             //Old transaction format
             if(transactions[i].amount == 1000000000)
                 transactions[i].amount = 1;
+
+            transactions[i].send = true;
+            transactions[i].address = transactions[i].to;
+            if(transactions[i].to.toUpperCase() === this.wallet.address.toUpperCase())
+            {
+                transactions[i].send = false;
+                transactions[i].address = transactions[i].from;
+            }
+
+            if(transactions[i].to.toUpperCase() === BridgeProtocol.Constants.ethereumSwapAddress.toUpperCase() ||
+                transactions[i].to.toUpperCase() === BridgeProtocol.Constants.neoSwapAddress.toUpperCase())
+            {
+                //transactions[i].address = "Bridge Token Swap";
+            }
         }
 
         this.transactions = transactions;

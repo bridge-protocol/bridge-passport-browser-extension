@@ -49,7 +49,7 @@
                                         :name="claim.claimTypeId"
                                         :value="claim.claimTypeId"
                                         label=""
-                                        color="secondary"
+                                        color="accent"
                                     ></v-checkbox>
                                 </v-list-item-action>
                                 <v-list-item-content class="py-0">
@@ -94,7 +94,7 @@
             <v-card-actions v-if="!loading">
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="secondary" @click="importClaims()" v-if="claims.length > 0">Import Claim(s)</v-btn>
+                <v-btn color="accent" @click="importClaims()" v-if="claims.length > 0">Import Claim(s)</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

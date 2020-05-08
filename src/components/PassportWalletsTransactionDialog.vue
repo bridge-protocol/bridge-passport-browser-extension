@@ -27,7 +27,7 @@
                         <v-row dense>
                             <v-col cols="2">{{transaction.send ? "To" : "From"}}</v-col>
                             <v-col cols="auto" class="mx-0">
-                                <v-icon small color="secondary" class="ma-0 pa-0">{{transaction.send ? "mdi-arrow-right-bold":"mdi-arrow-left-bold"}}</v-icon>
+                                <v-icon small color="accent" class="ma-0 pa-0">{{transaction.send ? "mdi-arrow-right-bold":"mdi-arrow-left-bold"}}</v-icon>
                             </v-col>
                             <v-col cols="auto" class="caption">{{transaction.address}}</v-col>
                         </v-row>
@@ -46,7 +46,7 @@
             <v-divider></v-divider>
             <v-card-actions>
                 <v-container text-center>
-                    <v-btn color="secondary" @click="close()">Close</v-btn>
+                    <v-btn color="accent" @click="close()">Close</v-btn>
                 </v-container>
             </v-card-actions>
         </v-card>

@@ -48,7 +48,7 @@
                                 Address
                             </v-col>
                             <v-col cols="auto">
-                                {{requestAddress}} <v-btn @click="openUrl(requestAddressUrl)" x-small color="secondary" :loading="unlocking" class="ml-2">View</v-btn>
+                                {{requestAddress}} <v-btn @click="openUrl(requestAddressUrl)" x-small color="accent" :loading="unlocking" class="ml-2">View</v-btn>
                             </v-col>
                         </v-row>
                         <v-row>
@@ -100,7 +100,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel();">Cancel</v-btn>
-                <v-btn color="secondary" @click="pay();" :disabled="insufficientBalance">Make Payment</v-btn>
+                <v-btn color="accent" @click="pay();" :disabled="insufficientBalance">Make Payment</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

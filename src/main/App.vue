@@ -168,7 +168,7 @@
       </v-container>
     </v-content>
 
-    <v-footer app class="d-flex flex-row justify-space-between">
+    <v-footer app class="d-flex flex-row justify-space-between gradient">
       <div>
         &copy; {{ currentYear }} Bridge Protocol Corporation
       </div>

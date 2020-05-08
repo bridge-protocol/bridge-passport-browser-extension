@@ -64,7 +64,7 @@
                                 <v-row>
                                     <v-col cols="1" class="py-0">
                                         <v-icon left v-if="network != 'neo'">mdi-checkbox-blank-circle</v-icon>
-                                        <v-icon left v-if="network == 'neo'"  color="secondary">mdi-checkbox-marked-circle</v-icon>
+                                        <v-icon left v-if="network == 'neo'"  color="accent">mdi-checkbox-marked-circle</v-icon>
                                     </v-col>
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/neo-logo.png" width="20" contain>
@@ -83,7 +83,7 @@
                                 <v-row>
                                     <v-col cols="1" class="py-0">
                                         <v-icon left v-if="network != 'eth'">mdi-checkbox-blank-circle</v-icon>
-                                        <v-icon left v-if="network == 'eth'" color="secondary">mdi-checkbox-marked-circle</v-icon>
+                                        <v-icon left v-if="network == 'eth'" color="accent">mdi-checkbox-marked-circle</v-icon>
                                     </v-col>
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/eth-logo.png" width="20" contain>
@@ -135,7 +135,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="close()">Cancel</v-btn>
-                <v-btn color="secondary" @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
+                <v-btn color="accent" @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

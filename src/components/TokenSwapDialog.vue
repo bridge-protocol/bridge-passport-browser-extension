@@ -55,7 +55,7 @@
                         </v-text-field>
                     </v-col>
                     <v-col cols="4" class="ml-n5">
-                        <v-btn text color="secondary" class="pt-9" @click="setMax()">Max</v-btn>
+                        <v-btn text color="accent" class="pt-9" @click="setMax()">Max</v-btn>
                     </v-col>
                 <v-row>
                 <v-row dense class="px-0 mx-0 my-n2">
@@ -95,7 +95,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="secondary"  @click="swap()" v-if="!insufficientBalance && !error">Send Token Swap Request</v-btn>
+                <v-btn color="accent"  @click="swap()" v-if="!insufficientBalance && !error">Send Token Swap Request</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

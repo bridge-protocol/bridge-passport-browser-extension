@@ -47,7 +47,7 @@
                     </div>
                     <div v-if="wallet.loaded">
                         <div class="float-right pt-4">
-                            <v-btn x-small class="secondary" @click="showTransactions(wallet)">View Transactions</v-btn>
+                            <v-btn x-small class="accent" @click="showTransactions(wallet)">View Transactions</v-btn>
                         </div>
                         <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>
@@ -63,7 +63,7 @@
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                             <v-col cols="auto">
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="secondary">Swap Tokens</v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="accent">Swap Tokens</v-btn>
                             </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -79,7 +79,7 @@
                                 <v-icon small class="mx-3">mdi-key</v-icon>
                             </v-col>
                             <v-col cols="10" class="text-left">
-                                <v-btn v-if="!wallet.unlocked" @click="showPrivateKey(wallet)" x-small color="secondary" :loading="unlocking">Show Private Key</v-btn>
+                                <v-btn v-if="!wallet.unlocked" @click="showPrivateKey(wallet)" x-small color="accent" :loading="unlocking">Show Private Key</v-btn>
                                 <div v-if="wallet.unlocked != null" class="text-break">{{wallet.privateKey}}</div>
                             </v-col>
                         </v-row>
@@ -102,13 +102,13 @@
                     <v-row dense v-if="!neoWallet">
                         <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
                         <v-col cols="10">
-                        <v-text-field v-model="neoPrivateKey" color="secondary" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        <v-text-field v-model="neoPrivateKey" color="accent" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
                     <v-row dense v-if="!ethWallet">
                         <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
                         <v-col cols="10">
-                        <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        <v-text-field v-model="ethPrivateKey" color="accent" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
                 </v-card-text>

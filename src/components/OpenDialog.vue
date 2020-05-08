@@ -67,7 +67,7 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn color="secondary" @click="createPassport();" :loading="wait">Create Passport</v-btn>
+                            <v-btn color="accent" @click="createPassport();" :loading="wait">Create Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>
@@ -96,7 +96,7 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn color="secondary" @click="importPassport();" :loading="wait">Import Passport</v-btn>
+                            <v-btn color="accent" @click="importPassport();" :loading="wait">Import Passport</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-tab-item>

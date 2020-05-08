@@ -32,7 +32,7 @@
                     No claims found to import
                 </v-container>
                 <v-list v-if="claims.length > 0" class="py-0">
-                        <p class="subheading ">
+                        <p class="caption text-justify mt-2">
                             Please choose the claims to be imported to your passport.  If a specified claim type already exists, it will be replaced by the imported claim.
                         </p>
                         <template 

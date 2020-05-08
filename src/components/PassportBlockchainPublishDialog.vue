@@ -129,6 +129,7 @@ export default {
             this.networkName = network === "eth" ? "Ethereum" : "NEO";
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
+            await this.wallet.unlock(this.passportContext.passphrase);
             this.gasLabel = network === "eth" ? "ETH" : "GAS";
 
             let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
@@ -162,8 +163,7 @@ export default {
                     this.$emit('close', true);
                     return;
                 }
-                await this.wallet.unlock(this.passportContext.passphrase);
-
+                
                 //Make sure the passport is published / registered
                 if(!this.passportPublished)
                 {

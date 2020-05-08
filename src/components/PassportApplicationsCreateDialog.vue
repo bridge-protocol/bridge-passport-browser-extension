@@ -258,8 +258,8 @@ export default {
         networkSelected: async function(network){
             await this.updateNetworkInfo(network);
         },
-        updateNetworkInfo: async function(network){
-            if(this.network == network)
+        updateNetworkInfo: async function(network, forceUpdate){
+            if(this.network == network && !forceUpdate)
                 return; 
 
             this.loading = true;
@@ -314,11 +314,10 @@ export default {
         if(neoWallet)
             this.networks.push("neo");
 
-        this.network = "neo";
-        this.wallet = this.passportContext.passport.getWalletForNetwork(this.network);
-        this.wallet.unlock(this.passportContext.passphrase);
-        let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
-        this.passportPublished = published != null && published.length > 0;
+        //For now just default Bridge
+        await this.updateNetworkInfo(this.network, true);
+        await this.partnerSelected(this.partners[0].id);
+
         this.loading = false;
     }
 };

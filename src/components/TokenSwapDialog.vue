@@ -119,6 +119,15 @@
                     >
                     Swap Transaction Failed: {{statusMessage}}
                 </v-alert>
+                <v-container class="px-0 py-0">
+                    <v-subheader class="pl-0 ml-0 mt-2 caption">Swap Information</v-subheader>
+                    <v-divider class="mb-2"></v-divider>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Date</v-col><v-col cols="auto" class="caption">{{new Date().toLocaleDateString()}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{from.address}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Address</v-col><v-col cols="auto" class="caption">{{to.address}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{swapTxId}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(swapTxId)" class="pl-0">View Transaction</v-btn></v-col></v-row>
+                </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
             </v-container>  
         </v-card>
@@ -208,6 +217,7 @@ export default {
                     await app.to.unlock(app.passportContext.passphrase);
 
                     let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
+                    alert(JSON.stringify(res));
                     if(res == null)
                         throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
                 
@@ -218,6 +228,7 @@ export default {
                     app.loading = false;
                 }
                 catch(err){
+                    alert(err);
                     console.log(err);
                     app.statusMessage = err.message;
                     app.sent = true;
@@ -234,7 +245,14 @@ export default {
         },
         openUrl(url){
             window.open(url);
-        } 
+        },
+        viewTransaction(transactionId){
+            let url = "https://neoscan.io/tx/" + transactionId;
+            if(this.from.network.toLowerCase === "eth")
+                url = "https://etherscan.io/tx/" + transactionId;
+            
+            this.openUrl(url);
+        }
     },
     mounted: async function(){
         this.loading = true;

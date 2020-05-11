@@ -9,7 +9,7 @@
                 <v-container>{{loadingMessage}}</v-container>
             </v-container>  
         </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+        <v-card class="mx-0 px-0" v-if="!loading && !sent && !pendingSwap">
             <v-toolbar
                 color="gradient"
                 dark
@@ -94,9 +94,56 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text @click="cancel()">Cancel</v-btn>
+                <v-btn text @click="close()">Cancel</v-btn>
                 <v-btn color="accent"  @click="swap()" v-if="!insufficientBalance && !error">Send Token Swap Request</v-btn>
             </v-card-actions>
+        </v-card>
+        <v-card v-if="!loading && sent && !pendingSwap">
+            <v-container text-center align-middle>
+                <v-container>
+                    <v-alert 
+                    dense
+                    outlined
+                    type="success" 
+                    v-if="!error"
+                    class="text-justify"
+                >
+                    Swap Transaction Sent Successfully: {{swapTxId}}
+                </v-alert>
+                <v-alert
+                    dense
+                    outlined
+                    type="error" 
+                    v-if="error"
+                    class="text-justify"
+                    >
+                    Swap Transaction Failed: {{statusMessage}}
+                </v-alert>
+                <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
+            </v-container>  
+        </v-card>
+        <v-card v-if="!loading && pendingSwap">
+            <v-container text-center align-middle>
+                <v-alert
+                    dense
+                    outlined
+                    type="warning" 
+                    class="text-justify"
+                    >
+                    Swap pending.  Please wait before sending another request.
+                </v-alert>
+                <v-container class="px-0 py-0" v-if="pendingSwapInfo != null">
+                    <v-subheader class="pl-0 ml-0 mt-2 caption">Pending Swap Information</v-subheader>
+                    <v-divider class="mb-2"></v-divider>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Date</v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.timestamp}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.sendAddress}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Address</v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.receiveAddress}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Amount</v-col><v-col cols="auto" class="caption px-0 mx-n2"><v-img src="../images/bridge-token.png" height="16" contain class="px-0 mx-0"></v-img></v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.amount}} BRDG</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{pendingSwapInfo.hash}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="openUrl(pendingSwapInfo.url)" class="pl-0">View Transaction</v-btn></v-col></v-row>
+                </v-container>
+                <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
+            </v-container>  
         </v-card>
     </v-dialog>
 </template>
@@ -117,7 +164,12 @@ export default {
             gasBalance: 0,
             insufficientBalance: false,
             insufficientBalanceErrorMessage: "",
+            sent: false,
+            statusMessage: null,
+            swapTxId: null,
             error: false,
+            pendingSwap: false,
+            pendingSwapInfo: null,
             rules: {
                 required: value => !!value || 'Swap amount required',
                 gtzero: value => {
@@ -145,36 +197,75 @@ export default {
     },
     methods:{
         swap: async function(){
+            let app = this;
             this.loading = true;
-            this.loadingMessage = "Sending token swap";
-            try
-            {
-                //Unlock the wallets
-                await this.from.unlock(this.passportContext.passphrase);
-                await this.to.unlock(this.passportContext.passphrase);
+            this.loadingMessage = "Sending token swap transaction";
+            window.setTimeout(async function(){
+                try
+                {
+                    //Unlock the wallets
+                    await app.from.unlock(app.passportContext.passphrase);
+                    await app.to.unlock(app.passportContext.passphrase);
 
-                let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(this.from, this.to, this.brdgAmount, false);
-                console.log(res);
-                alert("sent");
-                //this.$emit('close', true);
-                this.loading = false;
-            }
-            catch(err){
-                alert("Unable to publish claim: " + err.message);
-                console.log(err);
-                this.$emit('close', true);
-            }
+                    let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
+                    if(res == null)
+                        throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
+                
+                    app.statusMessage = "Swap request sent successfully.";
+                    app.swapTxId = res;
+                    app.error = false;
+                    app.sent = true;
+                    app.loading = false;
+                }
+                catch(err){
+                    console.log(err);
+                    app.statusMessage = err.message;
+                    app.sent = true;
+                    app.error = true;
+                    app.loading = false;
+                }
+            },500);
         },
         setMax: function(){
             this.brdgAmount = this.brdgBalance;
         },
-        cancel: function(){
+        close: function(){
             this.$emit('close', true);
-        }
+        },
+        openUrl(url){
+            window.open(url);
+        } 
     },
     mounted: async function(){
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
+
+        let lastSwapTx = await getLastSendSwapTransaction(this.from);
+        console.log(lastSwapTx);
+
+        if(lastSwapTx){
+            let lastSwapInfo = await BridgeProtocol.Services.TokenSwap.getTokenSwapInfo(this.from.network, lastSwapTx.hash, this.passportContext.passport, this.passportContext.passphrase);
+            console.log(lastSwapInfo);
+
+            this.pendingSwapInfo = {
+                hash: lastSwapTx.hash,
+                timestamp: new Date(lastSwapTx.timeStamp * 1000).toLocaleDateString(),
+                sendAddress: lastSwapTx.from,
+                amount: lastSwapTx.amount,
+                url: lastSwapTx.url
+            };
+
+            //We still have a swap in progress
+            if(lastSwapInfo != null && lastSwapInfo.status != "Complete" && lastSwapInfo.status != "Failed")
+            {
+                this.pendingSwapInfo.amount = lastSwapInfo.sendAmount;
+                this.pendingSwapInfo.receiveAddress = lastSwapInfo.receiveAddress;
+                this.pendingSwap = true;
+                this.loading = false;
+                return;
+            }
+        }
+
         let fromBalances = await BridgeExtension.getWalletBalances(this.from);
         let toBalances = await BridgeExtension.getWalletBalances(this.to);
         //Calculate the GAS cost
@@ -194,4 +285,19 @@ export default {
         this.loading = false;
     }
 };
+
+async function getLastSendSwapTransaction(wallet){
+    //See if there's already a swap in progress
+    let transactions = await BridgeProtocol.Services.Blockchain.getRecentTransactions(wallet.network, wallet.address);
+    if(transactions){
+        //Check the last transaction
+        let lastSendTransaction;
+        for(let i=0; i<transactions.length; i++){
+            if(transactions[i].to.toUpperCase() == BridgeProtocol.Constants.ethereumSwapAddress.toUpperCase() || transactions[i].to.toUpperCase() == BridgeProtocol.Constants.neoSwapAddress.toUpperCase()){
+                return transactions[i];
+            }
+        }
+    }
+    return null;
+}
 </script>

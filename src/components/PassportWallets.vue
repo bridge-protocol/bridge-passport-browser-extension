@@ -72,14 +72,18 @@
                             <v-col cols="auto" class="text-left">
                                 <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
                             </v-col>
-                            <v-col cols="auto" class="text-left">{{wallet.address}} 
+                            <v-col cols="auto" class="text-left">{{wallet.address}}</v-col>
+                            <v-col cols="auto">
+                                <v-btn text v-if="wallet.network.toLowerCase() === 'neo'" @click="openUrl('https://neoscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Neoscan</v-btn>
+                                <v-btn text v-if="wallet.network.toLowerCase() === 'eth'" @click="openUrl('https://etherscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Etherscan</v-btn>
+                            </v-col>   
                         </v-row>
                         <v-row dense>
                             <v-col cols="auto" class="text-center">
                                 <v-icon small class="mx-3">mdi-key</v-icon>
                             </v-col>
                             <v-col cols="10" class="text-left">
-                                <v-btn v-if="!wallet.unlocked" @click="showPrivateKey(wallet)" x-small color="accent" :loading="unlocking">Show Private Key</v-btn>
+                                <v-btn text v-if="!wallet.unlocked" @click="showPrivateKey(wallet)" x-small color="accent" class="pl-0" :loading="unlocking">Show Private Key</v-btn>
                                 <div v-if="wallet.unlocked != null" class="text-break">{{wallet.privateKey}}</div>
                             </v-col>
                         </v-row>
@@ -129,7 +133,7 @@
             </v-card>
         </v-dialog>
         <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false; transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
-        <token-swap-dialog v-if="tokenSwapDialog" :from="swapFrom" :to="swapTo" @close="tokenSwapDialog = false; swapFrom = null; swapTo = null;"></token-swap-dialog>
+        <token-swap-dialog v-if="tokenSwapDialog" :from="swapFrom" :to="swapTo" @close="tokenSwapDialog = false; swapFrom = null; swapTo = null; "></token-swap-dialog>
     </v-container>
 </template>
 

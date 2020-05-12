@@ -45,8 +45,8 @@ export default {
         close: function(){
             this.$emit('close', true);
         },
-        openPage: function(url){
-            this.$emit('openUrl', url);
+        openUrl: function(url){
+            window.open(url);
         }
     }
 };

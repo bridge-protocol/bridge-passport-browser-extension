@@ -296,14 +296,13 @@ export default {
             this.$emit('showMarketplace', true);
         },
         async showPublishClaimDialog(claim){
+            this.lastSelectedClaim = "";
             this.publishClaim = claim;
             this.publishDialog = true;
         },
-        claimPublished(){
-            let claim = this.publishClaim;
+        async claimPublished(publishedClaim){
             this.publishClaim = null;
             this.publishDialog = false;
-            this.refreshClaim(claim);
         }
     },
     data: function() {

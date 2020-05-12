@@ -35,7 +35,7 @@
             <v-list-item-title>My Marketplace Requests</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item color="red" link @click="openUrl('https://bridge-protocol.azurewebsites.net/')">
+        <v-list-item color="red" link @click="openUrl('https://explorer.bridgeprotocol.io/')">
           <v-list-item-action>
             <v-icon>mdi-compass</v-icon>
           </v-list-item-action>

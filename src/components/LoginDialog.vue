@@ -49,7 +49,7 @@
                         <v-container fluid class="mx-0 px-0 my-0 py-0"
                             v-for="(claimType, i) in requestedClaimTypes"
                             :key="claimType.id">
-                                <v-checkbox v-model="selectedClaimTypes" :label="claimType.name" :value="claimType.id" :disabled="!claimType.claim" class="px-0 mb-n4 mt-0 py-0"></v-checkbox>
+                                <v-checkbox v-model="selectedClaimTypes" :label="claimType.name" :value="claimType.id" :disabled="!claimType.claim" color="accent" class="px-0 mb-n4 mt-0 py-0"></v-checkbox>
                         </v-container>
 
                         <v-subheader class="pl-0 ml-0 mt-4 caption">Requested Blockchain Addresses</v-subheader>
@@ -62,7 +62,7 @@
                             v-for="(address, i) in requestedAddresses"
                             :key="address.network"
                             >   
-                                <v-checkbox v-model="selectedAddresses" :label="address.networkName" :value="address.network" :disabled="!address.address" class="px-0 mb-n4 mt-0 py-0"></v-checkbox>
+                                <v-checkbox v-model="selectedAddresses" :label="address.networkName" :value="address.network" :disabled="!address.address" color="accent" class="px-0 mb-n4 mt-0 py-0"></v-checkbox>
                             </template>
                         </v-container>
                     </v-container>

@@ -181,13 +181,14 @@ export default {
                 this.loadingMessage = "Publishing claim transaction";
                 console.log("Publishing claim");
                 await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, this.hashOnly);
-                this.$emit('published', true);
+                this.$emit('published', this.claim);
                 this.loading = false;
              }
             catch(err){
                 alert("Unable to publish claim: " + err.message);
                 console.log(err);
                 this.$emit('cancel', true);
+                this.loading = false;
             }
         },
         cancel: function(){
@@ -204,16 +205,18 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
-        if(ethWallet)
-            this.networks.push({ id:"eth", name:"Ethereum" });
+        
         if(neoWallet)
             this.networks.push({ id:"neo", name:"NEO" });
+        if(ethWallet)
+            this.networks.push({ id:"eth", name:"Ethereum" });
 
         let claimType = await BridgeExtension.getFullClaimInfo(this.claim);
         this.claimTypeName = claimType.claimTypeName;
         this.claimDate = claimType.verifiedOn;
         this.claimValue = this.claim.claimValue;
 
+        this.networkSelected("neo");
         this.loading = false;
     }
 };

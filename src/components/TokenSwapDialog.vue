@@ -108,7 +108,7 @@
                     v-if="!error"
                     class="text-justify"
                 >
-                    Swap Transaction Sent Successfully: {{swapTxId}}
+                    Swap Transaction Sent Successfully
                 </v-alert>
                 <v-alert
                     dense
@@ -119,14 +119,22 @@
                     >
                     Swap Transaction Failed: {{statusMessage}}
                 </v-alert>
-                <v-container class="px-0 py-0">
+                <v-container class="px-0 py-0" v-if="!error">
                     <v-subheader class="pl-0 ml-0 mt-2 caption">Swap Information</v-subheader>
                     <v-divider class="mb-2"></v-divider>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Date</v-col><v-col cols="auto" class="caption">{{new Date().toLocaleDateString()}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{from.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Address</v-col><v-col cols="auto" class="caption">{{to.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{swapTxId}}</v-col></v-row>
-                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(swapTxId)" class="pl-0">View Transaction</v-btn></v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(swapTxId)" class="pl-0" v-if="swapTxId">View Transaction</v-btn></v-col></v-row>
+                    <v-alert 
+                        dense
+                        outlined
+                        type="info" 
+                        class="text-justify caption"
+                    >
+                        Your blockchain transaction has been sent. Please wait for your transaction to process before sending other swap requests or other blockchain transactions to prevent failed transactions.  Bridge Protocol is not responsible for any lost funds due to failed transactions.
+                    </v-alert>
                 </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
             </v-container>  
@@ -217,7 +225,6 @@ export default {
                     await app.to.unlock(app.passportContext.passphrase);
 
                     let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
-                    alert(JSON.stringify(res));
                     if(res == null)
                         throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
                 
@@ -228,8 +235,10 @@ export default {
                     app.loading = false;
                 }
                 catch(err){
-                    alert(err);
                     console.log(err);
+                    if(err.message.includes("replacement transaction"))
+                        err.message = "There is already a transaction pending that has not been verified.  Please wait for it to complete before sending another request."
+
                     app.statusMessage = err.message;
                     app.sent = true;
                     app.error = true;
@@ -248,7 +257,7 @@ export default {
         },
         viewTransaction(transactionId){
             let url = "https://neoscan.io/tx/" + transactionId;
-            if(this.from.network.toLowerCase === "eth")
+            if(this.from.network.toLowerCase() === "eth")
                 url = "https://etherscan.io/tx/" + transactionId;
             
             this.openUrl(url);
@@ -272,6 +281,12 @@ export default {
                 amount: lastSwapTx.amount,
                 url: lastSwapTx.url
             };
+
+            if(lastSwapInfo == null){
+                this.pendingSwap = true;
+                this.loading = false;
+                return;
+            }
 
             //We still have a swap in progress
             if(lastSwapInfo != null && lastSwapInfo.status != "Complete" && lastSwapInfo.status != "Failed")
@@ -307,6 +322,7 @@ export default {
 async function getLastSendSwapTransaction(wallet){
     //See if there's already a swap in progress
     let transactions = await BridgeProtocol.Services.Blockchain.getRecentTransactions(wallet.network, wallet.address);
+    console.log(transactions);
     if(transactions){
         //Check the last transaction
         let lastSendTransaction;

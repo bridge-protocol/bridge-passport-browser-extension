@@ -224,6 +224,7 @@ export default {
                     await app.from.unlock(app.passportContext.passphrase);
                     await app.to.unlock(app.passportContext.passphrase);
 
+                    let res = null;
                     // let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
                     // if(res == null)
                     //     throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
@@ -293,7 +294,7 @@ export default {
         else{
             this.gasBalance = fromBalances.gas;
         }
-        
+
         //We need the cost of ethereum either way
         let wallet = this.from;
         if(this.from.network.toLowerCase() === "neo")

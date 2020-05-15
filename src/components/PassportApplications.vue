@@ -208,7 +208,7 @@ export default {
             let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, networkFee, recipient, application.id, false);
 
             //Send the fee payment info back to the application API
-            await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, application.id, wallet.network, wallet.address, transactionId);
+            await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, application.id, transactionId);
             console.log("Request fee transaction updated: " + JSON.stringify(application));
 
             this.loadStatus = "Verifying network fee transaction";

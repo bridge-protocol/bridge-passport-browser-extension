@@ -177,65 +177,43 @@ export default {
 
             //Allow UI to refresh with spinner
             window.setTimeout(async function(){
-                //Make sure the passport is published / registered
-                if(!app.passportPublished)
-                {
-                    app.loadStatus = "Publishing passport to blockchain";
-                    console.log("Passport not published, publishing");
-                    
-                    await BridgeProtocol.Services.Blockchain.publishPassport(app.wallet, app.passportContext.passport);
-                    let publish = await BridgeProtocol.Services.Blockchain.getPassportForAddress(app.wallet.network, app.wallet.address);
-                    if(!publish)
-                    {
-                        alert("Could not publish passport.");
-                        app.loading = false;
-                        return;
-                    }
-                }
-
                 app.loadStatus = "Creating marketplace request";
+
                 //Create the application via API
-                let application = await BridgeProtocol.Services.Application.createApplication(app.passportContext.passport, app.passportContext.passphrase, app.selectedPartner.id);
+                let application = await BridgeProtocol.Services.Application.createApplication(app.passportContext.passport, app.passportContext.passphrase, app.selectedPartner.id, app.wallet.network, app.wallet.address);
                 if(!application){
                     alert("Unable to create marketplace request.");
                     app.loading = false;
                     return;
                 }
+                console.log("Request created: " + application.id);
 
-                let applicationId = application.id;
-                console.log("Request created: " + applicationId);
+                let transactionId;
+                try{
+                    //Send a blockchain fee payment
+                    app.loadStatus = "Sending network fee transaction";
+                    console.log("Sending network fee for " + application.id);
 
-                //Send a blockchain fee payment
-                app.loadStatus = "Sending network fee transaction";
-                console.log("Sending network fee for " + applicationId);
+                    let recipient = null;
+                    if(app.wallet.network.toLowerCase() === "neo")
+                        recipient = BridgeProtocol.Constants.bridgeAddress;
+                    else if (app.wallet.network.toLowerCase() === "eth")
+                        recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
 
-                let recipient = null;
-                if(app.wallet.network.toLowerCase() === "neo")
-                    recipient = BridgeProtocol.Constants.bridgeAddress;
-                else if (app.wallet.network.toLowerCase() === "eth")
-                    recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
-
-                //Get the transaction id and send to the server and don't wait
-                let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(app.wallet, app.networkFee, recipient, applicationId, false);
+                    //Get the transaction id and send to the server and don't wait
+                    transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(app.wallet, app.networkFee, recipient, application.id);
+                }
+                catch(err){
+                    //If we fail to send a payment, we should just fail and remove the application
+                    await BridgeProtocol.Services.Application.remove(app.passportContext.passport, app.passportContext.passphrase, application.id);
+                    alert("Unable to create marketplace request: " + err.message);
+                    app.loading = false;
+                    return;
+                }
 
                 //Send the fee payment info back to the application API
-                application = await BridgeProtocol.Services.Application.updatePaymentTransaction(app.passportContext.passport, app.passportContext.passphrase, applicationId, app.wallet.network, app.wallet.address, transactionId);
-                console.log("Request fee transaction updated: " + JSON.stringify(application));
-
-                app.loadStatus = "Verifying network fee transaction";
-                //Wait for the transaction to be done
-                let status = await BridgeExtension.waitVerifyPayment(app.wallet.network, transactionId, app.wallet.address, recipient, app.networkFee, applicationId);
-                console.log("Network fee transaction: " + JSON.stringify(status));
-
-                if(status)
-                {
-                    //Relay to the partner
-                    app.loadStatus = "Relaying request to partner";
-                    await BridgeProtocol.Services.Application.retrySend(app.passportContext.passport, app.passportContext.passphrase, application.id);
-                }
-                else{
-                    alert("Payment verification failed");
-                }
+                await BridgeProtocol.Services.Application.updatePaymentTransaction(app.passportContext.passport, app.passportContext.passphrase, application.id, transactionId);
+                console.log("Request fee transaction updated.");
 
                 app.$emit('created', true);
                 app.loading = false;

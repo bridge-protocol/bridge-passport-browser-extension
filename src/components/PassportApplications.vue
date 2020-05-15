@@ -130,7 +130,7 @@ export default {
             this.applicationCreateDialog = false;
             this.refreshing = true;
             let passportContext = await BridgeExtension.getPassportContext();
-            let applications = await BridgeProtocol.Services.Application.getActiveApplications(passportContext.passport, passportContext.passphrase);
+            let applications = await BridgeProtocol.Services.Application.getApplicationList(passportContext.passport, passportContext.passphrase);
             for(let i=0; i<applications.length; i++){
                 applications[i].index = i;
                 let created = new Date(applications[i].createdOn * 1000); 

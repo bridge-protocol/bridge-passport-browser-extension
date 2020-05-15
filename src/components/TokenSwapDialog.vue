@@ -224,9 +224,9 @@ export default {
                     await app.from.unlock(app.passportContext.passphrase);
                     await app.to.unlock(app.passportContext.passphrase);
 
-                    let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
-                    if(res == null)
-                        throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
+                    // let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
+                    // if(res == null)
+                    //     throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
                 
                     app.statusMessage = "Swap request sent successfully.";
                     app.swapTxId = res;
@@ -267,38 +267,22 @@ export default {
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
 
-        let lastSwapTx = await getLastSendSwapTransaction(this.from);
-        console.log(lastSwapTx);
-
-        if(lastSwapTx){
-            let lastSwapInfo = await BridgeProtocol.Services.TokenSwap.getTokenSwapInfo(this.from.network, lastSwapTx.hash, this.passportContext.passport, this.passportContext.passphrase);
-            console.log(lastSwapInfo);
-
+        let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
+        if(pendingList != null && pendingList.length > 0){
+            let pending = pendingList[0];
             this.pendingSwapInfo = {
-                hash: lastSwapTx.hash,
-                timestamp: new Date(lastSwapTx.timeStamp * 1000).toLocaleDateString(),
-                sendAddress: lastSwapTx.from,
-                amount: lastSwapTx.amount,
-                url: lastSwapTx.url
+                hash: pending.sendTxId,
+                timestamp: new Date(pending.createdOn * 1000).toLocaleDateString(),
+                sendAddress: pending.sendAddress,
+                amount: pending.sendAmount,
+                url: "",
+                receiveAddress: pending.receiveAddress
             };
-
-            if(lastSwapInfo == null){
-                this.pendingSwap = true;
-                this.loading = false;
-                return;
-            }
-
-            //We still have a swap in progress
-            if(lastSwapInfo != null && lastSwapInfo.status != "Complete" && lastSwapInfo.status != "Failed")
-            {
-                this.pendingSwapInfo.amount = lastSwapInfo.sendAmount;
-                this.pendingSwapInfo.receiveAddress = lastSwapInfo.receiveAddress;
-                this.pendingSwap = true;
-                this.loading = false;
-                return;
-            }
+            this.pendingSwap = true;
+            this.loading = false;
+            return;
         }
-
+            
         let fromBalances = await BridgeExtension.getWalletBalances(this.from);
         let toBalances = await BridgeExtension.getWalletBalances(this.to);
         //Calculate the GAS cost
@@ -309,7 +293,15 @@ export default {
         else{
             this.gasBalance = fromBalances.gas;
         }
-        this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendSwapRequest(this.from, this.to, 1, true);
+        
+        //We need the cost of ethereum either way
+        let wallet = this.from;
+        if(this.from.network.toLowerCase() === "neo")
+            wallet = this.to;
+
+        await wallet.unlock(this.passportContext.passphrase);
+
+        this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, 1, this.to.address, "costonly", false, true);
         if(this.gasBalance < this.totalGasCost){
             this.insufficientBalance = true;
             this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
@@ -318,20 +310,4 @@ export default {
         this.loading = false;
     }
 };
-
-async function getLastSendSwapTransaction(wallet){
-    //See if there's already a swap in progress
-    let transactions = await BridgeProtocol.Services.Blockchain.getRecentTransactions(wallet.network, wallet.address);
-    console.log(transactions);
-    if(transactions){
-        //Check the last transaction
-        let lastSendTransaction;
-        for(let i=0; i<transactions.length; i++){
-            if(transactions[i].to.toUpperCase() == BridgeProtocol.Constants.ethereumSwapAddress.toUpperCase() || transactions[i].to.toUpperCase() == BridgeProtocol.Constants.neoSwapAddress.toUpperCase()){
-                return transactions[i];
-            }
-        }
-    }
-    return null;
-}
 </script>

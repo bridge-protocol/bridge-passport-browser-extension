@@ -122,7 +122,8 @@
                                     <v-col cols="11" v-if="!claim.neoLoading">
                                         <v-row v-if="claim.neoClaim" class="mt-n3">
                                             <v-col cols="2">{{getDate(claim.neoClaim.date)}}</v-col>
-                                            <v-col cols="9" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
+                                            <v-col cols="8" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
+                                            <v-col cols="1" class="text-left text=break" v-if="claim.neoVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
                                             <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'neo')" icon x-small :loading="neoWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
                                         <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.neoClaim">
@@ -145,7 +146,8 @@
                                     <v-col cols="11" v-if="!claim.ethLoading">
                                         <v-row v-if="claim.ethClaim" class="mt-n3">
                                             <v-col cols="2">{{getDate(claim.ethClaim.date)}}</v-col>
-                                            <v-col cols="9" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
+                                            <v-col cols="8" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
+                                            <v-col cols="1" class="text-left text=break" v-if="claim.ethVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
                                             <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'eth')" icon x-small :loading="ethWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
                                         <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.ethClaim">
@@ -218,12 +220,20 @@ export default {
             {
                 if(this.neoWallet){
                     let neoWallet = passportContext.passport.getWalletForNetwork("neo");
-                    claim.neoClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.neoWallet.network, claim.claimTypeId, this.neoWallet.address);
+                    let res = await BridgeProtocol.Services.Blockchain.getClaim(this.neoWallet.network, claim.claimTypeId, this.neoWallet.address);
+                    if(res.claim){
+                        claim.neoClaim = res.claim;
+                        claim.neoVerified = res.verified;
+                    }
                     claim.neoLoading = false;
                 }
                 if(this.ethWallet){
                     let ethWallet = passportContext.passport.getWalletForNetwork("eth");
-                    claim.ethClaim = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
+                    let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
+                    if(res.claim){
+                        claim.ethClaim = res.claim;
+                        claim.ethVerified = res.verified;
+                    }
                     claim.ethLoading = false;
                 }  
             }

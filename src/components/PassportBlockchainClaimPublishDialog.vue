@@ -53,14 +53,14 @@
                                 Claim Date
                             </v-col>
                             <v-col cols="auto">
-                                {{claimInfo.claimDate}}
+                                {{claimInfo.verifiedOn}}
                             </v-col>
                         </v-row>
                         <v-row>
                             <v-col cols="3">
                                 Claim Value
                             </v-col>
-                            <v-col cols="10" class="text-break text-left">
+                            <v-col cols="9" class="text-break text-left">
                                 {{claimInfo.claimValue}}
                             </v-col>
                         </v-row>
@@ -99,12 +99,21 @@
                             >
                             {{insufficientBalanceErrorMessage}}
                         </v-alert>
+                         <v-alert
+                            outlined
+                            color="primary"
+                            type="error"
+                            class="mt-2 caption text-justify"
+                            v-if="!passportPublished"
+                            >
+                            Passport is not published to the blockchain.  Passport must be published to the blockchain prior to publishing a claim.
+                        </v-alert>
                     </div>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance">Publish to Blockchain</v-btn>
+                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance && passportPublished">Publish to Blockchain</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -143,29 +152,32 @@ export default {
             this.loading = true;
             this.network = network;
             this.networkName = network === "eth" ? "Ethereum" : "NEO";
+            this.passportPublished = false;
+            this.gasBalance = 0;
+            this.brdgBalance = 0;
+            this.totalGasCost = 0;
+            this.insufficientBalance = false;
+            this.insufficientBalanceErrorMessage = null;
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
-            await this.wallet.unlock(this.passportContext.passphrase);
-            this.gasLabel = network === "eth" ? "ETH" : "GAS";
 
             let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
-            this.passportPublished = published != null && published.length > 0;
-
-            let claimPublishGasCost = await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false, true);
-            let passportPublishCost = 0;
-            if(!this.passportPublished)
-                passportPublishCost = await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport, true);
-            this.totalGasCost = parseFloat(passportPublishCost) + parseFloat(claimPublishGasCost);
-
+            if(published != null && published.length > 0)
+                this.passportPublished = true;
+ 
             let balances = await BridgeExtension.getWalletBalances(this.wallet);
             this.gasBalance = balances.gas;
-            this.brdgBalance = balance.brdg;
+            this.brdgBalance = balances.brdg;
+            this.gasLabel = network === "eth" ? "ETH" : "GAS";
 
             if(this.brdgBalance < this.networkFee){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient BRDG balance for transaction";
             }
 
+            await this.wallet.unlock(this.passportContext.passphrase);
+            let claimPublishGasCost = .0002; //await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false, true);
+            this.totalGasCost = parseFloat(claimPublishGasCost);
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
@@ -189,15 +201,18 @@ export default {
 
                 this.loadingMessage = "Sending claim publishing request";
                 console.log("Sending claim publishing request");
+                console.log(this.claim);
+                console.log(this.wallet);
+                
 
                 //Create the claim publish request
-                let claimPublish = await BridgeProtocol.Services.Claim.createClaimPublish(this.passportContext.passport, this.passportContext.passphrase, this.network, this.wallet.address, claim)
+                let claimPublish = await BridgeProtocol.Services.Claim.createClaimPublish(this.passportContext.passport, this.passportContext.passphrase, this.wallet.network, this.wallet.address, this.claim);
                 claimPublishId = claimPublish.id;
 
-                let transactionId = "BRDG12345";
+                let transactionId = "BRDG12345"; //Claim publish transaction to specified chain
                 let gasTransactionId;
                 if(this.wallet.network.toLowerCase() === "eth")
-                    gasTransactionId = "GAS12345";
+                    gasTransactionId = "GAS12345"; //Claim publish verification gas fee (eth only)
 
                 this.pendingClaim = await BridgeProtocol.Services.Claim.updateClaimPaymentTransaction(this.passportContext.passport, this.passportContext.passphrase, claimPublishId, transactionId, gasTransactionId)
                 this.loading = false;

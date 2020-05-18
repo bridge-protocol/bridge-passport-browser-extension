@@ -218,28 +218,38 @@ export default {
             this.loading = true;
             this.loadingMessage = "Sending token swap transaction";
             window.setTimeout(async function(){
+                let swapId;
                 try
                 {
                     //Unlock the wallets
                     await app.from.unlock(app.passportContext.passphrase);
                     await app.to.unlock(app.passportContext.passphrase);
 
-                    let res = null;
-                    // let res = await BridgeProtocol.Services.Blockchain.sendSwapRequest(app.from, app.to, app.brdgAmount, false);
-                    // if(res == null)
-                    //     throw new Error("Error sending transaction. Ethereum GAS network prices may be high and would exceed transaction maximums.  Try again later.See console for details.");
-                
+                    let swap = await BridgeProtocol.Services.TokenSwap.createTokenSwap(app.passportContext.passport, app.passportContext.passphrase, app.from.network, app.from.address, app.to.address, app.brdgAmount);
+                    swapId = swap.id;
+
+                    let brdgSwapAddress = BridgeProtocol.Constants.ethereumSwapAddress;
+
+                    //If it's NEO -> Ethereum we prepay the transfer gas, Ethereum -> NEO doesn't require prepayment
+                    let gasTransactionId = null;
+                    if(app.from.network.toLowerCase() === "neo"){
+                        brdgSwapAddress = BridgeProtocol.Constants.neoSwapAddress;
+                        gasTransactionId = "GAS12345"; //await BridgeProtocol.Services.Blockchain.transferGas(app.to, app.totalGasCost, BridgeProtocol.Constants.ethereumSwapAddress, swapId);
+                    }
+
+                    //Send the swap BRDG payment(s)
+                    let transactionId = "BRDG12345"; //await BridgeProtocol.Services.Blockchain.sendPayment(app.from, app.brdgAmount, brdgSwapAddress, swapId);
+
+                    let res = await BridgeProtocol.Services.TokenSwap.updatePaymentTransaction(app.passportContext.passport, app.passportContext.passphrase, swapId, transactionId, gasTransactionId);
                     app.statusMessage = "Swap request sent successfully.";
-                    app.swapTxId = res;
+                    app.swapTxId = res.sendTxId;
                     app.error = false;
                     app.sent = true;
                     app.loading = false;
                 }
                 catch(err){
                     console.log(err);
-                    if(err.message.includes("replacement transaction"))
-                        err.message = "There is already a transaction pending that has not been verified.  Please wait for it to complete before sending another request."
-
+                    await BridgeProtocol.Services.TokenSwap.remove(app.passportContext.passport, app.passportContext.passphrase, swapId);
                     app.statusMessage = err.message;
                     app.sent = true;
                     app.error = true;
@@ -276,7 +286,7 @@ export default {
                 timestamp: new Date(pending.createdOn * 1000).toLocaleDateString(),
                 sendAddress: pending.sendAddress,
                 amount: pending.sendAmount,
-                url: "",
+                url: pending.sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pending.sendTxId : "https://etherscan.io/tx/" + pending.sendTxId,
                 receiveAddress: pending.receiveAddress
             };
             this.pendingSwap = true;

@@ -31,6 +31,32 @@
                             <v-col cols="auto" class="text-left">{{passportId}}</v-col>
                         </v-row>
 
+                        <div class="float-right">
+                            <v-menu close-on-click small bottom left>
+                                    <template v-slot:activator="{ on }">
+                                        <v-btn
+                                            icon
+                                            v-on="on"
+                                            class="ml-12 mt-3"
+                                        >
+                                            <v-icon small>mdi-dots-vertical</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <v-list dense>
+                                        <v-list-item two-line @click="showPublishDialog()">
+                                            <v-list-item-icon>
+                                            <v-icon>mdi-publish</v-icon>
+                                            </v-list-item-icon>
+                                            <v-list-item-content>
+                                            <v-list-item-title>Publish to Blockchain</v-list-item-title>
+                                            <v-list-item-subtitle>
+                                                Publish the passport to the blockchain
+                                            </v-list-item-subtitle>
+                                            </v-list-item-content>
+                                        </v-list-item>
+                                    </v-list>
+                            </v-menu>
+                        </div>
                         <v-subheader class="pl-0 ml-0 mt-2 caption">Blockchain Publishing</v-subheader>
                         <v-divider class="mb-2"></v-divider>
                         <v-row dense v-if="neoWallet != null">
@@ -109,32 +135,6 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
                         <v-container fluid>
-                            <div class="float-right">
-                                <v-menu close-on-click small bottom left>
-                                        <template v-slot:activator="{ on }">
-                                            <v-btn
-                                                icon
-                                                v-on="on"
-                                                class="ml-12"
-                                            >
-                                                <v-icon small>mdi-dots-vertical</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <v-list dense>
-                                            <v-list-item two-line @click="showPublishClaimDialog(claim)">
-                                                <v-list-item-icon>
-                                                <v-icon>mdi-publish</v-icon>
-                                                </v-list-item-icon>
-                                                <v-list-item-content>
-                                                <v-list-item-title>Publish to Blockchain</v-list-item-title>
-                                                <v-list-item-subtitle>
-                                                    Publish the claim data or hash to the blockchain
-                                                </v-list-item-subtitle>
-                                                </v-list-item-content>
-                                            </v-list-item>
-                                        </v-list>
-                                </v-menu>
-                            </div>
                             <v-subheader class="pl-0 ml-0 caption">
                                 Claim Details 
                             </v-subheader>
@@ -152,6 +152,32 @@
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
                             <div v-if="neoWallet != null || ethWallet != null">
+                                <div class="float-right">
+                                    <v-menu close-on-click small bottom left>
+                                            <template v-slot:activator="{ on }">
+                                                <v-btn
+                                                    icon
+                                                    v-on="on"
+                                                    class="ml-12 mt-3"
+                                                >
+                                                    <v-icon small>mdi-dots-vertical</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <v-list dense>
+                                                <v-list-item two-line @click="showPublishClaimDialog(claim)">
+                                                    <v-list-item-icon>
+                                                    <v-icon>mdi-publish</v-icon>
+                                                    </v-list-item-icon>
+                                                    <v-list-item-content>
+                                                    <v-list-item-title>Publish to Blockchain</v-list-item-title>
+                                                    <v-list-item-subtitle>
+                                                        Publish the claim data or hash to the blockchain
+                                                    </v-list-item-subtitle>
+                                                    </v-list-item-content>
+                                                </v-list-item>
+                                            </v-list>
+                                    </v-menu>
+                                </div>
                                 <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
                                 <v-divider class="mb-2"></v-divider>
                                 <v-row dense v-if="neoWallet != null">
@@ -206,16 +232,19 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </v-container>
-        <blockchain-publish-dialog v-if="publishDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishDialog = false"></blockchain-publish-dialog>
+        <blockchain-publish-dialog v-if="publishDialog" :network="publishNetwork" @published="passportPublished" @cancel="publishDialog = false"></blockchain-publish-dialog>
+        <blockchain-claim-publish-dialog v-if="publishClaimDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishClaimDialog = false"></blockchain-claim-publish-dialog>
     </v-container>
 </template>
 
 <script>
 import BlockchainPublishDialog from '../components/PassportBlockchainPublishDialog.vue';
+import BlockchainClaimPublishDialog from '../components/PassportBlockchainClaimPublishDialog.vue';
 export default {
     name: 'passport-details',
      components: {
-         BlockchainPublishDialog
+         BlockchainPublishDialog,
+         BlockchainClaimPublishDialog
     },
     methods: {
         init: async function(){
@@ -245,43 +274,9 @@ export default {
             this.refreshing = false;
         },
         passportDetail: async function(){
-            this.passportNeoLoading = true;
-            this.passportEthLoading = true;
-            
             this.passportDetailSelected = !this.passportDetailSelected;
-
             if(this.passportDetailSelected){
-                let pendingPassportPublish = await BridgeProtocol.Services.Passport.getPendingPassportPublishList(this.passportContext.passport, this.passportContext.passphrase);
-                //See if the passport is published or pending publish on NEO
-                if(this.neoWallet){
-                    let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.neoWallet.network, this.neoWallet.address);
-                    if(published != null && published.length > 0)
-                        this.passportNeoPublished = true;
-
-                    if(!this.passportNeoPublished){
-                        for(let i=0; i<pendingPassportPublish.length; i++){
-                            if(pendingPassportPublish[i].network.toLowerCase() === "neo")
-                                this.passportNeoPending = true;
-                        }
-                    }     
-                }
-
-                //See if the passport is published or pending publish on Ethereum
-                if(this.ethWallet){
-                    let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.ethWallet.network, this.ethWallet.address);
-                    if(published != null && published.length > 0)
-                        this.passportEthPublished = true;
-
-                    if(!this.passportEthPublished){
-                        for(let i=0; i<pendingPassportPublish.length; i++){
-                            if(pendingPassportPublish[i].network.toLowerCase() === "eth")
-                                this.passportEthPending = true;
-                        }
-                    }
-                }
-
-                this.passportNeoLoading = false;
-                this.passportEthLoading = false;
+                await this.refreshPassportDetail();
             }
         },
         claimSelected: async function(claim){
@@ -331,20 +326,62 @@ export default {
             this.claims.push({});
             this.claims.pop();
         },
+        refreshPassportDetail: async function(){
+            this.passportNeoLoading = true;
+            this.passportEthLoading = true;
+            let pendingPassportPublish = await BridgeProtocol.Services.Passport.getPendingPassportPublishList(this.passportContext.passport, this.passportContext.passphrase);
+            //See if the passport is published or pending publish on NEO
+            if(this.neoWallet){
+                let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.neoWallet.network, this.neoWallet.address);
+                if(published != null && published.length > 0)
+                    this.passportNeoPublished = true;
+
+                if(!this.passportNeoPublished){
+                    for(let i=0; i<pendingPassportPublish.length; i++){
+                        if(pendingPassportPublish[i].network.toLowerCase() === "neo")
+                            this.passportNeoPending = true;
+                    }
+                }     
+            }
+
+            //See if the passport is published or pending publish on Ethereum
+            if(this.ethWallet){
+                let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.ethWallet.network, this.ethWallet.address);
+                if(published != null && published.length > 0)
+                    this.passportEthPublished = true;
+
+                if(!this.passportEthPublished){
+                    for(let i=0; i<pendingPassportPublish.length; i++){
+                        if(pendingPassportPublish[i].network.toLowerCase() === "eth")
+                            this.passportEthPending = true;
+                    }
+                }
+            }
+
+            this.passportNeoLoading = false;
+            this.passportEthLoading = false;
+        },
         getDate(date){
             return BridgeExtension.getReadableDate(date);
         },
         navigateToMarketplace(){
             this.$emit('showMarketplace', true);
         },
+        async showPublishDialog(){
+            this.publishDialog = true;
+        },
         async showPublishClaimDialog(claim){
             this.lastSelectedClaim = "";
             this.publishClaim = claim;
-            this.publishDialog = true;
+            this.publishClaimDialog = true;
+        },
+        async passportPublished(){
+            this.publishDialog = false;
+            await this.refreshPassportDetail();
         },
         async claimPublished(publishedClaim){
             this.publishClaim = null;
-            this.publishDialog = false;
+            this.publishClaimDialog = false;
         }
     },
     data: function() {
@@ -368,7 +405,8 @@ export default {
             refreshing: true,
             claims: [],
             publishClaim: null,
-            publishDialog: false
+            publishDialog: false,
+            publishClaimDialog: false
         }
     },
     created: async function(){

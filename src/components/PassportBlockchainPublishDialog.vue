@@ -9,7 +9,12 @@
                 <v-container>{{loadingMessage}}</v-container>
             </v-container>  
         </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+        <v-card v-if="!loading && pendingClaim != null" class="py-12">
+            <v-container text-center align-middle>
+                PENDING CLAIM STATUS
+            </v-container>  
+        </v-card>
+        <v-card class="mx-0 px-0" v-if="!loading && !pendingClaim">
             <v-toolbar
                 color="gradient"
                 dark
@@ -34,33 +39,33 @@
                             ></v-select>
                         </v-col>
                     </v-row>
-                    <div v-if="network != null" class="mt-n10">
+                    <div v-if="network != null && claimInfo != null" class="mt-n10">
                         <v-row>
-                            <v-col cols="2">
+                            <v-col cols="3">
                                 Claim Type
                             </v-col>
                             <v-col cols="auto">
-                                {{claimTypeName}}
+                                {{claimInfo.claimTypeName}}
                             </v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="2">
+                            <v-col cols="3">
                                 Claim Date
                             </v-col>
                             <v-col cols="auto">
-                                {{claimDate}}
+                                {{claimInfo.claimDate}}
                             </v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="2">
+                            <v-col cols="3">
                                 Claim Value
                             </v-col>
                             <v-col cols="10" class="text-break text-left">
-                                {{claimValue}}
+                                {{claimInfo.claimValue}}
                             </v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="2">
+                            <v-col cols="3">
 
                             </v-col>
                             <v-col cols="auto" class="mt-n4">
@@ -68,7 +73,16 @@
                             </v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="2">
+                            <v-col cols="3">
+                                Network Fee
+                            </v-col>
+                            <v-col cols="auto"><v-img :src="'/images/bridge-token.png'" width="20" contain></v-img></v-col>
+                            <v-col cols="8" class="ml-n5">
+                                {{networkFee}} BRDG ({{brdgBalance}} Available)
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="3">
                                 GAS Cost
                             </v-col>
                             <v-col cols="auto"><v-img :src="'/images/' + network + '-logo.png'" width="20" contain></v-img></v-col>
@@ -109,14 +123,16 @@ export default {
             network: null,
             networkName: null,
             passportContext: null,
-            claimTypeName: null,
-            claimDate: null,
-            claimValue: null,
+            pendingClaim: null,
+            claimInfo: null,
             hashOnly: false,
             wallet: null,
+            statusMessage: null,
             gasLabel: null,
             totalGasCost: 0,
             gasBalance: 0,
+            networkFee: 0,
+            brdgBalance: 0,
             insufficientBalance: false,
             insufficientBalanceErrorMessage: "",
             passportPublished: false
@@ -135,24 +151,31 @@ export default {
             let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
             this.passportPublished = published != null && published.length > 0;
 
+            let claimPublishGasCost = await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false, true);
             let passportPublishCost = 0;
-            if(!this.passportPublished){
+            if(!this.passportPublished)
                 passportPublishCost = await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport, true);
-            }
-            let claimPublishCost = await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, false, true);
-            this.totalGasCost = parseFloat(passportPublishCost) + parseFloat(claimPublishCost);
+            this.totalGasCost = parseFloat(passportPublishCost) + parseFloat(claimPublishGasCost);
 
             let balances = await BridgeExtension.getWalletBalances(this.wallet);
             this.gasBalance = balances.gas;
+            this.brdgBalance = balance.brdg;
+
+            if(this.brdgBalance < this.networkFee){
+                this.insufficientBalance = true;
+                this.insufficientBalanceErrorMessage = "Insufficient BRDG balance for transaction";
+            }
 
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
             }
+
             this.loading = false;
         },
         publish: async function(){
             this.loading = true;
+            let claimPublishId;
             try
             {
                 this.loadingMessage = "Publishing claim";
@@ -165,27 +188,37 @@ export default {
                 }
                 
                 //Make sure the passport is published / registered
-                if(!this.passportPublished)
-                {
-                    console.log("Passport not published, publishing");
-                    await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport);
-                    let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
-                    this.passportPublished = published != null && published.length > 0;
-                    if(!this.passportPublished)
-                    {
-                        alert("Could not publish passport.");
-                        return;
-                    }
-                }
+                // if(!this.passportPublished)
+                // {
+                //     console.log("Passport not published, publishing");
+                //     await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport);
+                //     let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
+                //     this.passportPublished = published != null && published.length > 0;
+                //     if(!this.passportPublished)
+                //     {
+                //         alert("Could not publish passport.");
+                //         return;
+                //     }
+                // }
 
-                this.loadingMessage = "Publishing claim transaction";
-                console.log("Publishing claim");
-                await BridgeProtocol.Services.Blockchain.addClaim(this.passportContext.passport, this.passportContext.passphrase, this.wallet, this.claim, this.hashOnly);
-                this.$emit('published', this.claim);
+                this.loadingMessage = "Sending claim publishing request";
+                console.log("Sending claim publishing request");
+
+                //Create the claim publish request
+                let claimPublish = await BridgeProtocol.Services.Claim.createClaimPublish(this.passportContext.passport, this.passportContext.passphrase, this.network, this.wallet.address, claim)
+                claimPublishId = claimPublish.id;
+
+                let transactionId = "BRDG12345";
+                let gasTransactionId;
+                if(this.wallet.network.toLowerCase() === "eth")
+                    gasTransactionId = "GAS12345";
+
+                this.pendingClaim = await BridgeProtocol.Services.Claim.updateClaimPaymentTransaction(this.passportContext.passport, this.passportContext.passphrase, claimPublishId, transactionId, gasTransactionId)
                 this.loading = false;
              }
             catch(err){
                 alert("Unable to publish claim: " + err.message);
+                await BridgeProtocol.Services.Claim.remove(this.passportContext.passport, this.passportContext.passphrase, claimPublishId);
                 console.log(err);
                 this.$emit('cancel', true);
                 this.loading = false;
@@ -201,22 +234,27 @@ export default {
     mounted: async function(){
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
+        this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(this.passportContext.passport, this.passportContext.passphrase);
+        this.claimInfo = await BridgeExtension.getFullClaimInfo(this.claim);
 
-        //Setup the available networks
-        let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
-        let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
-        
-        if(neoWallet)
-            this.networks.push({ id:"neo", name:"NEO" });
-        if(ethWallet)
-            this.networks.push({ id:"eth", name:"Ethereum" });
+        //Find out if there is a pending claim publish for this type
+        let pendingClaims = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
+        for(let i=0; i<pendingClaims.length; i++){
+            if(pendingClaims[i].claimTypeId == this.claimInfo.claimTypeId)
+                this.pendingClaim = pendingClaims[i];
+        }
 
-        let claimType = await BridgeExtension.getFullClaimInfo(this.claim);
-        this.claimTypeName = claimType.claimTypeName;
-        this.claimDate = claimType.verifiedOn;
-        this.claimValue = this.claim.claimValue;
+        if(!this.pendingClaim){
+            //Setup the available networks
+            let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
+            let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+            if(neoWallet)
+                this.networks.push({ id:"neo", name:"NEO" });
+            if(ethWallet)
+                this.networks.push({ id:"eth", name:"Ethereum" });
+            this.networkSelected("neo");
+        }
 
-        this.networkSelected("neo");
         this.loading = false;
     }
 };

@@ -9,7 +9,7 @@
         </v-container>
         <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
             <v-expansion-panels>
-                <v-expansion-panel>
+                <v-expansion-panel @click="passportDetail">
                     <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
@@ -29,6 +29,57 @@
                         <v-row class="mb-n4">
                             <v-col cols="2" class="text-left">Id:</v-col>
                             <v-col cols="auto" class="text-left">{{passportId}}</v-col>
+                        </v-row>
+
+                        <v-subheader class="pl-0 ml-0 mt-2 caption">Blockchain Publishing</v-subheader>
+                        <v-divider class="mb-2"></v-divider>
+                        <v-row dense v-if="neoWallet != null">
+                            <v-col cols="1" class="text-left">
+                                <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="9" v-if="!passportNeoLoading">
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportNeoPublished">
+                                    Published 
+                                </v-container>
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportNeoPending">
+                                    Transaction Pending
+                                </v-container>
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!passportNeoPublished && !passportNeoPending">
+                                    Not Published 
+                                </v-container>
+                            </v-col>
+                            <v-col cols="auto" v-if="passportNeoLoading">
+                                <v-progress-circular
+                                    indeterminate
+                                    color="secondary"
+                                    size="16"
+                                    width="2"
+                                ></v-progress-circular>
+                            </v-col>
+                        </v-row>
+                        <v-row dense v-if="ethWallet != null">
+                            <v-col cols="1" class="text-left">
+                                <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="9" v-if="!passportEthLoading">
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportEthPublished">
+                                    Published 
+                                </v-container>
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportEthPending">
+                                    Transaction Pending
+                                </v-container>
+                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!passportEthPublished && !passportEthPending">
+                                    Not Published 
+                                </v-container>
+                            </v-col>
+                            <v-col cols="auto" v-if="passportEthLoading">
+                                        <v-progress-circular
+                                            indeterminate
+                                            color="secondary"
+                                            size="16"
+                                            width="2"
+                                        ></v-progress-circular>
+                            </v-col>
                         </v-row>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -81,18 +132,6 @@
                                                 </v-list-item-subtitle>
                                                 </v-list-item-content>
                                             </v-list-item>
-                                            <v-divider v-if="(neoWallet && !claim.neoClaim) || (ethWallet && !claim.ethClaim)"></v-divider>
-                                            <v-list-item two-line @click="removeClaim(claim)" :disabled="claim.neoClaim != null || claim.ethClaim != null">
-                                                <v-list-item-icon>
-                                                <v-icon>mdi-delete</v-icon>
-                                                </v-list-item-icon>
-                                                <v-list-item-content>
-                                                <v-list-item-title>Delete Claim</v-list-item-title>
-                                                <v-list-item-subtitle>
-                                                    Remove the claim from your passport
-                                                </v-list-item-subtitle>
-                                                </v-list-item-content>
-                                            </v-list-item>
                                         </v-list>
                                 </v-menu>
                             </div>
@@ -122,9 +161,8 @@
                                     <v-col cols="11" v-if="!claim.neoLoading">
                                         <v-row v-if="claim.neoClaim" class="mt-n3">
                                             <v-col cols="2">{{getDate(claim.neoClaim.date)}}</v-col>
-                                            <v-col cols="8" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
+                                            <v-col cols="9" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
                                             <v-col cols="1" class="text-left text=break" v-if="claim.neoVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
-                                            <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'neo')" icon x-small :loading="neoWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
                                         <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.neoClaim">
                                             Not Published 
@@ -146,9 +184,8 @@
                                     <v-col cols="11" v-if="!claim.ethLoading">
                                         <v-row v-if="claim.ethClaim" class="mt-n3">
                                             <v-col cols="2">{{getDate(claim.ethClaim.date)}}</v-col>
-                                            <v-col cols="8" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
+                                            <v-col cols="9" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
                                             <v-col cols="1" class="text-left text=break" v-if="claim.ethVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
-                                            <v-col cols="1"><v-btn @click="unpublishClaim(claim, 'eth')" icon x-small :loading="ethWait"><v-icon>mdi-delete-forever</v-icon></v-btn></v-col>
                                         </v-row>
                                         <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.ethClaim">
                                             Not Published                                         
@@ -183,20 +220,69 @@ export default {
     methods: {
         init: async function(){
             this.refreshing = true;
-
             this.passportId = "";
             this.publicKey = "";
 
-            let passportContext = await BridgeExtension.getPassportContext();
-            if(passportContext.passport){
-                this.passportId = passportContext.passport.id;
-                this.publicKey = passportContext.passport.publicKey;
-                this.version = BridgeExtension.passportVersion;
-            }
+            this.passportContext = await BridgeExtension.getPassportContext();
+            this.passportId = this.passportContext.passport.id;
+            this.publicKey = this.passportContext.passport.publicKey;
+            this.version = BridgeExtension.passportVersion;
 
-            this.neoWallet = passportContext.passport.getWalletForNetwork("neo");
-            this.ethWallet = passportContext.passport.getWalletForNetwork("eth");
+            this.neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+            this.ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
             this.refreshing = false;
+        },
+        refreshClaims: async function(){
+            this.refreshing = true;
+
+            this.claims = [];
+            let passportContext = await BridgeExtension.getPassportContext();
+            let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
+
+            //Update with all the user friendly info
+            this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
+
+            this.refreshing = false;
+        },
+        passportDetail: async function(){
+            this.passportNeoLoading = true;
+            this.passportEthLoading = true;
+            
+            this.passportDetailSelected = !this.passportDetailSelected;
+
+            if(this.passportDetailSelected){
+                let pendingPassportPublish = await BridgeProtocol.Services.Passport.getPendingPassportPublishList(this.passportContext.passport, this.passportContext.passphrase);
+                //See if the passport is published or pending publish on NEO
+                if(this.neoWallet){
+                    let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.neoWallet.network, this.neoWallet.address);
+                    if(published != null && published.length > 0)
+                        this.passportNeoPublished = true;
+
+                    if(!this.passportNeoPublished){
+                        for(let i=0; i<pendingPassportPublish.length; i++){
+                            if(pendingPassportPublish[i].network.toLowerCase() === "neo")
+                                this.passportNeoPending = true;
+                        }
+                    }     
+                }
+
+                //See if the passport is published or pending publish on Ethereum
+                if(this.ethWallet){
+                    let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.ethWallet.network, this.ethWallet.address);
+                    if(published != null && published.length > 0)
+                        this.passportEthPublished = true;
+
+                    if(!this.passportEthPublished){
+                        for(let i=0; i<pendingPassportPublish.length; i++){
+                            if(pendingPassportPublish[i].network.toLowerCase() === "eth")
+                                this.passportEthPending = true;
+                        }
+                    }
+                }
+
+                this.passportNeoLoading = false;
+                this.passportEthLoading = false;
+            }
         },
         claimSelected: async function(claim){
             if(this.lastSelectedClaim == claim.claimTypeId){
@@ -245,62 +331,8 @@ export default {
             this.claims.push({});
             this.claims.pop();
         },
-        refreshClaims: async function(){
-            this.refreshing = true;
-
-            this.claims = [];
-            let passportContext = await BridgeExtension.getPassportContext();
-            let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
-
-            //Update with all the user friendly info
-            this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
-            this.refreshing = false;
-        },
-        async removeClaim(claim){
-            let publishedClaim = false;
-            let passportContext = await BridgeExtension.getPassportContext();
-
-            if(claim.neoClaim != null || claim.ethClaim != null){
-                alert("Please unpublish the claim from blockchains to continue.");
-                return;
-            }
-
-            //Remove the sourcce claim package from the passport and save
-            let claimPackages = [];
-            for(let i=0; i<passportContext.passport.claims.length; i++){
-                if(passportContext.passport.claims[i].typeId != claim.claimTypeId)
-                    claimPackages.push(passportContext.passport.claims[i]);
-            }
-            passportContext.passport.claims = claimPackages;
-            await BridgeExtension.savePassportToBrowserStorage(passportContext.passport);
-
-            //Remove the decrypted claim from our UI collection to prevent the full refresh
-            let claims = [];
-            for(let i=0; i<this.claims.length; i++){
-                if(this.claims[i].claimTypeId != claim.claimTypeId)
-                    claims.push(this.claims[i]);
-                else
-                    console.log("Excluding " + this.claims[i].typeId + " " + claim.claimTypeId);
-            }
-            this.claims = claims;
-        },
         getDate(date){
             return BridgeExtension.getReadableDate(date);
-        },
-        async unpublishClaim(claim, network){
-            if(network.toLowerCase() === "neo")
-                this.neoWait = true;
-            else if(network.toLowerCase() === "eth")
-                this.ethWait = true;
-
-            let passportContext = await BridgeExtension.getPassportContext();
-            let wallet = passportContext.passport.getWalletForNetwork(network);
-            await wallet.unlock(passportContext.passphrase);
-            await BridgeProtocol.Services.Blockchain.removeClaim(wallet, claim.claimTypeId);
-            this.refreshClaim(claim);
-
-            this.neoWait = false;
-            this.ethWait = false;
         },
         navigateToMarketplace(){
             this.$emit('showMarketplace', true);
@@ -319,6 +351,13 @@ export default {
         return {
             mainContainerHeight: 690,
             passportId: "",
+            passportDetailSelected: false,
+            passportNeoLoading: false,
+            passportEthLoading: false,
+            passportNeoPending: false,
+            passportEthPending: false,
+            passportNeoPublished: false,
+            passportEthPublished: false,
             version: null,
             publicKey: "",
             lastSelectedClaim: "",

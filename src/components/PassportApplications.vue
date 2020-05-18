@@ -61,14 +61,12 @@
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Status</v-col>
                                     <v-col cols="auto">{{ application.statusText }}</v-col>
-                                    <v-btn v-if="application.status == 'waitingForNetworkFeePayment'" @click="resendPaymentAndSend(application)" x-small color="accent" class="ml-3">Send Payment</v-btn>
-                                    <v-btn v-if="application.status == 'networkFeePaymentReceived' || application.status == 'notTransmittedToPartner'" @click="resendPartner(application)" x-small color="accent" :loading="retry" class="ml-3">Retry Send</v-btn>
                                 </v-row>
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Partner</v-col>
                                     <v-col cols="auto">{{ application.partnerName }}</v-col>
                                 </v-row>
-                                <v-row dense v-if="application.status == 'sentSuccessfully'">
+                                <v-row dense v-if="application.status == 'complete'">
                                     <v-col cols="2" class="text-left">Link</v-col>
                                     <v-col cols="10"  class="text-break text-left">
                                         <a @click="openUrl(application.url)">{{application.url}}</a>
@@ -167,6 +165,8 @@ export default {
 
             //Make the status readable
             application.status = appDetails.status;
+            if(appDetails.status == "complete")
+                appDetails.status = "Sent Successfully";
             application.statusText = makeStringReadable(appDetails.status);
             application.url = appDetails.url;
             application.transactionId = appDetails.transactionId;

@@ -201,7 +201,7 @@ export default {
                         recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
 
                     //Get the transaction id and send to the server and don't wait
-                    transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(app.wallet, app.networkFee, recipient, application.id);
+                    transactionId = "BRDG123"; //await BridgeProtocol.Services.Blockchain.sendPayment(app.wallet, app.networkFee, recipient, application.id);
                 }
                 catch(err){
                     //If we fail to send a payment, we should just fail and remove the application

@@ -235,6 +235,15 @@
             return res;
         }
 
+        getReadableString(str) {
+            let camelMatch = /([A-Z])/g;
+            str = str.replace(camelMatch, " $1");
+        
+            str = str.charAt(0).toUpperCase() + str.slice(1);
+        
+            return str;
+        }
+
         async getClaimType(claimTypeId){
             return await BridgeProtocol.Services.Claim.getType(claimTypeId);
         }
@@ -267,13 +276,14 @@
              //Assingn a unique id
              claim.id = Math.random().toString(36).substring(2) + Date.now().toString(36);
              claim.verifiedOn = this.getReadableDate(claim.createdOn);
+
              //Find the expiration date
              if(claim.expiresOn == 0)
-                 claim.expiresOn = "Never";
+                 claim.expireDate = "Never";
              else{
-                 claim.expiresOn = this.getReadableDate(claim.expiresOn);
+                 claim.expireDate = this.getReadableDate(claim.expiresOn);
              }
-                 
+
              //Set the claim type name
              claim.claimTypeName = claim.claimTypeId;
              let claimType = await BridgeProtocol.Services.Claim.getType(claim.claimTypeId);

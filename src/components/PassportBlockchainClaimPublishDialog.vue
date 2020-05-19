@@ -9,19 +9,70 @@
                 <v-container>{{loadingMessage}}</v-container>
             </v-container>  
         </v-card>
-        <v-card v-if="!loading && pendingClaim != null" class="py-12">
-            <v-container text-center align-middle>
-                PENDING CLAIM STATUS
-            </v-container>  
-        </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading && !pendingClaim">
+        <v-card class="mx-0 px-0" v-if="!loading">
             <v-toolbar
                 color="gradient"
                 dark
                 >
                 <v-toolbar-title class="subtitle-1">Publish Claim to Blockchain</v-toolbar-title>
             </v-toolbar>
-            <v-card-text>
+            <v-card-text v-if="pendingClaim != null">
+                <v-row>
+                    <v-col class="d-flex" cols="12">
+                        <v-select
+                        :items="networks"
+                        outlined
+                        item-text="name"
+                        item-value="id"
+                        color="secondary"
+                        :label="networkName"
+                        @change="networkSelected"
+                        class="mb-0"
+                        ></v-select>
+                    </v-col>
+                </v-row>
+                <v-alert
+                    outlined
+                    color="primary"
+                    type="error"
+                    class="mt-n4 caption text-justify"
+                    >
+                    Publish Request Pending
+                </v-alert>
+                <v-row>
+                    <v-col cols="3">
+                        Network
+                    </v-col>
+                    <v-col cols="auto">
+                        {{pendingClaim.network}}
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col cols="3">
+                        Claim Type
+                    </v-col>
+                    <v-col cols="auto">
+                        {{pendingClaim.claim.claimTypeName}}
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col cols="3">
+                        Claim Date
+                    </v-col>
+                    <v-col cols="auto">
+                        {{pendingClaim.claim.verifiedOn}}
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col cols="3">
+                        Claim Value
+                    </v-col>
+                    <v-col cols="9" class="text-break text-left">
+                        {{pendingClaim.claim.claimValue}}
+                    </v-col>
+                </v-row> 
+            </v-card-text>
+            <v-card-text v-if="!pendingClaim">
                     <p class="mt-4 mb-0">
                         Choose the blockchain and method of publishing the claim below
                     </p>
@@ -113,7 +164,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance && passportPublished">Publish to Blockchain</v-btn>
+                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance && passportPublished && !pendingClaim">Publish to Blockchain</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -126,7 +177,7 @@ export default {
     data: function () {
         return {
             visible: true,
-            loading: false,
+            loading: true,
             loadingMessage: "Please wait",
             networks: [],
             network: null,
@@ -158,9 +209,24 @@ export default {
             this.totalGasCost = 0;
             this.insufficientBalance = false;
             this.insufficientBalanceErrorMessage = null;
+            this.pendingClaim = null;
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
 
+            //Find out if there is a pending claim publish for this type
+            let pendingClaims = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
+            for(let i=0; i<pendingClaims.length; i++){
+                if(pendingClaims[i].network.toLowerCase() === this.wallet.network.toLowerCase() && pendingClaims[i].claim && pendingClaims[i].claim.claimTypeId == this.claimInfo.claimTypeId)
+                    this.pendingClaim = pendingClaims[i];
+            }
+            if(this.pendingClaim){
+                this.pendingClaim.claim = await BridgeExtension.getFullClaimInfo(this.pendingClaim.claim);
+                this.pendingClaim.status = BridgeExtension.getReadableString(this.pendingClaim.status);
+                this.loading = false;
+                console.log(this.pendingClaim);
+                return;
+            }
+                
             let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
             if(published != null && published.length > 0)
                 this.passportPublished = true;
@@ -199,14 +265,21 @@ export default {
                     return;
                 }
 
+                let publish = {
+                    claimTypeId: this.claim.claimTypeId,
+                    claimValue: this.claim.claimValue,
+                    createdOn: this.claim.createdOn,
+                    expiresOn: this.claim.expiresOn,
+                    signedByKey: this.claim.signedByKey,
+                    signature: this.claim.signature
+                };
+
                 this.loadingMessage = "Sending claim publishing request";
                 console.log("Sending claim publishing request");
-                console.log(this.claim);
-                console.log(this.wallet);
+                console.log(publish);
                 
-
                 //Create the claim publish request
-                let claimPublish = await BridgeProtocol.Services.Claim.createClaimPublish(this.passportContext.passport, this.passportContext.passphrase, this.wallet.network, this.wallet.address, this.claim);
+                let claimPublish = await BridgeProtocol.Services.Claim.createClaimPublish(this.passportContext.passport, this.passportContext.passphrase, this.wallet.network, this.wallet.address, publish);
                 claimPublishId = claimPublish.id;
 
                 let transactionId = "BRDG12345"; //Claim publish transaction to specified chain
@@ -238,23 +311,14 @@ export default {
         this.networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(this.passportContext.passport, this.passportContext.passphrase);
         this.claimInfo = await BridgeExtension.getFullClaimInfo(this.claim);
 
-        //Find out if there is a pending claim publish for this type
-        let pendingClaims = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
-        for(let i=0; i<pendingClaims.length; i++){
-            if(pendingClaims[i].claimTypeId == this.claimInfo.claimTypeId)
-                this.pendingClaim = pendingClaims[i];
-        }
-
-        if(!this.pendingClaim){
-            //Setup the available networks
-            let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
-            let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
-            if(neoWallet)
-                this.networks.push({ id:"neo", name:"NEO" });
-            if(ethWallet)
-                this.networks.push({ id:"eth", name:"Ethereum" });
-            this.networkSelected("neo");
-        }
+        //Setup the available networks
+        let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
+        let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        if(neoWallet)
+            this.networks.push({ id:"neo", name:"NEO" });
+        if(ethWallet)
+            this.networks.push({ id:"eth", name:"Ethereum" });
+        this.networkSelected("neo");
 
         this.loading = false;
     }

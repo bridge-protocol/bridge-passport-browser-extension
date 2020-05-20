@@ -63,16 +63,18 @@
                             <v-col cols="1" class="text-left">
                                 <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                             </v-col>
-                            <v-col cols="9" v-if="!passportNeoLoading">
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportNeoPublished">
-                                    Published 
-                                </v-container>
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportNeoPending">
-                                    Transaction Pending
-                                </v-container>
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!passportNeoPublished && !passportNeoPending">
-                                    Not Published 
-                                </v-container>
+                            <v-col cols="9" class="text-left" v-if="!passportNeoLoading">
+                                <span v-if="passportNeoPublished">Published </span>
+                                <span v-if="passportNeoPending">Transaction Pending
+                                    <v-progress-circular
+                                        indeterminate
+                                        color="secondary"
+                                        size="12"
+                                        width="2"
+                                        class="ml-1"
+                                    ></v-progress-circular>
+                                </span>
+                                <span v-if="!passportNeoPublished && !passportNeoPending">Not Published </span>
                             </v-col>
                             <v-col cols="auto" v-if="passportNeoLoading">
                                 <v-progress-circular
@@ -87,24 +89,26 @@
                             <v-col cols="1" class="text-left">
                                 <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                             </v-col>
-                            <v-col cols="9" v-if="!passportEthLoading">
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportEthPublished">
-                                    Published 
-                                </v-container>
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="passportEthPending">
-                                    Transaction Pending
-                                </v-container>
-                                <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!passportEthPublished && !passportEthPending">
-                                    Not Published 
-                                </v-container>
+                            <v-col cols="9" class="text-left" v-if="!passportEthLoading">
+                                <span v-if="passportEthPublished">Published </span>
+                                <span v-if="passportEthPending">Transaction Pending
+                                    <v-progress-circular
+                                    indeterminate
+                                    color="secondary"
+                                    size="12"
+                                    width="2"
+                                    class="ml-1"
+                                    ></v-progress-circular>
+                                </span>
+                                <span v-if="!passportEthPublished && !passportEthPending">Not Published </span>
                             </v-col>
                             <v-col cols="auto" v-if="passportEthLoading">
-                                        <v-progress-circular
-                                            indeterminate
-                                            color="secondary"
-                                            size="16"
-                                            width="2"
-                                        ></v-progress-circular>
+                                <v-progress-circular
+                                    indeterminate
+                                    color="secondary"
+                                    size="16"
+                                    width="2"
+                                ></v-progress-circular>
                             </v-col>
                         </v-row>
                     </v-expansion-panel-content>
@@ -242,9 +246,35 @@ import BlockchainPublishDialog from '../components/PassportBlockchainPublishDial
 import BlockchainClaimPublishDialog from '../components/PassportBlockchainClaimPublishDialog.vue';
 export default {
     name: 'passport-details',
-     components: {
-         BlockchainPublishDialog,
-         BlockchainClaimPublishDialog
+    components: {
+        BlockchainPublishDialog,
+        BlockchainClaimPublishDialog
+    },
+    data: function() {
+        return {
+            mainContainerHeight: 690,
+            passportId: "",
+            passportDetailSelected: false,
+            passportNeoLoading: false,
+            passportEthLoading: false,
+            passportNeoPending: false,
+            passportEthPending: false,
+            passportNeoPublished: false,
+            passportEthPublished: false,
+            version: null,
+            publicKey: "",
+            lastSelectedClaim: "",
+            neoWallet: null,
+            ethWallet: null,
+            neoWait: false,
+            ethWait: false,
+            refreshing: true,
+            claims: [],
+            publishClaim: null,
+            publishDialog: false,
+            publishClaimDialog: false,
+            polling: false
+        }
     },
     methods: {
         init: async function(){
@@ -329,13 +359,23 @@ export default {
         refreshPassportDetail: async function(){
             this.passportNeoLoading = true;
             this.passportEthLoading = true;
+            
+            await this.getPassportPublishStatus();
+
+            this.passportNeoLoading = false;
+            this.passportEthLoading = false;
+        },
+        getPassportPublishStatus: async function(){
             let pendingPassportPublish = await BridgeProtocol.Services.Passport.getPendingPassportPublishList(this.passportContext.passport, this.passportContext.passphrase);
+
             //See if the passport is published or pending publish on NEO
             if(this.neoWallet){
                 let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.neoWallet.network, this.neoWallet.address);
+                this.passportNeoPublished = false;
                 if(published != null && published.length > 0)
                     this.passportNeoPublished = true;
 
+                this.passportNeoPending = false;
                 if(!this.passportNeoPublished){
                     for(let i=0; i<pendingPassportPublish.length; i++){
                         if(pendingPassportPublish[i].network.toLowerCase() === "neo")
@@ -347,9 +387,11 @@ export default {
             //See if the passport is published or pending publish on Ethereum
             if(this.ethWallet){
                 let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.ethWallet.network, this.ethWallet.address);
+                this.passportEthPublished = false;
                 if(published != null && published.length > 0)
                     this.passportEthPublished = true;
 
+                this.passportEthPending = false;
                 if(!this.passportEthPublished){
                     for(let i=0; i<pendingPassportPublish.length; i++){
                         if(pendingPassportPublish[i].network.toLowerCase() === "eth")
@@ -358,8 +400,16 @@ export default {
                 }
             }
 
-            this.passportNeoLoading = false;
-            this.passportEthLoading = false;
+             //If there is a pending publish, poll for status while open
+            if(this.passportNeoPending || this.passportEthPending){
+                console.log("passport publish pending, polling for updated status");
+                this.polling = true;
+                let app = this;
+                window.setTimeout(async function(){
+                    if(app.polling)
+                        await app.getPassportPublishStatus();
+                },15000);
+            }
         },
         getDate(date){
             return BridgeExtension.getReadableDate(date);
@@ -382,31 +432,6 @@ export default {
         async claimPublished(publishedClaim){
             this.publishClaim = null;
             this.publishClaimDialog = false;
-        }
-    },
-    data: function() {
-        return {
-            mainContainerHeight: 690,
-            passportId: "",
-            passportDetailSelected: false,
-            passportNeoLoading: false,
-            passportEthLoading: false,
-            passportNeoPending: false,
-            passportEthPending: false,
-            passportNeoPublished: false,
-            passportEthPublished: false,
-            version: null,
-            publicKey: "",
-            lastSelectedClaim: "",
-            neoWallet: null,
-            ethWallet: null,
-            neoWait: false,
-            ethWait: false,
-            refreshing: true,
-            claims: [],
-            publishClaim: null,
-            publishDialog: false,
-            publishClaimDialog: false
         }
     },
     created: async function(){

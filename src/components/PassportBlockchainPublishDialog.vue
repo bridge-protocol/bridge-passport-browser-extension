@@ -99,10 +99,7 @@ export default {
             await this.wallet.unlock(this.passportContext.passphrase);
             this.gasLabel = network === "eth" ? "ETH" : "GAS";
 
-            let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
-            this.passportPublished = published != null && published.length > 0;
-
-            let passportPublishCost = await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport, true);
+            let passportPublishCost = await BridgeProtocol.Services.Blockchain.sendPassportPublishRequest(this.passportContext.passport, this.passportContext.passphrase, this.wallet, true);
             this.totalGasCost = parseFloat(passportPublishCost);
 
             let balances = await BridgeExtension.getWalletBalances(this.wallet);
@@ -132,9 +129,8 @@ export default {
                 this.loadingMessage = "Sending passport publish transaction";
                 console.log("Sending passport publish transaction");
 
-                let transactionId = "BRDG12345";
+                let passportPublish = await BridgeProtocol.Services.Blockchain.sendPassportPublishRequest(this.passportContext.passport, this.passportContext.passphrase, this.wallet);
 
-                let passportPublish = await BridgeProtocol.Services.Passport.createPassportPublish(this.passportContext.passport, this.passportContext.passphrase, this.network, this.wallet.address);
                 this.loading = false;
                 this.$emit('published', true);
              }
@@ -163,7 +159,7 @@ export default {
             this.networks.push({ id:"neo", name:"NEO" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
-        this.networkSelected("neo");
+        await this.networkSelected("neo");
 
         this.loading = false;
     }

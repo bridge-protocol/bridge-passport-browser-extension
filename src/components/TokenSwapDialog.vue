@@ -265,7 +265,7 @@ export default {
                     await app.from.unlock(app.passportContext.passphrase);
                     await app.to.unlock(app.passportContext.passphrase);
 
-                    await BridgeProtocol.Services.Blockchain.sendTokenSwapRequest(app.passportContext.passport, app.passportContext.passphrase, app.from, app.to, app.brdgAmount);
+                    let res = await BridgeProtocol.Services.Blockchain.sendTokenSwapRequest(app.passportContext.passport, app.passportContext.passphrase, app.from, app.to, app.brdgAmount);
 
                     app.statusMessage = "Swap request sent successfully.";
                     app.swapTxId = res.sendTxId;

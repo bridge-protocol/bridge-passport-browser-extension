@@ -189,7 +189,16 @@
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
                                     <v-col cols="11" class="text-left" v-if="!claim.neoLoading && claim.neoPublish">
-                                        {{claim.neoPublish != null ? claim.neoPublish.text : null}} <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1">Publish</v-btn>
+                                        {{claim.neoPublish != null ? claim.neoPublish.text : null}} 
+                                        <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1">Publish</v-btn>
+                                        <v-progress-circular
+                                        indeterminate
+                                        color="secondary"
+                                        size="12"
+                                        width="2"
+                                        class="ml-1"
+                                        v-if="claim.neoPublish != null && claim.neoPublish.status == 2"
+                                        ></v-progress-circular>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.neoLoading">
                                         <v-progress-circular
@@ -206,6 +215,14 @@
                                     </v-col>
                                     <v-col cols="11" class="text-left" v-if="!claim.ethLoading">
                                         {{claim.ethPublish != null ? claim.ethPublish.text : null}}
+                                        <v-progress-circular
+                                        indeterminate
+                                        color="secondary"
+                                        size="12"
+                                        width="2"
+                                        class="ml-1"
+                                        v-if="claim.ethPublish != null && claim.ethPublish.status == 2"
+                                        ></v-progress-circular>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.ethLoading">
                                         <v-progress-circular
@@ -312,7 +329,19 @@ export default {
             this.claims.push({});
             this.claims.pop();
 
-            await this.getClaimPublishStatus(claim);
+            //See if it's published on NEO if we have a NEO wallet
+            if(this.passportContext.passport.getWalletForNetwork("neo")){
+                claim.neoPublish = await this.getBlockchainPublishStatus("neo", claim);
+                if(claim.neoPublish.status == 2)
+                    await this.getPublishStatus("neo", claim);
+            }
+                
+            //See if it's published on Ethereum if we have an Ethereum wallet
+            if(this.passportContext.passport.getWalletForNetwork("eth")){
+                claim.ethPublish = await this.getBlockchainPublishStatus("eth", claim);
+                if(claim.ethPublish.status == 2)
+                    await this.getPublishStatus("eth", claim);
+            }
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
@@ -321,25 +350,23 @@ export default {
             claim.neoLoading = false;
             claim.ethLoading = false;
         },
-        getClaimPublishStatus: async function(claim)
-        {
-            try
-            {
-                //See if it's published on NEO if we have a NEO wallet
-                if(this.passportContext.passport.getWalletForNetwork("neo"))
-                    claim.neoPublish = await this.getPublishStatus("neo", claim.claimTypeId);
-
-                //See if it's published on Ethereum if we have an Ethereum wallet
-                if(this.passportContext.passport.getWalletForNetwork("eth"))
-                    claim.ethPublish = await this.getPublishStatus("eth", claim.claimTypeId);
-            }
-            catch(err){
-                alert(err.message);
-            }
+        async getPublishStatus(network, claim){
+            console.log("claim publish pending, polling for updated status");
+            this.polling = true;
+            let app = this;
+            window.setTimeout(async function(){
+                if(app.polling){
+                    let publishStatus = await app.getBlockchainPublishStatus(network, claim);
+                    console.log(publishStatus);
+                    if(publishStatus.status == 2) //Pending, try again
+                        return await app.getPublishStatus(network, claim);
+                    else
+                        return publishStatus;
+                }
+            },15000);
         },
-        async getPublishStatus(network, claimTypeId){
-            let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claimTypeId, this.ethWallet.address);
-
+        async getBlockchainPublishStatus(network, claim){
+            let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
             let publishStatus = {
                 status: 0,
                 text: this.getPublishStatusText(0)
@@ -351,11 +378,11 @@ export default {
             }
 
             if(publishStatus.status != 1){
-                let pendingStatus = await this.getPendingPublishStatus(network, claimTypeId);
+                let pendingStatus = await this.getPendingPublishStatus(network, claim.claimTypeId);
                 if(pendingStatus)
                     publishStatus = pendingStatus;
             }
-                
+
             return publishStatus;
         },
         async getPendingPublishStatus(network, claimTypeId){

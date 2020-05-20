@@ -129,7 +129,6 @@ export default {
             lastSelectedApplication: null,
             statusDialog: false,
             loadStatus: "Please wait",
-            retry: false,
             polling: false
         }
     },
@@ -218,51 +217,6 @@ export default {
                 },15000);
             } 
         },
-        resendPaymentAndSend: async function(application){
-            this.statusDialog = true;
-            let passportContext = await BridgeExtension.getPassportContext();
-            let networkFee = await BridgeProtocol.Services.Bridge.getBridgeNetworkFee(passportContext.passport, passportContext.passphrase);
-
-            //Send a blockchain fee payment
-            this.loadStatus = "Sending network fee transaction";
-            console.log("Sending network fee for " + application.id);
-            let wallet = passportContext.passport.getWalletForNetwork("neo");
-            await wallet.unlock(passportContext.passphrase);
-
-            let recipient = BridgeProtocol.Constants.bridgeAddress;
-            //Get the transaction id and send to the server and don't wait
-            let transactionId = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, networkFee, recipient, application.id, false);
-
-            //Send the fee payment info back to the application API
-            await BridgeProtocol.Services.Application.updatePaymentTransaction(passportContext.passport, passportContext.passphrase, application.id, transactionId);
-            console.log("Request fee transaction updated: " + JSON.stringify(application));
-
-            this.loadStatus = "Verifying network fee transaction";
-            //Wait for the transaction to be done
-            let status = await BridgeExtension.waitVerifyPayment(wallet.network, transactionId, wallet.address, recipient, networkFee, application.id);
-            console.log("Network fee transaction: " + JSON.stringify(status));
-
-            if(status)
-            {
-                //Relay to the partner
-                this.loadStatus = "Relaying request to partner";
-                await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
-            }
-            else{
-                alert("Payment verification failed");
-                this.statusDialog = false;
-            }
-
-            this.refreshApplication(application);
-            this.statusDialog = false;
-        },
-        resendPartner: async function(application){
-            this.retry = true;
-            let passportContext = await BridgeExtension.getPassportContext();
-            await BridgeProtocol.Services.Application.retrySend(passportContext.passport, passportContext.passphrase, application.id);
-            this.refreshApplication(application);
-            this.retry = false;
-        },       
         openUrl: function(url){
             this.$emit('openUrl', url);
         }

@@ -144,7 +144,7 @@
                 <v-alert
                     dense
                     outlined
-                    type="warning" 
+                    type="info" 
                     class="text-justify"
                     >
                     Swap pending.  Please wait before sending another request.
@@ -213,6 +213,46 @@ export default {
         }
     },
     methods:{
+        getPendingSwap: async function(){
+            let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
+            //Find out if we have a pending swap for this network already
+            if(pendingList != null && pendingList.length > 0){
+                for(let i=0; i<pendingList.length; i++){
+                    if(pendingList[i].sendTxNetwork.toLowerCase() === this.from.network.toLowerCase()){
+                        this.pendingSwapInfo = {
+                            hash: pendingList[i].sendTxId,
+                            timestamp: new Date(pendingList[i].createdOn * 1000).toLocaleDateString(),
+                            sendAddress: pendingList[i].sendAddress,
+                            amount: pendingList[i].sendAmount,
+                            url: pendingList[i].sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pendingList[i].sendTxId : "https://etherscan.io/tx/" + pendingList[i].sendTxId,
+                            receiveAddress: pendingList[i].receiveAddress
+                        };
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        },
+        checkCostsAndBalances: async function(){
+            let fromBalances = await BridgeExtension.getWalletBalances(this.from);
+            let toBalances = await BridgeExtension.getWalletBalances(this.to);
+            //Calculate the GAS cost
+            this.brdgBalance = fromBalances.brdg;
+            if(this.from.network.toLowerCase() === "neo"){
+                this.gasBalance = toBalances.gas;
+            }
+            else{
+                this.gasBalance = fromBalances.gas;
+            }
+
+            this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendTokenSwapRequest(this.passportContext.passport, this.passportContext.passphrase, this.from, this.to, 1, true);
+
+            if(this.gasBalance < this.totalGasCost){
+                this.insufficientBalance = true;
+                this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
+            }
+        },
         swap: async function(){
             let app = this;
             this.loading = true;
@@ -225,22 +265,8 @@ export default {
                     await app.from.unlock(app.passportContext.passphrase);
                     await app.to.unlock(app.passportContext.passphrase);
 
-                    let swap = await BridgeProtocol.Services.TokenSwap.createTokenSwap(app.passportContext.passport, app.passportContext.passphrase, app.from.network, app.from.address, app.to.address, app.brdgAmount);
-                    swapId = swap.id;
+                    await BridgeProtocol.Services.Blockchain.sendTokenSwapRequest(app.passportContext.passport, app.passportContext.passphrase, app.from, app.to, app.brdgAmount);
 
-                    let brdgSwapAddress = BridgeProtocol.Constants.ethereumSwapAddress;
-
-                    //If it's NEO -> Ethereum we prepay the transfer gas, Ethereum -> NEO doesn't require prepayment
-                    let gasTransactionId = null;
-                    if(app.from.network.toLowerCase() === "neo"){
-                        brdgSwapAddress = BridgeProtocol.Constants.neoSwapAddress;
-                        gasTransactionId = "GAS12345"; //await BridgeProtocol.Services.Blockchain.transferGas(app.to, app.totalGasCost, BridgeProtocol.Constants.ethereumSwapAddress, swapId);
-                    }
-
-                    //Send the swap BRDG payment(s)
-                    let transactionId = "BRDG12345"; //await BridgeProtocol.Services.Blockchain.sendPayment(app.from, app.brdgAmount, brdgSwapAddress, swapId);
-
-                    let res = await BridgeProtocol.Services.TokenSwap.updatePaymentTransaction(app.passportContext.passport, app.passportContext.passphrase, swapId, transactionId, gasTransactionId);
                     app.statusMessage = "Swap request sent successfully.";
                     app.swapTxId = res.sendTxId;
                     app.error = false;
@@ -249,7 +275,6 @@ export default {
                 }
                 catch(err){
                     console.log(err);
-                    await BridgeProtocol.Services.TokenSwap.remove(app.passportContext.passport, app.passportContext.passphrase, swapId);
                     app.statusMessage = err.message;
                     app.sent = true;
                     app.error = true;
@@ -278,50 +303,12 @@ export default {
         this.loading = true;
         this.passportContext = await BridgeExtension.getPassportContext();
 
-        let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
-
-        //Find out if we have a pending swap for this network already
-        if(pendingList != null && pendingList.length > 0){
-            for(let i=0; i<pendingList.length; i++){
-                if(pendingList[i].sendTxNetwork.toLowerCase() === this.from.network.toLowerCase()){
-                    let pending = pendingList[i];
-                    this.pendingSwapInfo = {
-                        hash: pending.sendTxId,
-                        timestamp: new Date(pending.createdOn * 1000).toLocaleDateString(),
-                        sendAddress: pending.sendAddress,
-                        amount: pending.sendAmount,
-                        url: pending.sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pending.sendTxId : "https://etherscan.io/tx/" + pending.sendTxId,
-                        receiveAddress: pending.receiveAddress
-                    };
-                    this.pendingSwap = true;
-                    this.loading = false;
-                    return;
-                }
-            }
-        }
-
-        let fromBalances = await BridgeExtension.getWalletBalances(this.from);
-        let toBalances = await BridgeExtension.getWalletBalances(this.to);
-        //Calculate the GAS cost
-        this.brdgBalance = fromBalances.brdg;
-        if(this.from.network.toLowerCase() === "neo"){
-            this.gasBalance = toBalances.gas;
-        }
-        else{
-            this.gasBalance = fromBalances.gas;
-        }
-
-        //We need the cost of ethereum either way
-        let wallet = this.from;
-        if(this.from.network.toLowerCase() === "neo")
-            wallet = this.to;
-
-        await wallet.unlock(this.passportContext.passphrase);
-
-        this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendPayment(wallet, 1, this.to.address, "costonly", false, true);
-        if(this.gasBalance < this.totalGasCost){
-            this.insufficientBalance = true;
-            this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
+        //Check for a pending swap
+        this.pendingSwap = await this.getPendingSwap();
+        if(!this.pendingSwap)
+        {
+            //Get the costs and balances
+            await this.checkCostsAndBalances();
         }
 
         this.loading = false;

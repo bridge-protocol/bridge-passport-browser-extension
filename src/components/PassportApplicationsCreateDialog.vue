@@ -178,42 +178,14 @@ export default {
             //Allow UI to refresh with spinner
             window.setTimeout(async function(){
                 app.loadStatus = "Creating marketplace request";
-
-                //Create the application via API
-                let application = await BridgeProtocol.Services.Application.createApplication(app.passportContext.passport, app.passportContext.passphrase, app.selectedPartner.id, app.wallet.network, app.wallet.address);
-                if(!application){
-                    alert("Unable to create marketplace request.");
-                    app.loading = false;
-                    return;
-                }
-                console.log("Request created: " + application.id);
-
-                let transactionId;
                 try{
-                    //Send a blockchain fee payment
-                    app.loadStatus = "Sending network fee transaction";
-                    console.log("Sending network fee for " + application.id);
-
-                    let recipient = null;
-                    if(app.wallet.network.toLowerCase() === "neo")
-                        recipient = BridgeProtocol.Constants.bridgeAddress;
-                    else if (app.wallet.network.toLowerCase() === "eth")
-                        recipient = BridgeProtocol.Constants.bridgeEthereumAddress;
-
-                    //Get the transaction id and send to the server and don't wait
-                    transactionId = "BRDG123"; //await BridgeProtocol.Services.Blockchain.sendPayment(app.wallet, app.networkFee, recipient, application.id);
+                    await BridgeProtocol.Services.Blockchain.sendApplicationRequest(this.passportContext.passport, this.passportContext.passphrase, app.wallet, app.selectedPartner.id);
                 }
                 catch(err){
-                    //If we fail to send a payment, we should just fail and remove the application
-                    await BridgeProtocol.Services.Application.remove(app.passportContext.passport, app.passportContext.passphrase, application.id);
                     alert("Unable to create marketplace request: " + err.message);
                     app.loading = false;
                     return;
                 }
-
-                //Send the fee payment info back to the application API
-                await BridgeProtocol.Services.Application.updatePaymentTransaction(app.passportContext.passport, app.passportContext.passphrase, application.id, transactionId);
-                console.log("Request fee transaction updated.");
 
                 app.$emit('created', true);
                 app.loading = false;
@@ -236,34 +208,19 @@ export default {
         networkSelected: async function(network){
             await this.updateNetworkInfo(network);
         },
-        updateNetworkInfo: async function(network, forceUpdate){
-            if(this.network == network && !forceUpdate)
-                return; 
-
-            this.loading = true;
-            this.loadStatus = "Please wait";
-            this.network = network;
-            this.wallet = this.passportContext.passport.getWalletForNetwork(this.network);
-            let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.wallet.network, this.wallet.address);
-            this.passportPublished = published != null && published.length > 0;
-
-            let balances = await BridgeExtension.getWalletBalances(this.wallet);
+        getCostsAndBalances: async function(network){
+            let wallet = this.passportContext.passport.getWalletForNetwork(network);
+            let balances = await BridgeExtension.getWalletBalances(wallet);
             this.gasLabel = "GAS";
             if(this.network.toLowerCase() === "eth")
                 this.gasLabel = "ETH";
+
             this.gasBalance = balances.gas;
             this.brdgBalance = balances.brdg;
 
-            //Get the costs
-            await this.wallet.unlock(this.passportContext.passphrase);
-            this.paymentGasCost = await BridgeProtocol.Services.Blockchain.sendPayment(this.wallet, 1, BridgeProtocol.Constants.bridgeEthereumAddress, "identifier", false, true); //Get the transfer GAS cost
-            this.totalGasCost = this.paymentGasCost;
-            if(!this.passportPublished){
-                this.publishGasCost = await BridgeProtocol.Services.Blockchain.publishPassport(this.wallet, this.passportContext.passport, true); //Need to also include the passport publish GAS cost
-                this.totalGasCost = parseFloat(this.publishGasCost) + parseFloat(this.paymentGasCost);
-            }
+            //Find the cost of creating the application
+            this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendApplicationRequest(this.passportContext.passport, this.passportContext.passphrase, wallet, "costonly", true);
 
-            //TODO: Factor in the passport publish fee into the GAS costs if the passport is not published yet
             if(balances.gas < this.totalGasCost){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + (this.network === "neo" ? "GAS":"ETH");
@@ -272,6 +229,24 @@ export default {
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient balance for network fees.  This transaction requires " + this.networkFee + " BRDG";
             }
+        },
+        checkPassportPublished: async function(network){
+            let wallet = this.passportContext.passport.getWalletForNetwork(network);
+            let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
+            return published != null && published.length > 0;
+        },
+        updateNetworkInfo: async function(network, forceUpdate){
+            if(this.network == network && !forceUpdate)
+                return; 
+
+            this.loading = true;
+            this.loadStatus = "Please wait";
+            
+            this.network = network;
+            this.passportPublished = await this.checkPassportPublished(network);
+            this.wallet = this.passportContext.passport.getWalletForNetwork(network);
+            await this.getCostsAndBalances(network);
+
             this.loading = false;
         },
         openUrl: function(url){

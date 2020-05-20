@@ -33,7 +33,7 @@
             </v-alert>
             <v-expansion-panels
                 v-model="applicationPanels"
-                multiple>
+                >
                 <v-expansion-panel
                 v-for="(application,i) in applications"
                 :key="i"
@@ -61,6 +61,15 @@
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Status</v-col>
                                     <v-col cols="auto">{{ application.statusText }}</v-col>
+                                    <v-col cols="1" class="text-left">
+                                        <v-progress-circular
+                                            indeterminate
+                                            color="secondary"
+                                            size="12"
+                                            width="2"
+                                            v-if="application.pending"
+                                        ></v-progress-circular>
+                                    </v-col>
                                 </v-row>
                                 <v-row dense>
                                     <v-col cols="2" class="text-left">Partner</v-col>
@@ -120,7 +129,8 @@ export default {
             lastSelectedApplication: null,
             statusDialog: false,
             loadStatus: "Please wait",
-            retry: false
+            retry: false,
+            polling: false
         }
     },
     methods: {
@@ -149,6 +159,7 @@ export default {
             }
         },
         applicationSelected: async function(application){
+            this.polling = false; //Reset any status polling
             if(this.lastSelectedApplication == application.id){
                 this.lastSelectedApplication = "";
             }
@@ -160,14 +171,22 @@ export default {
         refreshApplication: async function(application){
             //Update the application status from the service
             application.loading = true;
+            
+            await this.setApplicationDetail(application);
+
+            this.applications.push({});
+            this.applications.pop();
+            application.loading = false;
+        },
+        setApplicationDetail: async function(application){
             let passportContext = await BridgeExtension.getPassportContext();
             let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
-
             //Make the status readable
             application.status = appDetails.status;
             if(appDetails.status == "complete")
                 appDetails.status = "Sent Successfully";
             application.statusText = makeStringReadable(appDetails.status);
+            application.pending = application.status != "failed" && application.status != "complete";
             application.url = appDetails.url;
             application.transactionId = appDetails.transactionId;
 
@@ -188,9 +207,16 @@ export default {
                 application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + appDetails.transactionId;
             }
 
-            this.applications.push({});
-            this.applications.pop();
-            application.loading = false;
+            //If we are incomplete, set to poll every 15s
+            if(application.pending){
+                console.log("application pending, polling for updated status");
+                this.polling = true;
+                let app = this;
+                window.setTimeout(async function(){
+                    if(app.polling)
+                        await app.setApplicationDetail(application);
+                },15000);
+            } 
         },
         resendPaymentAndSend: async function(application){
             this.statusDialog = true;

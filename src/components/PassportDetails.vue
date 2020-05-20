@@ -65,7 +65,7 @@
                             </v-col>
                             <v-col cols="9" class="text-left" v-if="!passportNeoLoading">
                                 <span v-if="passportNeoPublished">Published </span>
-                                <span v-if="passportNeoPending">Transaction Pending
+                                <span v-if="passportNeoPending">Publish Pending
                                     <v-progress-circular
                                         indeterminate
                                         color="secondary"
@@ -91,7 +91,7 @@
                             </v-col>
                             <v-col cols="9" class="text-left" v-if="!passportEthLoading">
                                 <span v-if="passportEthPublished">Published </span>
-                                <span v-if="passportEthPending">Transaction Pending
+                                <span v-if="passportEthPending">Publish Pending
                                     <v-progress-circular
                                     indeterminate
                                     color="secondary"
@@ -188,15 +188,8 @@
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="11" v-if="!claim.neoLoading">
-                                        <v-row v-if="claim.neoClaim" class="mt-n3">
-                                            <v-col cols="2">{{getDate(claim.neoClaim.date)}}</v-col>
-                                            <v-col cols="9" class="text-left text-break">{{claim.neoClaim.value}}</v-col>
-                                            <v-col cols="1" class="text-left text=break" v-if="claim.neoVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
-                                        </v-row>
-                                        <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.neoClaim">
-                                            Not Published 
-                                        </v-container>
+                                    <v-col cols="11" class="text-left" v-if="!claim.neoLoading && claim.neoPublish">
+                                        {{claim.neoPublish != null ? claim.neoPublish.text : null}} <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1">Publish</v-btn>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.neoLoading">
                                         <v-progress-circular
@@ -211,15 +204,8 @@
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
-                                    <v-col cols="11" v-if="!claim.ethLoading">
-                                        <v-row v-if="claim.ethClaim" class="mt-n3">
-                                            <v-col cols="2">{{getDate(claim.ethClaim.date)}}</v-col>
-                                            <v-col cols="9" class="text-left text=break">{{claim.ethClaim.value}}</v-col>
-                                            <v-col cols="1" class="text-left text=break" v-if="claim.ethVerified"><v-icon small color="success">mdi-check-decagram</v-icon></v-col>
-                                        </v-row>
-                                        <v-container class="text-left px-0 py-0 mx-0 my-0" v-if="!claim.ethClaim">
-                                            Not Published                                         
-                                        </v-container>
+                                    <v-col cols="11" class="text-left" v-if="!claim.ethLoading">
+                                        {{claim.ethPublish != null ? claim.ethPublish.text : null}}
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.ethLoading">
                                         <v-progress-circular
@@ -326,35 +312,88 @@ export default {
             this.claims.push({});
             this.claims.pop();
 
-            let passportContext = await BridgeExtension.getPassportContext();
-            try
-            {
-                if(this.neoWallet){
-                    let neoWallet = passportContext.passport.getWalletForNetwork("neo");
-                    let res = await BridgeProtocol.Services.Blockchain.getClaim(this.neoWallet.network, claim.claimTypeId, this.neoWallet.address);
-                    if(res.claim){
-                        claim.neoClaim = res.claim;
-                        claim.neoVerified = res.verified;
-                    }
-                    claim.neoLoading = false;
-                }
-                if(this.ethWallet){
-                    let ethWallet = passportContext.passport.getWalletForNetwork("eth");
-                    let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
-                    if(res.claim){
-                        claim.ethClaim = res.claim;
-                        claim.ethVerified = res.verified;
-                    }
-                    claim.ethLoading = false;
-                }  
-            }
-            catch(err){
-                alert(err.message);
-            }
+            await this.getClaimPublishStatus(claim);
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
             this.claims.pop();
+
+            claim.neoLoading = false;
+            claim.ethLoading = false;
+        },
+        getClaimPublishStatus: async function(claim)
+        {
+            try
+            {
+                //See if it's published on NEO if we have a NEO wallet
+                if(this.passportContext.passport.getWalletForNetwork("neo"))
+                    claim.neoPublish = await this.getPublishStatus("neo", claim.claimTypeId);
+
+                //See if it's published on Ethereum if we have an Ethereum wallet
+                if(this.passportContext.passport.getWalletForNetwork("eth"))
+                    claim.ethPublish = await this.getPublishStatus("eth", claim.claimTypeId);
+            }
+            catch(err){
+                alert(err.message);
+            }
+        },
+        async getPublishStatus(network, claimTypeId){
+            let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claimTypeId, this.ethWallet.address);
+
+            let publishStatus = {
+                status: 0,
+                text: this.getPublishStatusText(0)
+            };
+
+            if(res && res.claim && res.verified){
+                publishStatus.status = 1;
+                publishStatus.text = JSON.stringify(res.claim);
+            }
+
+            if(publishStatus.status != 1){
+                let pendingStatus = await this.getPendingPublishStatus(network, claimTypeId);
+                if(pendingStatus)
+                    publishStatus = pendingStatus;
+            }
+                
+            return publishStatus;
+        },
+        async getPendingPublishStatus(network, claimTypeId){
+            let pendingList = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
+
+            for(let i=0; i<pendingList.length; i++){
+                if(pendingList[i].claimTypeId === claimTypeId && pendingList[i].network.toLowerCase() === network.toLowerCase())
+                {
+                    let status = 2;
+                    if(network.toLowerCase() === "neo" && pendingList[i].status == "transactionReady")
+                        status = 3;
+
+                    return {
+                        id: pendingList[i].id,
+                        status,
+                        text: this.getPublishStatusText(status)
+                    };
+                } 
+            }
+
+            return null;
+        },
+        getPublishStatusText(status){
+            let text;
+            switch(status) {
+                case 1:
+                    text = "Published";
+                    break;
+                case 2:
+                    text = "Pending Publish Approval";
+                    break;
+                case 3:
+                    text = "Publishing Approved";
+                    break;
+                default:
+                    text = "Not Published";
+            }
+            return text;
         },
         refreshPassportDetail: async function(){
             this.passportNeoLoading = true;

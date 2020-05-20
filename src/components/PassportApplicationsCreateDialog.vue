@@ -179,7 +179,8 @@ export default {
             window.setTimeout(async function(){
                 app.loadStatus = "Creating marketplace request";
                 try{
-                    await BridgeProtocol.Services.Blockchain.sendApplicationRequest(this.passportContext.passport, this.passportContext.passphrase, app.wallet, app.selectedPartner.id);
+                    await app.wallet.unlock(app.passportContext.passphrase);
+                    await BridgeProtocol.Services.Blockchain.sendApplicationRequest(app.passportContext.passport, app.passportContext.passphrase, app.wallet, app.selectedPartner.id);
                 }
                 catch(err){
                     alert("Unable to create marketplace request: " + err.message);
@@ -241,7 +242,7 @@ export default {
 
             this.loading = true;
             this.loadStatus = "Please wait";
-            
+
             this.network = network;
             this.passportPublished = await this.checkPassportPublished(network);
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);

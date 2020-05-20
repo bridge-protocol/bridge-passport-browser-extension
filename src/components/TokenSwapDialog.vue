@@ -279,21 +279,27 @@ export default {
         this.passportContext = await BridgeExtension.getPassportContext();
 
         let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
+
+        //Find out if we have a pending swap for this network already
         if(pendingList != null && pendingList.length > 0){
-            let pending = pendingList[0];
-            this.pendingSwapInfo = {
-                hash: pending.sendTxId,
-                timestamp: new Date(pending.createdOn * 1000).toLocaleDateString(),
-                sendAddress: pending.sendAddress,
-                amount: pending.sendAmount,
-                url: pending.sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pending.sendTxId : "https://etherscan.io/tx/" + pending.sendTxId,
-                receiveAddress: pending.receiveAddress
-            };
-            this.pendingSwap = true;
-            this.loading = false;
-            return;
+            for(let i=0; i<pendingList.length; i++){
+                if(pendingList[i].sendTxNetwork.toLowerCase() === this.from.network.toLowerCase()){
+                    let pending = pendingList[i];
+                    this.pendingSwapInfo = {
+                        hash: pending.sendTxId,
+                        timestamp: new Date(pending.createdOn * 1000).toLocaleDateString(),
+                        sendAddress: pending.sendAddress,
+                        amount: pending.sendAmount,
+                        url: pending.sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pending.sendTxId : "https://etherscan.io/tx/" + pending.sendTxId,
+                        receiveAddress: pending.receiveAddress
+                    };
+                    this.pendingSwap = true;
+                    this.loading = false;
+                    return;
+                }
+            }
         }
-            
+
         let fromBalances = await BridgeExtension.getWalletBalances(this.from);
         let toBalances = await BridgeExtension.getWalletBalances(this.to);
         //Calculate the GAS cost

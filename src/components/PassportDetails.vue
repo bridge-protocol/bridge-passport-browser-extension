@@ -190,7 +190,7 @@
                                     </v-col>
                                     <v-col cols="11" class="text-left" v-if="!claim.neoLoading && claim.neoPublish">
                                         {{claim.neoPublish != null ? claim.neoPublish.text : null}} 
-                                        <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1">Publish</v-btn>
+                                        <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1" @click="sendNeoClaimTransaction(claim)" :loading="neoPublishing">Publish</v-btn>
                                         <v-progress-circular
                                         indeterminate
                                         color="secondary"
@@ -276,7 +276,8 @@ export default {
             publishClaim: null,
             publishDialog: false,
             publishClaimDialog: false,
-            polling: false
+            polling: false,
+            neoPublishing: false
         }
     },
     methods: {
@@ -461,6 +462,19 @@ export default {
             this.refreshClaim(this.publishClaim);
             this.publishClaim = null;
             this.publishClaimDialog = false;
+        },
+        async sendNeoClaimTransaction(claim){ 
+            this.neoPublishing = true;
+            try{
+                await this.neoWallet.unlock(this.passportContext.passphrase);
+                let claimPublishTransaction = await BridgeProtocol.Services.Blockchain.publishClaimTransaction(this.passportContext.passport, this.passportContext.passphrase, this.neoWallet, claim, false, claim.neoPublish.id, true);
+                this.refreshClaim(claim);
+            }
+            catch(err){
+                console.log(err);
+                alert("Unable to publish claim: " + err.message);
+            }
+            this.neoPublishing = false;
         }
     },
     created: async function(){

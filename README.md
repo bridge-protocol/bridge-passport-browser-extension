@@ -11,11 +11,10 @@
 The Bridge Passport Browser Extension enables end users to easily create and manage their Bridge Passport on the Bridge Protocol Network.
 
 # User Guide and Feature Documentation
-[Bridge Passport Browser Extension v2.0 User Guide and Feature Overview - Google Docs.pdf](https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/docs/Bridge%20Passport%20Browser%20Extension%20v2.0%20User%20Guide%20and%20Feature%20Overview%20-%20Google%20Docs.pdf)
+Visit <a href="https://bridge-protocol.github.io/docs/extension-passport</a> to get started.
 
-
-# Installation
-- "npm i && npx webpack" (you can also use "npm run watch")
+# Local Installation
+- "npm i && npm run build"
 
 # Browser Installation
 ### Chrome and Chromium Based Browsers (Opera, Brave, etc)

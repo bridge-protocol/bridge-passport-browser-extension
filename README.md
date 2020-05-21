@@ -15,7 +15,7 @@ The Bridge Passport Browser Extension enables end users to easily create and man
 
 
 # Installation
-### Chrome and Chromium Based Browsers (Opera, Brave, etc)
+### Chrome and Chromium Based Browsers (Opera, Brave, Edge, etc)
 - Go to tools menu -> More Tools -> Extensions
 - Enable Developer Mode (toggle switch upper right)
 - Load Unpacked Extension

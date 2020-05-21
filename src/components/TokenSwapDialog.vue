@@ -146,6 +146,7 @@
                     outlined
                     type="info" 
                     class="text-justify"
+                    color="primary"
                     >
                     Swap pending.  Please wait before sending another request.
                 </v-alert>

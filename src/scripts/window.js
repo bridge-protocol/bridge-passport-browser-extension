@@ -314,7 +314,65 @@
             });
         }
 
-        
+        async getBlockchainClaimPublishStatus(passport, passphrase, wallet, claimTypeId){
+            let res = await BridgeProtocol.Services.Blockchain.getClaim(wallet.network, claimTypeId, wallet.address);
+            let publishStatus = {
+                status: 0,
+                text: this.getClaimPublishStatusText(0)
+            };
+
+            if(res && res.claim && res.verified){
+                publishStatus.status = 1;
+                publishStatus.text = JSON.stringify(res.claim);
+            }
+
+            if(publishStatus.status != 1){
+                let pendingStatus = await this.getPendingClaimPublishStatus(passport, passphrase, wallet.network, claimTypeId);
+                if(pendingStatus)
+                    publishStatus = pendingStatus;
+            }
+
+            return publishStatus;
+        }
+
+        async getPendingClaimPublishStatus(passport, passphrase, network, claimTypeId){
+            let pendingList = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(passport, passphrase);
+
+            for(let i=0; i<pendingList.length; i++){
+                if(pendingList[i].claimTypeId === claimTypeId && pendingList[i].network.toLowerCase() === network.toLowerCase())
+                {
+                    let status = 2;
+                    if(network.toLowerCase() === "neo" && pendingList[i].status == "transactionReady")
+                        status = 3;
+
+                    return {
+                        id: pendingList[i].id,
+                        status,
+                        text: this.getClaimPublishStatusText(status)
+                    };
+                } 
+            }
+
+            return null;
+        }
+
+        getClaimPublishStatusText(status){
+            let text;
+            switch(status) {
+                case 1:
+                    text = "Published";
+                    break;
+                case 2:
+                    text = "Pending Publish Approval";
+                    break;
+                case 3:
+                    text = "Publishing Approved";
+                    break;
+                default:
+                    text = "Not Published";
+            }
+            return text;
+        }
     }
 
     //Setup the window

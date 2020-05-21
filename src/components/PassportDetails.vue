@@ -307,12 +307,14 @@ export default {
             this.refreshing = false;
         },
         passportDetail: async function(){
+            this.polling = false;
             this.passportDetailSelected = !this.passportDetailSelected;
             if(this.passportDetailSelected){
                 await this.refreshPassportDetail();
             }
         },
         claimSelected: async function(claim){
+            this.polling = false;
             if(this.lastSelectedClaim == claim.claimTypeId){
                 this.lastSelectedClaim = "";
             }
@@ -330,17 +332,21 @@ export default {
             this.claims.pop();
 
             //See if it's published on NEO if we have a NEO wallet
-            if(this.passportContext.passport.getWalletForNetwork("neo")){
-                claim.neoPublish = await this.getBlockchainPublishStatus("neo", claim);
+            if(this.neoWallet){
+                claim.neoPublish = await BridgeExtension.getBlockchainClaimPublishStatus(this.passportContext.passport, this.passportContext.passphrase, this.neoWallet, claim.claimTypeId);
+                claim.neoLoading = false;
+                //If we are pending, poll to keep the status updated
                 if(claim.neoPublish.status == 2)
-                    await this.getPublishStatus("neo", claim);
+                    this.pollPublishStatus(this.neoWallet, claim);
             }
                 
             //See if it's published on Ethereum if we have an Ethereum wallet
-            if(this.passportContext.passport.getWalletForNetwork("eth")){
-                claim.ethPublish = await this.getBlockchainPublishStatus("eth", claim);
+            if(this.ethWallet){
+                claim.ethPublish = await BridgeExtension.getBlockchainClaimPublishStatus(this.passportContext.passport, this.passportContext.passphrase, this.ethWallet, claim.claimTypeId);
+                claim.ethLoading = false;
+                //If we are pending, poll to keep the status updated
                 if(claim.ethPublish.status == 2)
-                    await this.getPublishStatus("eth", claim);
+                    this.pollPublishStatus(this.ethWallet, claim);
             }
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
@@ -350,77 +356,33 @@ export default {
             claim.neoLoading = false;
             claim.ethLoading = false;
         },
-        async getPublishStatus(network, claim){
-            console.log("claim publish pending, polling for updated status");
-            this.polling = true;
+        async pollPublishStatus(wallet, claim){
+            if(wallet.network.toLowerCase() === "neo")
+                claim.neoPublish = await this.pollClaimPublishStatus(wallet, claim.claimTypeId);
+            else
+                claim.ethPublish = await this.pollClaimPublishStatus(wallet, claim.claimTypeId);
+
+            //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
+            this.claims.push({});
+            this.claims.pop();
+        },
+        async pollClaimPublishStatus(wallet, claimTypeId){
             let app = this;
-            window.setTimeout(async function(){
-                if(app.polling){
-                    let publishStatus = await app.getBlockchainPublishStatus(network, claim);
-                    console.log(publishStatus);
-                    if(publishStatus.status == 2) //Pending, try again
-                        return await app.getPublishStatus(network, claim);
-                    else
-                        return publishStatus;
-                }
-            },15000);
-        },
-        async getBlockchainPublishStatus(network, claim){
-            let res = await BridgeProtocol.Services.Blockchain.getClaim(this.ethWallet.network, claim.claimTypeId, this.ethWallet.address);
-            let publishStatus = {
-                status: 0,
-                text: this.getPublishStatusText(0)
-            };
+            app.polling = true;
+            return new Promise(function (resolve, reject) {
+                (async function waitStatus(){
+                    let res = await BridgeExtension.getBlockchainClaimPublishStatus(app.passportContext.passport, app.passportContext.passphrase, wallet, claimTypeId);
+                    if(res && res.status != 2){
+                        console.log("status non-pending, returning " + wallet.network);
+                        return resolve(res);
+                    }
 
-            if(res && res.claim && res.verified){
-                publishStatus.status = 1;
-                publishStatus.text = JSON.stringify(res.claim);
-            }
-
-            if(publishStatus.status != 1){
-                let pendingStatus = await this.getPendingPublishStatus(network, claim.claimTypeId);
-                if(pendingStatus)
-                    publishStatus = pendingStatus;
-            }
-
-            return publishStatus;
-        },
-        async getPendingPublishStatus(network, claimTypeId){
-            let pendingList = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
-
-            for(let i=0; i<pendingList.length; i++){
-                if(pendingList[i].claimTypeId === claimTypeId && pendingList[i].network.toLowerCase() === network.toLowerCase())
-                {
-                    let status = 2;
-                    if(network.toLowerCase() === "neo" && pendingList[i].status == "transactionReady")
-                        status = 3;
-
-                    return {
-                        id: pendingList[i].id,
-                        status,
-                        text: this.getPublishStatusText(status)
-                    };
-                } 
-            }
-
-            return null;
-        },
-        getPublishStatusText(status){
-            let text;
-            switch(status) {
-                case 1:
-                    text = "Published";
-                    break;
-                case 2:
-                    text = "Pending Publish Approval";
-                    break;
-                case 3:
-                    text = "Publishing Approved";
-                    break;
-                default:
-                    text = "Not Published";
-            }
-            return text;
+                    if(app.polling){
+                        console.log("status pending, waiting and retrying " + wallet.network);
+                        setTimeout(waitStatus, 5000);
+                    }   
+                })();
+            });
         },
         refreshPassportDetail: async function(){
             this.passportNeoLoading = true;
@@ -496,6 +458,7 @@ export default {
             await this.refreshPassportDetail();
         },
         async claimPublished(publishedClaim){
+            this.refreshClaim(this.publishClaim);
             this.publishClaim = null;
             this.publishClaimDialog = false;
         }

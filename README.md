@@ -5,10 +5,12 @@
 </p>
 <h3 align="center">Bridge Passport Browser Extension</h3>
 
-<img src="https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/images/bridge_passport.jpg" width="100%;">
+<p align="center">
+<img src="./docs/passport.jpg" width="450px">
+</p>
 
 # Summary
-The Bridge Passport Browser Extension enables end users to easily create and manage their Bridge Passport on the Bridge Protocol Network.
+The Bridge Passport Browser Extension enables end users to easily manage their digital identity using the Bridge Protocol.
 
 # User Guide and Feature Documentation
 Visit <a href="https://bridge-protocol.github.io/docs/extension-passport</a> to get started.

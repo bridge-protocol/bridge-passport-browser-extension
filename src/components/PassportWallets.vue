@@ -118,16 +118,9 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <div v-if="!adding">
-                        <v-btn text @click="addDialog = false" text-right>Cancel</v-btn>
-                        <v-btn text @click="adding = true, addWallet()" text-right>Add Wallet</v-btn>
-                    </div>
-                    <div v-if="adding" text-right>
-                        <v-progress-circular
-                        indeterminate
-                        color="secondary"
-                        class="mr-2"
-                        ></v-progress-circular>
+                    <div>
+                        <v-btn text @click="addDialog = false" text-right v-if="!adding">Cancel</v-btn>
+                        <v-btn color="accent" @click="adding = true, addWallet()" text-right :loading="adding">Add Wallet</v-btn>
                     </div>
                 </v-card-actions>
             </v-card>

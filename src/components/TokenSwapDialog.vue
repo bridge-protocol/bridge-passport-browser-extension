@@ -132,26 +132,24 @@
                         outlined
                         type="info" 
                         class="text-justify caption"
+                        color="primary"
                     >
-                        Your blockchain transaction has been sent. Please wait for your transaction to process before sending other swap requests or other blockchain transactions to prevent failed transactions.  Bridge Protocol is not responsible for any lost funds due to failed transactions.
+                        NOTE: Token swap processing time can vary greatly due to blockchain network and Bridge Network conditions.  Once the Bridge Network has verified your swap transaction request and tokens are sent, transfer times may vary due to blockchain network conditions.  Please wait for your transaction to be processed process before sending other swap requests to prevent failed transactions.  If you have not received your swapped tokens within 24 hours, please contact support.  
                     </v-alert>
                 </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
             </v-container>  
         </v-card>
         <v-card v-if="!loading && pendingSwap">
+            <v-toolbar
+                color="gradient"
+                dark
+                >
+                <v-toolbar-title class="subtitle-1">Token Swap</v-toolbar-title>
+            </v-toolbar>
             <v-container text-center align-middle>
-                <v-alert
-                    dense
-                    outlined
-                    type="info" 
-                    class="text-justify"
-                    color="primary"
-                    >
-                    Swap pending.  Please wait before sending another request.
-                </v-alert>
                 <v-container class="px-0 py-0" v-if="pendingSwapInfo != null">
-                    <v-subheader class="pl-0 ml-0 mt-2 caption">Pending Swap Information</v-subheader>
+                    <v-subheader class="pl-0 ml-0 caption">Pending Swap Information</v-subheader>
                     <v-divider class="mb-2"></v-divider>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Date</v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.timestamp}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.sendAddress}}</v-col></v-row>
@@ -159,6 +157,15 @@
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Amount</v-col><v-col cols="auto" class="caption px-0 mx-n2"><v-img src="../images/bridge-token.png" height="16" contain class="px-0 mx-0"></v-img></v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.amount}} BRDG</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{pendingSwapInfo.hash}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="openUrl(pendingSwapInfo.url)" class="pl-0">View Transaction</v-btn></v-col></v-row>
+                    <v-alert 
+                        dense
+                        outlined
+                        type="info" 
+                        class="text-justify caption mt-2"
+                        color="primary"
+                    >
+                        NOTE: Token swap processing time can vary greatly due to blockchain network and Bridge Network conditions.  Once the Bridge Network has verified your swap transaction request and tokens are sent, transfer times may vary due to blockchain network conditions.  If you have not received your swapped tokens within 24 hours, please contact support.  
+                    </v-alert>
                 </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
             </v-container>  

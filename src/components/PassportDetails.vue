@@ -467,7 +467,7 @@ export default {
             this.neoPublishing = true;
             try{
                 await this.neoWallet.unlock(this.passportContext.passphrase);
-                let claimPublishTransaction = await BridgeProtocol.Services.Blockchain.publishClaimTransaction(this.passportContext.passport, this.passportContext.passphrase, this.neoWallet, claim, false, claim.neoPublish.id, true);
+                let claimPublishTransaction = await BridgeProtocol.Services.Blockchain.publishClaimTransaction(this.passportContext.passport, this.passportContext.passphrase, this.neoWallet, claim, claim.neoPublish.id, true);
                 this.refreshClaim(claim);
             }
             catch(err){

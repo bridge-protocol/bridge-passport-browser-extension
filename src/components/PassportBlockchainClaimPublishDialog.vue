@@ -104,7 +104,7 @@
                                 Claim Hash
                             </v-col>
                             <v-col cols="9" class="text-break text-left">
-                                {{claimInfo.claimValueHash}}
+                                {{claimInfo.valueHash}}
                             </v-col>
                         </v-row>
                         <v-row>

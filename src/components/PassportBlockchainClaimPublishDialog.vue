@@ -101,7 +101,15 @@
                         </v-row>
                         <v-row>
                             <v-col cols="3">
-
+                                Claim Hash
+                            </v-col>
+                            <v-col cols="9" class="text-break text-left">
+                                {{claimInfo.claimValueHash}}
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="3">
+                                
                             </v-col>
                             <v-col cols="auto" class="mt-n4">
                                 <input type="checkbox" v-model="hashOnly"></input> Publish hash only

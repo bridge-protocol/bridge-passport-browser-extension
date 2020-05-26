@@ -157,6 +157,8 @@
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Amount</v-col><v-col cols="auto" class="caption px-0 mx-n2"><v-img src="../images/bridge-token.png" height="16" contain class="px-0 mx-0"></v-img></v-col><v-col cols="auto" class="caption">{{pendingSwapInfo.amount}} BRDG</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{pendingSwapInfo.hash}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="openUrl(pendingSwapInfo.url)" class="pl-0">View Transaction</v-btn></v-col></v-row>
+                    <v-row dense v-if="pendingSwapInfo.gashash != null"><v-col cols="3" class="font-weight-bold caption text-left">Gas Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{pendingSwapInfo.gashash}}</v-col></v-row>
+                    <v-row dense v-if="pendingSwapInfo.gashash != null"><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="openUrl(pendingSwapInfo.gasurl)" class="pl-0">View Transaction</v-btn></v-col></v-row>
                     <v-alert 
                         dense
                         outlined
@@ -233,7 +235,9 @@ export default {
                             sendAddress: pendingList[i].sendAddress,
                             amount: pendingList[i].sendAmount,
                             url: pendingList[i].sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pendingList[i].sendTxId : "https://etherscan.io/tx/" + pendingList[i].sendTxId,
-                            receiveAddress: pendingList[i].receiveAddress
+                            receiveAddress: pendingList[i].receiveAddress,
+                            gashash: pendingList[i].gasTxId,
+                            gasurl: "https://etherscan.io/tx/" + pendingList[i].gasTxId
                         };
                         return true;
                     }
@@ -300,7 +304,7 @@ export default {
             window.open(url);
         },
         viewTransaction(transactionId){
-            let url = "https://neoscan.io/tx/" + transactionId;
+            let url = "https://neoscan.io/transaction/" + transactionId;
             if(this.from.network.toLowerCase() === "eth")
                 url = "https://etherscan.io/tx/" + transactionId;
             

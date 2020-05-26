@@ -240,7 +240,7 @@
             </v-expansion-panels>
         </v-container>
         <blockchain-publish-dialog v-if="publishDialog" :network="publishNetwork" @published="passportPublished" @cancel="publishDialog = false"></blockchain-publish-dialog>
-        <blockchain-claim-publish-dialog v-if="publishClaimDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishClaimDialog = false"></blockchain-claim-publish-dialog>
+        <blockchain-claim-publish-dialog v-if="publishClaimDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishClaimDialog = false" @publishPassport="showPublishDialog"></blockchain-claim-publish-dialog>
     </v-container>
 </template>
 
@@ -447,6 +447,7 @@ export default {
             this.$emit('showMarketplace', true);
         },
         async showPublishDialog(){
+            this.publishClaimDialog = false;
             this.publishDialog = true;
         },
         async showPublishClaimDialog(claim){

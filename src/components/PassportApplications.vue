@@ -182,10 +182,14 @@ export default {
             let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
             //Make the status readable
             application.status = appDetails.status;
-            if(appDetails.status == "complete")
-                appDetails.status = "Sent Successfully";
-            application.statusText = makeStringReadable(appDetails.status);
             application.pending = application.status != "failed" && application.status != "complete";
+            if(application.status == "complete")
+                application.statusText = "Sent Successfully";
+            else if(application.pending)
+                application.statusText = "Awaiting Verification";
+            else
+                application.statusText = makeStringReadable(appDetails.status);
+            
             application.url = appDetails.url;
             application.transactionId = appDetails.transactionId;
 
@@ -215,7 +219,12 @@ export default {
                     if(app.polling)
                         await app.setApplicationDetail(application);
                 },15000);
-            } 
+            }
+            else{
+                //HACK: Make sure we refresh
+                this.applications.push({});
+                this.applications.pop();
+            }
         },
         openUrl: function(url){
             this.$emit('openUrl', url);

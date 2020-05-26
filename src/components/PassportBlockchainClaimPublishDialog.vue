@@ -149,7 +149,8 @@
                             class="mt-2 caption text-justify"
                             v-if="!passportPublished"
                             >
-                            Passport is not published to the blockchain.  Passport must be published to the blockchain prior to publishing a claim.
+                            <div>Passport is not published to the blockchain.  Passport must be published to the blockchain prior to publishing a claim.</div>
+                            <v-btn x-small class="accent" @click="publishPassport()">Publish Passport</v-btn>
                         </v-alert>
                     </div>
             </v-card-text>
@@ -275,6 +276,9 @@ export default {
                 this.$emit('cancel', true);
                 this.loading = false;
             }
+        },
+        publishPassport: function(){
+            this.$emit('publishPassport', true);
         },
         cancel: function(){
             this.$emit('cancel', true);

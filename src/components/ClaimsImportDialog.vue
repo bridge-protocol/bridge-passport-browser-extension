@@ -75,7 +75,7 @@
                                                     </v-row>
                                                     <v-row dense>
                                                         <v-col cols="2" class="text-left">Expires:</v-col>
-                                                        <v-col cols="auto">{{claim.expiresOn}}</v-col>
+                                                        <v-col cols="auto">{{claim.expireDate}}</v-col>
                                                     </v-row>
                                                     <v-row dense>
                                                         <v-col cols="2" class="text-left">Issuer:</v-col>

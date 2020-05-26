@@ -134,7 +134,7 @@
                         class="text-justify caption"
                         color="primary"
                     >
-                        NOTE: Token swap processing time can vary greatly due to blockchain network and Bridge Network conditions.  Once the Bridge Network has verified your swap transaction request and tokens are sent, transfer times may vary due to blockchain network conditions.  Please wait for your transaction to be processed process before sending other swap requests to prevent failed transactions.  If you have not received your swapped tokens within 24 hours, please contact support.  
+                        NOTE: Token swap processing time can vary greatly due to blockchain network and Bridge Network conditions.  Once the Bridge Network has verified your swap transaction request and tokens are sent, transfer times may vary due to blockchain network conditions.  If you have not received your swapped tokens within 24 hours, please contact support.  
                     </v-alert>
                 </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>

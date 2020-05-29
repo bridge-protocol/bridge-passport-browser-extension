@@ -1,18 +1,12 @@
-var _settings = {
-  lockPassport: false,
-  apiBaseUrl: BridgeProtocol.Constants.bridgeApiUrl,
-  explorerBaseUrl: BridgeProtocol.Constants.bridgeExplorerUrl,
-}
+//Browser for compatibility
+var _browser = (function () {
+  return window.msBrowser ||
+    window.browser ||
+    window.chrome;
+})();
 
-//Cached passport
-var _passport;
+//Cached passphrase
 var _passphrase;
-
-//Cache stuff for now
-var _verificationPartners;
-var _claimTypes;
-var _profileTypes;
-var _scriptHash;
 
 //Window tracking
 var popupWindowId = false;
@@ -33,10 +27,10 @@ function openPopup(pageName, params) {
   else if (height > 1024)
     height = 1024;
 
-  if (width < 1280)
+  if (width < 700)
     width = screen.width;
-  else if (width > 1280)
-    width = 1280;
+  else if (width > 700)
+    width = 700;
 
   //Center the window
   hcenter = screen.width * .50;
@@ -54,7 +48,7 @@ function openPopup(pageName, params) {
     top
   };
   
-  let url = _browser.extension.getURL("/pages/" + pageName + ".html");
+  let url = _browser.extension.getURL("/" + pageName + "/" + pageName + ".html");
   if (params)
     url = url + "?" + params;
 
@@ -89,7 +83,6 @@ function openPopup(pageName, params) {
 //Look for closing popups
 _browser.windows.onRemoved.addListener(function (winId) {
   if (popupWindowId === winId) {
-    //_browser.browserAction.enable();
     _browser.browserAction.setTitle({ title: windowNotOpenTitle });
     popupWindowId = false;
   }
@@ -100,6 +93,7 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
     return;
 
   if (request.action == "login") {
+    console.log("login request received");
     if(popupWindowId === false){
       openPopup("main", "sender=" + sender.tab.id + "&login_request=" + request.detail.loginRequest);
     }
@@ -112,6 +106,7 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
   }
 
   if (request.action == "payment") {
+    console.log("paymentrequest received");
     if(popupWindowId === false){
       openPopup("main", "sender=" + sender.tab.id + "&payment_request=" + request.detail.paymentRequest);
     }
@@ -124,6 +119,7 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
   }
 
   if(request.action == "claimsImport"){
+    console.log("claims import request received");
     _browser.runtime.sendMessage({target:"popup", action:"claimsImport", sender: sender.tab.id, claimsImportRequest: request.detail.claimsImportRequest});
   }
 
@@ -132,185 +128,19 @@ _browser.runtime.onMessage.addListener(function (request, sender, sendResponse) 
     return;
   }
 
-  if (request.action == "clearCache") {
-    _claimTypes = null;
-    _verificationPartners = null;
-    _profileTypes = null;
-    _scriptHash = null;
-    sendResponse();
-  }
-
-  if (request.action == "getSettings") {
-    loadSettingsFromBrowserStorage().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "saveSettings") {
-    _settings = request.settings;
-    saveSettingsToBrowserStorage(request.settings).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassphrase") {
+  if (request.action == "loadPassphrase") {
     sendResponse(_passphrase);
   }
 
-  if (request.action == "getPassport") {
-    getPassport().then(sendResponse);
-    return true;
+  if (request.action == "savePassphrase") {
+    _passphrase = request.passphrase;
+    sendResponse();
   }
 
-  if (request.action == "createPassport") {
-    createPassport(request.passphrase, request.neoWif, request.autoCreate).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassportDetails") {
-    getPassportDetails().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassportIdForPublicKey") {
-    getPassportIdForPublicKey(request.publicKey).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "importPassport") {
-    importPassport(request.content, request.passphrase).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "unlockPassport") {
-    unlockPassport(request.passphrase).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassportFromStorage") {
-    loadPassportFromBrowserStorage().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "closePassport") {
-    closePassport().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "removePassport") {
-    removePassport().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getBridgePassportId") {
-    getBridgePassportId().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getClaims") {
-    getDecryptedClaims().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getApplications") {
-    getApplications().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getApplication") {
-    getApplication(request.applicationId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "createApplication") {
-    createApplication(request.partner, request.serviceTypes, request.paymentNetwork, request.paymentTransactionId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "updateApplicationTransaction") {
-    updateApplicationTransaction(request.applicationId, request.network, request.transactionId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "resendApplication") {
-    resendApplication(request.applicationId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getVerificationPartners") {
-    getVerificationPartners().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getVerificationPartner") {
-    getVerificationPartner(request.partnerId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassportLoginRequest") {
-    getPassportLoginRequest(request.payload).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getPassportLoginResponse") {
-    getPassportLoginResponse(request.request, request.claimTypeIds).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "removeAllApplicationClaims") {
-    removeAllApplicationClaims(request.applicationId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "updateClaimPackages") {
-    updateClaimPackages(request.claimPackages).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "removeClaimPackage") {
-    removeClaimPackage(request.claimTypeId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getNetworkFee") {
-    getNetworkFee().then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getBlockchainAddresses") {
-    sendResponse(_passport.wallets);
-  }
-
-  if (request.action == "getBlockchainPrivateKey") {
-    getBlockchainPrivateKey(request.network, request.key).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "registerBlockchainAddress") {
-    registerBlockchainAddress(request.network, request.address).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "sendBlockchainPayment") {
-    sendBlockchainPayment(request.network, request.amount, request.paymentIdentifier, request.recipientAddress).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getBlockchainPassportInfo") {
-    getBlockchainPassportInfo(request.network, request.passportId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getBlockchainAddressInfo") {
-    getBlockchainAddressInfo(request.network, request.address).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "getBlockchainTransactionInfo") {
-    getBlockchainTransactionInfo(request.network, request.transactionId).then(sendResponse);
-    return true;
-  }
-
-  if (request.action == "checkBlockchainTransactionComplete") {
-    checkBlockchainTransactionComplete(request.network, request.transactionId).then(sendResponse);
-    return true;
+  if (request.action == "removePassphrase") {
+    _passphrase = null;
+    sendResponse();
   }
 });
+
+

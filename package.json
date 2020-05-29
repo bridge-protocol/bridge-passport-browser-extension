@@ -1,0 +1,55 @@
+{
+  "name": "bridge-passport",
+  "version": "3.0.0",
+  "description": "Extension to allow users to create, manage, and use their Bridge Passport",
+  "author": "Bridge Protocol Corporation",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --hide-modules",
+    "build-zip": "node scripts/build-zip.js",
+    "build:dev": "cross-env NODE_ENV=development webpack --hide-modules",
+    "prettier": "prettier \"src/**/*.{js,vue}\"",
+    "prettier:write": "npm run prettier -- --write",
+    "watch": "npm run build -- --watch",
+    "watch:dev": "cross-env HMR=true npm run build:dev -- --watch"
+  },
+  "dependencies": {
+    "@bridge-protocol/bridge-protocol-js": "^3.0.26",
+    "chrome-extension-async": "^3.4.1",
+    "jquery": "^3.4.1",
+    "vue": "^2.6.10",
+    "vuetify": "^2.2.19"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-optional-chaining": "^7.0.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/runtime-corejs3": "^7.4.0",
+    "@types/chrome": "^0.0.74",
+    "archiver": "^3.0.0",
+    "babel-loader": "^8.0.2",
+    "babel-plugin-syntax-async-functions": "^6.13.0",
+    "copy-webpack-plugin": "^5.1.1",
+    "core-js": "^3.0.1",
+    "cross-env": "^5.2.0",
+    "css-loader": "^3.4.0",
+    "deepmerge": "^4.2.2",
+    "ejs": "^2.6.1",
+    "fibers": "^4.0.2",
+    "file-loader": "^5.0.2",
+    "mini-css-extract-plugin": "^0.9.0",
+    "node-sass": "^4.9.3",
+    "sass": "^1.26.3",
+    "sass-loader": "^8.0.2",
+    "vue-cli-plugin-vuetify": "~2.0.5",
+    "vue-loader": "^15.4.2",
+    "vue-template-compiler": "^2.6.10",
+    "vuetify-loader": "^1.3.0",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-extension-reloader": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "license": "Apache 2.0"
+}

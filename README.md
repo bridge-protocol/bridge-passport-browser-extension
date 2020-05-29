@@ -5,27 +5,31 @@
 </p>
 <h3 align="center">Bridge Passport Browser Extension</h3>
 
-<img src="https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/images/bridge_passport.jpg" width="100%;">
+<p align="center">
+<img src="./docs/passport.jpg" width="450px">
+</p>
 
 # Summary
-The Bridge Passport Browser Extension enables end users to easily create and manage their Bridge Passport on the Bridge Protocol Network.
+The Bridge Passport Browser Extension enables end users to easily manage their digital identity using the Bridge Protocol.
 
 # User Guide and Feature Documentation
-[Bridge Passport Browser Extension v2.0 User Guide and Feature Overview - Google Docs.pdf](https://github.com/bridge-protocol/bridge-passport-browser-extension/blob/master/docs/Bridge%20Passport%20Browser%20Extension%20v2.0%20User%20Guide%20and%20Feature%20Overview%20-%20Google%20Docs.pdf)
+Visit <a href="https://bridge-protocol.github.io/docs/extension-passport</a> to get started.
 
+# Local Installation
+- "npm i && npm run build"
 
-# Installation
+# Browser Installation
 ### Chrome and Chromium Based Browsers (Opera, Brave, Edge, etc)
 - Go to tools menu -> More Tools -> Extensions
 - Enable Developer Mode (toggle switch upper right)
 - Load Unpacked Extension
-- Select /src folder
+- Select /dist folder
   
 ### Firefox
 - Tools menu -> Add-ons
 - Select the gear icon -> Debug addons
 - Load Temporary Add-on
-- Select /src manifest.json
+- Select /dist manifest.json
 
 # Additional Notes for Developers
 Due to Google Chrome Web Store publishing policies, any site that interacts with the Bridge Passport Extension needs to be explicitly listed in the manifest under content_scripts -> matches.  While testing, you will need to add your local or published site URL to the list for the page to be able to interact with the extension for requesting auth and claims, requesting payments, etc.

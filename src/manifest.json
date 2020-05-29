@@ -1,41 +1,41 @@
 {
   "name": "Bridge Passport",
-  "version": "2.5",
+  "version": "2.5.0",
   "manifest_version": 2,
   "description": "Extension to allow users to create, manage, and use their Bridge Passport on the Bridge Protocol Network",
   "icons": {
-    "16": "icons/icon-16.png",
-    "128": "icons/icon-128.png"
+    "16": "icons/icon_16.png",
+    "128": "icons/icon_128.png"
   },
-  "default_locale": "en",
+  "browser_action": {
+    "default_icon": {
+      "19": "icons/icon_19.png",
+      "38": "icons/icon_38.png"
+    },
+    "default_title": "Bridge Passport",
+    "default_popup": "popup/popup.html"
+  },
   "background": {
-    "page": "background.html"
+    "scripts": [
+      "scripts/background.js"
+    ],
+    "persistent": true
   },
-  "permissions": [
-    "storage"
-  ],
   "content_scripts": [
     {
       "matches": [
-        "https://bridgeprotocol.azurewebsites.net/*"
+        "https://bridge-protocol.azurewebsites.net/*"
       ],
       "js": [
-        "scripts/jquery/jquery-3.1.1.min.js",        
-        "scripts/common.js",
         "scripts/contentscript.js"
       ],
       "run_at": "document_end",
       "all_frames": false
     }
   ],
-  "browser_action": {
-    "default_icon": {
-      "19": "icons/icon-19.png",
-      "38": "icons/icon-38.png"
-    },
-    "default_title": "Bridge Passport",
-    "default_popup": "./popup.html"
-  }
+  "permissions": [
+    "storage"
+  ]
 }
 
 

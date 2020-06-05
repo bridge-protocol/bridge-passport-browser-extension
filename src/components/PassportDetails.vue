@@ -31,86 +31,88 @@
                             <v-col cols="auto" class="text-left">{{passportId}}</v-col>
                         </v-row>
 
-                        <div class="float-right">
-                            <v-menu close-on-click small bottom left>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn
-                                            icon
-                                            v-on="on"
-                                            class="ml-12 mt-3"
-                                        >
-                                            <v-icon small>mdi-dots-vertical</v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <v-list dense>
-                                        <v-list-item two-line @click="showPublishDialog()">
-                                            <v-list-item-icon>
-                                            <v-icon>mdi-publish</v-icon>
-                                            </v-list-item-icon>
-                                            <v-list-item-content>
-                                            <v-list-item-title>Publish to Blockchain</v-list-item-title>
-                                            <v-list-item-subtitle>
-                                                Publish the passport to the blockchain
-                                            </v-list-item-subtitle>
-                                            </v-list-item-content>
-                                        </v-list-item>
-                                    </v-list>
-                            </v-menu>
-                        </div>
-                        <v-subheader class="pl-0 ml-0 mt-2 caption">Blockchain Publishing</v-subheader>
-                        <v-divider class="mb-2"></v-divider>
-                        <v-row dense v-if="neoWallet != null">
-                            <v-col cols="1" class="text-left">
-                                <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
-                            </v-col>
-                            <v-col cols="9" class="text-left" v-if="!passportNeoLoading">
-                                <span v-if="passportNeoPublished">Published </span>
-                                <span v-if="passportNeoPending">Publish Pending
+                        <div v-if="neoWallet != null || ethWallet != null">
+                            <div class="float-right">
+                                <v-menu close-on-click small bottom left>
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn
+                                                icon
+                                                v-on="on"
+                                                class="ml-12 mt-3"
+                                            >
+                                                <v-icon small>mdi-dots-vertical</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list dense>
+                                            <v-list-item two-line @click="showPublishDialog()">
+                                                <v-list-item-icon>
+                                                <v-icon>mdi-publish</v-icon>
+                                                </v-list-item-icon>
+                                                <v-list-item-content>
+                                                <v-list-item-title>Publish to Blockchain</v-list-item-title>
+                                                <v-list-item-subtitle>
+                                                    Publish the passport to the blockchain
+                                                </v-list-item-subtitle>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-list>
+                                </v-menu>
+                            </div>
+                            <v-subheader class="pl-0 ml-0 mt-2 caption">Blockchain Publishing</v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-row dense v-if="neoWallet != null">
+                                <v-col cols="1" class="text-left">
+                                    <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                                </v-col>
+                                <v-col cols="9" class="text-left" v-if="!passportNeoLoading">
+                                    <span v-if="passportNeoPublished">Published </span>
+                                    <span v-if="passportNeoPending">Publish Pending
+                                        <v-progress-circular
+                                            indeterminate
+                                            color="secondary"
+                                            size="12"
+                                            width="2"
+                                            class="ml-1"
+                                        ></v-progress-circular>
+                                    </span>
+                                    <span v-if="!passportNeoPublished && !passportNeoPending">Not Published </span>
+                                </v-col>
+                                <v-col cols="auto" v-if="passportNeoLoading">
                                     <v-progress-circular
+                                        indeterminate
+                                        color="secondary"
+                                        size="16"
+                                        width="2"
+                                    ></v-progress-circular>
+                                </v-col>
+                            </v-row>
+                            <v-row dense v-if="ethWallet != null">
+                                <v-col cols="1" class="text-left">
+                                    <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
+                                </v-col>
+                                <v-col cols="9" class="text-left" v-if="!passportEthLoading">
+                                    <span v-if="passportEthPublished">Published </span>
+                                    <span v-if="passportEthPending">Publish Pending
+                                        <v-progress-circular
                                         indeterminate
                                         color="secondary"
                                         size="12"
                                         width="2"
                                         class="ml-1"
-                                    ></v-progress-circular>
-                                </span>
-                                <span v-if="!passportNeoPublished && !passportNeoPending">Not Published </span>
-                            </v-col>
-                            <v-col cols="auto" v-if="passportNeoLoading">
-                                <v-progress-circular
-                                    indeterminate
-                                    color="secondary"
-                                    size="16"
-                                    width="2"
-                                ></v-progress-circular>
-                            </v-col>
-                        </v-row>
-                        <v-row dense v-if="ethWallet != null">
-                            <v-col cols="1" class="text-left">
-                                <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
-                            </v-col>
-                            <v-col cols="9" class="text-left" v-if="!passportEthLoading">
-                                <span v-if="passportEthPublished">Published </span>
-                                <span v-if="passportEthPending">Publish Pending
+                                        ></v-progress-circular>
+                                    </span>
+                                    <span v-if="!passportEthPublished && !passportEthPending">Not Published </span>
+                                </v-col>
+                                <v-col cols="auto" v-if="passportEthLoading">
                                     <v-progress-circular
-                                    indeterminate
-                                    color="secondary"
-                                    size="12"
-                                    width="2"
-                                    class="ml-1"
+                                        indeterminate
+                                        color="secondary"
+                                        size="16"
+                                        width="2"
                                     ></v-progress-circular>
-                                </span>
-                                <span v-if="!passportEthPublished && !passportEthPending">Not Published </span>
-                            </v-col>
-                            <v-col cols="auto" v-if="passportEthLoading">
-                                <v-progress-circular
-                                    indeterminate
-                                    color="secondary"
-                                    size="16"
-                                    width="2"
-                                ></v-progress-circular>
-                            </v-col>
-                        </v-row>
+                                </v-col>
+                            </v-row>
+                        </div>
                     </v-expansion-panel-content>
                 </v-expansion-panel>
                 <v-alert

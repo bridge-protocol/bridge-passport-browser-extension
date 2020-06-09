@@ -348,7 +348,8 @@
                     return {
                         id: pendingList[i].id,
                         status,
-                        text: this.getClaimPublishStatusText(status)
+                        text: this.getClaimPublishStatusText(status, pendingList[i].network),
+                        txId: pendingList[i].claimPublishTransactionId
                     };
                 } 
             }
@@ -356,14 +357,17 @@
             return null;
         }
 
-        getClaimPublishStatusText(status){
+        getClaimPublishStatusText(status, network){
             let text;
             switch(status) {
                 case 1:
                     text = "Published";
                     break;
                 case 2:
-                    text = "Pending Publish Approval";
+                    if(network && network.toLowerCase() === "eth")
+                        text = "Pending Publish";
+                    else
+                        text = "Pending Publish Approval";
                     break;
                 case 3:
                     text = "Publishing Approved";

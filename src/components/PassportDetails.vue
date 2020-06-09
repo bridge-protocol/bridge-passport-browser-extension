@@ -91,7 +91,7 @@
                                     <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                 </v-col>
                                 <v-col cols="9" class="text-left" v-if="!passportEthLoading">
-                                    <span v-if="passportEthPublished">Published </span>
+                                    <span v-if="passportEthPublished">Published</span>
                                     <span v-if="passportEthPending">Publish Pending
                                         <v-progress-circular
                                         indeterminate
@@ -100,6 +100,7 @@
                                         width="2"
                                         class="ml-1"
                                         ></v-progress-circular>
+                                        <v-btn text @click="openUrl('https://etherscan.io/address/' + ethWallet.address);" x-small color="accent" class="pl-0 ml-4">View on Etherscan</v-btn>
                                     </span>
                                     <span v-if="!passportEthPublished && !passportEthPending">Not Published </span>
                                 </v-col>
@@ -225,6 +226,7 @@
                                         class="ml-1"
                                         v-if="claim.ethPublish != null && claim.ethPublish.status == 2"
                                         ></v-progress-circular>
+                                        <v-btn text v-if="claim.ethPublish != null && claim.ethPublish.txId != null" @click="openUrl('https://etherscan.io/tx/' + claim.ethPublish.txId);" x-small color="accent" class="pl-0 ml-4">View on Etherscan</v-btn>
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.ethLoading">
                                         <v-progress-circular
@@ -478,6 +480,9 @@ export default {
                 alert("Unable to publish claim: " + err.message);
             }
             this.neoPublishing = false;
+        },
+        openUrl: function(url){
+            window.open(url);
         }
     },
     created: async function(){

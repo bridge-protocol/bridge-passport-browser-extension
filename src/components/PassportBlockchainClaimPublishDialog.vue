@@ -300,9 +300,8 @@ export default {
             this.networks.push({ id:"neo", name:"NEO" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
+            
         this.networkSelected("neo");
-
-        this.loading = false;
     }
 };
 </script>

@@ -75,13 +75,13 @@
                                     <v-col cols="2" class="text-left">Partner</v-col>
                                     <v-col cols="auto">{{ application.partnerName }}</v-col>
                                 </v-row>
-                                <v-row dense v-if="application.status == 'complete'">
+                                <v-row dense v-if="application.status == 5">
                                     <v-col cols="2" class="text-left">Link</v-col>
                                     <v-col cols="10"  class="text-break text-left">
                                         <a @click="openUrl(application.url)">{{application.url}}</a>
                                     </v-col>
                                 </v-row>
-                                <v-subheader class="pl-0 ml-0 caption" v-if="application.transactionId">Payment Transaction</v-subheader>
+                                <v-subheader class="pl-0 ml-0 caption" v-if="application.transactionId">Network Fee Transaction</v-subheader>
                                 <v-divider class="mb-2" v-if="application.transactionId"></v-divider>
                                 <v-row dense v-if="application.transactionId">
                                     <v-col cols="2" class="text-left"><v-img src="/images/bridge-token.png" height="20" width="20"></v-img></v-col>
@@ -96,7 +96,7 @@
                 </v-expansion-panel>
             </v-expansion-panels>
         </v-container>
-        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="refreshApplications(0)" @openUrl="openUrl"></application-create-dialog>
+        <application-create-dialog v-if="applicationCreateDialog" @close="applicationCreateDialog = false" @created="applicationCreated()" @openUrl="openUrl"></application-create-dialog>
         <v-dialog v-model="statusDialog" persistent max-width="600px">
             <v-card class="py-12">
                 <v-container text-center align-middle>
@@ -133,8 +133,12 @@ export default {
         }
     },
     methods: {
-        refreshApplications: async function(openIndex){
+        applicationCreated(){
             this.applicationCreateDialog = false;
+            this.refreshing = true;
+            this.refreshApplications(0);
+        },
+        refreshApplications: async function(openIndex){
             this.refreshing = true;
             let passportContext = await BridgeExtension.getPassportContext();
             let applications = await BridgeProtocol.Services.Application.getApplicationList(passportContext.passport, passportContext.passphrase);
@@ -180,23 +184,24 @@ export default {
         setApplicationDetail: async function(application){
             let passportContext = await BridgeExtension.getPassportContext();
             let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
+
             //Make the status readable
             application.status = appDetails.status;
-            application.pending = application.status != "failed" && application.status != "complete";
-            if(application.status == "complete")
-                application.statusText = "Sent Successfully";
-            else if(application.pending)
+            application.pending = application.status != 4 && application.status != 5;
+            if(application.pending)
                 application.statusText = "Awaiting Verification";
-            else
-                application.statusText = makeStringReadable(appDetails.status);
-            
+            else if(application.status == 5)
+                application.statusText = "Sent Successfully";
+            else if(application.status == 4)
+                application.statusText = appDetails.statusMessage;
+
             application.url = appDetails.url;
             application.transactionId = appDetails.transactionId;
 
             if(appDetails.transactionFee){
                 application.transactionFee = appDetails.transactionFee;
                 //Legacy transaction amount format
-                if(appDetails.transactionFee = 1000000000) 
+                if(appDetails.transactionFee == 1000000000) 
                     application.transactionFee = 1;
             }
 
@@ -210,21 +215,28 @@ export default {
                 application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + appDetails.transactionId;
             }
 
-            //If we are incomplete, set to poll every 15s
+            //HACK: Make sure we refresh
+            this.applications.push({});
+            this.applications.pop();
+
             if(application.pending){
-                console.log("application pending, polling for updated status");
-                this.polling = true;
-                let app = this;
-                window.setTimeout(async function(){
-                    if(app.polling)
-                        await app.setApplicationDetail(application);
-                },15000);
+                let app = await this.waitApplicationComplete(application.id);
+                this.setApplicationDetail(app);
             }
-            else{
-                //HACK: Make sure we refresh
-                this.applications.push({});
-                this.applications.pop();
-            }
+        },
+        async waitApplicationComplete(applicationId){
+            return new Promise(function (resolve, reject) {
+                (async function waitForComplete(){
+                    let passportContext = await BridgeExtension.getPassportContext();
+                    let app = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, applicationId);
+                    if(app.status == 4 || app.status == 5){ //Failed or complete
+                        console.log("Application verification complete");
+                        return resolve(app);
+                    }
+                    console.log("Application verification not complete. Waiting and retrying.");
+                    setTimeout(waitForComplete, 15000);
+                })();
+            });
         },
         openUrl: function(url){
             this.$emit('openUrl', url);

@@ -384,7 +384,7 @@ export default {
 
                     if(app.polling){
                         console.log("status pending, waiting and retrying " + wallet.network);
-                        setTimeout(waitStatus, 5000);
+                        setTimeout(waitStatus, 15000);
                     }   
                 })();
             });

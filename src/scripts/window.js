@@ -342,7 +342,7 @@
                 if(pendingList[i].claimTypeId === claimTypeId && pendingList[i].network.toLowerCase() === network.toLowerCase())
                 {
                     let status = 2;
-                    if(network.toLowerCase() === "neo" && pendingList[i].status == "transactionReady")
+                    if(network.toLowerCase() === "neo" && pendingList[i].status == 9)
                         status = 3;
 
                     return {

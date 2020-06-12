@@ -2,7 +2,7 @@
   "name": "Bridge Passport",
   "version": "3.0.0",
   "manifest_version": 2,
-  "description": "Extension to allow users to create, manage, and use their Bridge Passport on the Bridge Protocol Network",
+  "description": "Extension to allow users to create, manage, and use their Bridge Identity on the Bridge Protocol Network",
   "icons": {
     "16": "icons/icon_16.png",
     "128": "icons/icon_128.png"

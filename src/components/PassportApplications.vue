@@ -136,9 +136,9 @@ export default {
         applicationCreated(){
             this.applicationCreateDialog = false;
             this.refreshing = true;
-            this.refreshApplications(0);
+            this.refreshApplications(true);
         },
-        refreshApplications: async function(openIndex){
+        refreshApplications: async function(open){
             this.refreshing = true;
             let passportContext = await BridgeExtension.getPassportContext();
             let applications = await BridgeProtocol.Services.Application.getApplicationList(passportContext.passport, passportContext.passphrase);
@@ -154,10 +154,10 @@ export default {
             }
             this.applications = applications;
             this.refreshing = false;
-            if(openIndex != null){
-                 let application = applications[openIndex];
+            if(open != null){
+                 let application = applications[0];
                  this.lastSelectedApplication = application.id;
-                 this.applicationPanels = [openIndex];
+                 this.applicationPanels = [0];
                  await this.refreshApplication(application);
             }
         },
@@ -174,17 +174,44 @@ export default {
         refreshApplication: async function(application){
             //Update the application status from the service
             application.loading = true;
-            
-            await this.setApplicationDetail(application);
 
-            this.applications.push({});
-            this.applications.pop();
-            application.loading = false;
-        },
-        setApplicationDetail: async function(application){
+            //Get the details
             let passportContext = await BridgeExtension.getPassportContext();
             let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
-
+            
+            //Show the current details
+            this.showApplicationDetail(application, appDetails);
+            application.loading = false;
+            
+            //If we are pending, poll for status
+            if(application.pending){
+                console.log("Application pending, polling for status");
+                this.polling = true;
+                this.waitApplicationComplete(application);
+            }
+        },
+        async waitApplicationComplete(application){
+            let app = this;
+            return new Promise(function (resolve, reject) {
+                (async function waitForComplete(){
+                    console.log("Retrieving application status");
+                    let passportContext = await BridgeExtension.getPassportContext();
+                    let appDetails = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, application.id);
+                    if(appDetails.status == 4 || appDetails.status == 5){ //Failed or complete
+                        console.log("Application verification complete");
+                        app.polling = false;
+                        await app.showApplicationDetail(application, appDetails);
+                        return resolve();
+                    }
+                    if(app.polling){
+                        console.log("Application verification not complete. Waiting and retrying.");
+                        setTimeout(waitForComplete, 15000);
+                    }
+                })();
+            });
+        },
+        showApplicationDetail: async function(application, appDetails)
+        {
             //Make the status readable
             application.status = appDetails.status;
             application.pending = application.status != 4 && application.status != 5;
@@ -218,32 +245,13 @@ export default {
             //HACK: Make sure we refresh
             this.applications.push({});
             this.applications.pop();
-
-            if(application.pending){
-                let app = await this.waitApplicationComplete(application.id);
-                this.setApplicationDetail(app);
-            }
-        },
-        async waitApplicationComplete(applicationId){
-            return new Promise(function (resolve, reject) {
-                (async function waitForComplete(){
-                    let passportContext = await BridgeExtension.getPassportContext();
-                    let app = await BridgeProtocol.Services.Application.getApplication(passportContext.passport, passportContext.passphrase, applicationId);
-                    if(app.status == 4 || app.status == 5){ //Failed or complete
-                        console.log("Application verification complete");
-                        return resolve(app);
-                    }
-                    console.log("Application verification not complete. Waiting and retrying.");
-                    setTimeout(waitForComplete, 15000);
-                })();
-            });
         },
         openUrl: function(url){
             this.$emit('openUrl', url);
         }
     },
     created: async function(){
-        await this.refreshApplications(null);
+        await this.refreshApplications(false);
         //Update the rendered height
         this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
     }

@@ -13,7 +13,7 @@
 The Bridge Passport Browser Extension enables end users to easily manage their digital identity using the Bridge Protocol.
 
 # User Guide and Feature Documentation
-Visit <a href="https://bridge-protocol.github.io/docs/extension-passport</a> to get started.
+Visit <a href="https://bridge-protocol.github.io/docs/extension-passport">docs.bridgeprotocol.io</a> to get started.
 
 # Local Installation
 - "npm i && npm run build"

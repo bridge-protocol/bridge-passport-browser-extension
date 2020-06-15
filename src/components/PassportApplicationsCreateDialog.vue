@@ -70,7 +70,7 @@
                                         <v-img src="/images/neo-logo.png" width="20" contain>
                                     </v-col>
                                     <v-col cols="5" class="ml-n4 py-0">
-                                        NEO
+                                        Neo
                                     </v-col>
                                 </v-row>
                             </v-col>

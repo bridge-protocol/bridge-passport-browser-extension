@@ -11,17 +11,16 @@
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
         <v-btn
-            absolute
-            dark
-            fab
-            top 
-            right
-            color="accent"
-            class="mt-8 mr-n3"
-            @click="addDialog = true"
-            v-if="wallets.length < 2"
-        >
-            <v-icon link>mdi-plus</v-icon>
+                dark
+                fab
+                top 
+                right
+                color="accent"
+                @click="addDialog = true"
+                v-if="wallets.length < 2"
+                style="position:fixed; right: 10px; top:70px; z-index:500;"
+            >
+                <v-icon link>mdi-plus</v-icon>
         </v-btn>
         <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
@@ -106,7 +105,7 @@
                     <v-row dense v-if="!neoWallet">
                         <v-col cols="auto"><v-img src="../images/neo-logo.png" width="36"></v-img></v-col>
                         <v-col cols="10">
-                        <v-text-field v-model="neoPrivateKey" color="accent" label="NEO Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        <v-text-field v-model="neoPrivateKey" color="accent" label="Neo Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
                     <v-row dense v-if="!ethWallet">
@@ -152,7 +151,7 @@ export default {
                     this.neoWallet = true;
                 }
                 catch(err){
-                    console.log("Unable to add NEO wallet: " + err.message);
+                    console.log("Unable to add Neo wallet: " + err.message);
                 }
             }
             if(!this.ethWallet){
@@ -245,7 +244,7 @@ export default {
                     if(wallets[i].network.toLowerCase() === "neo"){
                         this.neoWallet = true;
                         wallets[i].color = "green";
-                        wallets[i].networkName = "NEO";
+                        wallets[i].networkName = "Neo";
                         wallets[i].gasBalanceLabel = "GAS";
                     }
                     else if(wallets[i].network.toLowerCase() === "eth"){
@@ -321,7 +320,7 @@ export default {
             }
 
             if(!this.swapFrom || !this.swapTo){
-                alert("You must have both a NEO and Ethereum wallet in your passport to swap tokens.");
+                alert("You must have both a Neo and Ethereum wallet in your passport to swap tokens.");
                 return;
             }
 

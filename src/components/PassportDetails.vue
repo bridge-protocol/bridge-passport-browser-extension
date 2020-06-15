@@ -7,7 +7,7 @@
                 style="margin-left: 50%;"
             ></v-progress-circular>
         </v-container>
-        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + mainContainerHeight + 'px; overflow-y:auto;'">
             <v-expansion-panels>
                 <v-expansion-panel @click="passportDetail">
                     <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
@@ -30,7 +30,6 @@
                             <v-col cols="2" class="text-left">Id:</v-col>
                             <v-col cols="auto" class="text-left">{{passportId}}</v-col>
                         </v-row>
-
                         <div v-if="neoWallet != null || ethWallet != null">
                             <div class="float-right">
                                 <v-menu close-on-click small bottom left>

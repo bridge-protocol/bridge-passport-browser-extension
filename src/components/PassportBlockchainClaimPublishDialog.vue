@@ -199,7 +199,7 @@ export default {
         networkSelected: async function(network){
             this.loading = true;
             this.network = network;
-            this.networkName = network === "eth" ? "Ethereum" : "NEO";
+            this.networkName = network === "eth" ? "Ethereum" : "Neo";
             this.passportPublished = false;
             this.gasBalance = 0;
             this.brdgBalance = 0;
@@ -297,7 +297,7 @@ export default {
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
         if(neoWallet)
-            this.networks.push({ id:"neo", name:"NEO" });
+            this.networks.push({ id:"neo", name:"Neo" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
             

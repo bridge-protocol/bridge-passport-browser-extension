@@ -147,7 +147,7 @@ export default {
             this.requestIdentifier = this.requestMessage.payload.identifier;
             this.requestNetwork = this.requestMessage.payload.network.toLowerCase();
             if(this.requestNetwork === "neo"){
-                this.requestNetworkName = "NEO";
+                this.requestNetworkName = "Neo";
                 this.requestAddressUrl = BridgeProtocol.Constants.neoscanUrl + "address/" + this.requestAddress;
             }
             else if(this.requestNetwork === "eth"){

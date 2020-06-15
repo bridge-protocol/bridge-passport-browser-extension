@@ -7,17 +7,16 @@
                 style="margin-left: 50%;"
             ></v-progress-circular>
         </v-container>
-        <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'max-height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+        <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + mainContainerHeight + 'px; overflow-y:auto;'">
             <v-btn
-                absolute
                 dark
                 fab
                 top 
                 right
                 color="accent"
-                class="mt-8 mr-n3"
                 @click="applicationCreateDialog = true"
                 v-if="!refreshing" 
+                style="position:fixed; right: 10px; top:70px; z-index:500;"
             >
                 <v-icon link>mdi-plus</v-icon>
             </v-btn>

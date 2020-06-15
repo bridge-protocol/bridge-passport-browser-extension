@@ -129,8 +129,8 @@
 
     <v-content>
       <v-container
-        class="fill-height justify-center text-center"
         fluid
+        class="fill-height justify-center text-center"
       >
 
       <!-- about dialog -->
@@ -157,13 +157,15 @@
       <passport-applications v-if="isCurrentView('passportApplications')" @openUrl="openUrl"></passport-applications>
 
       <!-- home view -->
-      <div v-if="isCurrentView('passportHome')" class="justify-center text-center pt-n6 mt-n6">
-          <div width="250" class="mt-n6">
-              <v-img src="../../images/bridge-passport.png" height="250" contain></v-img>
-          </div>
-          <v-divider class="my-4"></v-divider>
-          <div class="text-uppercase">{{passportId}}</div>
-      </div>
+      <v-container v-if="isCurrentView('passportHome')" class="text-center" style="position:fixed; top:250px;">
+        <v-row><v-col cols="12" class="text-center"><v-img src="../../images/bridge-passport.png" height="250" contain></v-img></v-col></v-row>
+        <v-row>
+          <v-col cols="3"></v-col>
+          <v-col cols="6" class="text-center"><v-divider class="my-0"></v-divider></v-col>
+          <v-col cols="3"></v-col>
+        </v-row>
+        <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{passportId}}</div></v-col></v-row>
+      </v-container>
 
       </v-container>
     </v-content>

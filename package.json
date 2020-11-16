@@ -14,8 +14,14 @@
   },
   "dependencies": {
     "@bridge-protocol/bridge-protocol-js": "^3.0.28",
+    "@ethersproject/contracts": "^5.0.5",
+    "@ethersproject/networks": "^5.0.4",
+    "@ethersproject/providers": "^5.0.14",
+    "@ethersproject/solidity": "^5.0.5",
+    "@uniswap/sdk": "^3.0.3",
     "chrome-extension-async": "^3.4.1",
     "jquery": "^3.4.1",
+    "qrcode": "^1.4.4",
     "vue": "^2.6.10",
     "vuetify": "^2.2.19"
   },

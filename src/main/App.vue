@@ -111,6 +111,17 @@
               </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item two-line :disabled="!passportLoaded" @click="handoffDialog = true">
+            <v-list-item-icon>
+              <v-icon>mdi-cellphone-arrow-down</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Send to Mobile</v-list-item-title>
+              <v-list-item-subtitle>
+                Sync with your Bridge Mobile Passport
+              </v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
 
           <v-divider inset></v-divider>
           
@@ -135,6 +146,9 @@
 
       <!-- about dialog -->
       <about-dialog v-if="aboutDialog" @close="aboutDialog = false" @openUrl="openUrl"></about-dialog>
+
+      <!-- handoff dialog -->
+      <handoff-dialog v-if="handoffDialog" @close="handoffDialog = false"></handoff-dialog>
 
       <!-- open dialog -->
       <open-dialog v-if="openDialog" @unlocked="unlocked()"></open-dialog>
@@ -187,6 +201,7 @@
   import AboutDialog from '../components/AboutDialog.vue';
   import OpenDialog from '../components/OpenDialog.vue';
   import UnlockDialog from '../components/UnlockDialog.vue';
+  import HandoffDialog from '../components/HandoffDialog.vue';
   import LoginDialog from '../components/LoginDialog.vue';
   import PaymentDialog from '../components/PaymentDialog.vue';
   import ClaimsImportDialog from '../components/ClaimsImportDialog.vue';
@@ -199,6 +214,7 @@
       AboutDialog,
       OpenDialog,
       UnlockDialog,
+      HandoffDialog,
       LoginDialog,
       PaymentDialog,
       ClaimsImportDialog,
@@ -215,6 +231,7 @@
       openDialog: false,
       unlockDialog: false,
       aboutDialog: false,
+      handoffDialog: false,
       loginDialog: false,
       paymentDialog: false,
       claimsImportDialog: false,

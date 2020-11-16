@@ -2,6 +2,7 @@
     const jquery = require('jquery');
     const Bridge = require('@bridge-protocol/bridge-protocol-js');
     const chromeAsync = require('chrome-extension-async'); 
+    var QRCode = require('qrcode');
     
     class BridgeExtension
     {
@@ -179,6 +180,21 @@
                 style: 'display: none',
             });
             document.body.appendChild(iframe);
+        }
+
+        async handoffPassport(passport, passphrase){
+            return await Bridge.Services.Passport.handoff(passport, passphrase);
+        }
+
+        async getQRCode(value){
+            return new Promise(function (resolve, reject) {
+                QRCode.toDataURL(value, function (err, url) {
+                    if(err)
+                        reject(err);
+                        
+                    resolve(url);
+                });
+            });
         }
 
         async sendLoginResponse(sender, response){

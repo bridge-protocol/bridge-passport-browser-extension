@@ -63,6 +63,7 @@
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                             <v-col cols="auto">
                                 <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="accent">Swap Tokens</v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" x-small color="accent">Buy on Uniswap</v-btn>
                             </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -126,17 +127,20 @@
         </v-dialog>
         <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false; transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
         <token-swap-dialog v-if="tokenSwapDialog" :from="swapFrom" :to="swapTo" @close="tokenSwapDialog = false; swapFrom = null; swapTo = null; "></token-swap-dialog>
+        <uniswap-dialog v-if="uniswapDialog" :wallet="wallet" @close="uniswapDialog = false; swapFrom = null; swapTo = null; "></uniswap-dialog>
     </v-container>
 </template>
 
 <script>
 import TransactionDialog from './PassportWalletsTransactionDialog.vue';
 import TokenSwapDialog from './TokenSwapDialog.vue';
+import UniswapDialog from './UniswapDialog.vue'; 
 export default {
     name: 'passport-wallets',
     components:{
         TransactionDialog,
-        TokenSwapDialog
+        TokenSwapDialog,
+        UniswapDialog
     },
     methods: {
         addWallet: async function(){
@@ -329,6 +333,11 @@ export default {
             this.wallets.push({});
             this.wallets.pop();
         },
+        buyUniswap: async function(wallet){
+            this.uniswapDialog = true;
+            this.wallets.push({});
+            this.wallets.pop();
+        },
         openUrl: function(url){
             this.$emit('openUrl', url);
         }
@@ -350,7 +359,8 @@ export default {
             transactionWallet: null,
             wallets: [],
             swapFrom: null,
-            swapTo: null
+            swapTo: null,
+            uniswapDialog: false
         }
     },
     created: async function(){

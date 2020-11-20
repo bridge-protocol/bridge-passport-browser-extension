@@ -227,6 +227,7 @@
             let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
             let gas = 0;
             let brdg = 0;
+            let native = 0;
             if(balances){
                 for(let i=0; i<balances.length; i++){
                     if(balances[i].asset.toLowerCase() === "gas"){
@@ -234,13 +235,17 @@
                     }
                     else if(balances[i].asset.toLowerCase() == "eth"){
                         gas = balances[i].balance;
+                        native = balances[i].balance;
+                    }
+                    if(balances[i].asset.toLowerCase() == "neo"){
+                        native = balances[i].balance;
                     }
                     if(balances[i].asset.toLowerCase() == "brdg"){
                         brdg = balances[i].balance;
                     }
                 }
             }
-            return { gas, brdg };
+            return { gas, brdg, native };
         }
 
         getReadableDate(date, includeTime){

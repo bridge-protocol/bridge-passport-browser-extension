@@ -9,7 +9,7 @@
                 <v-container>{{loadingMessage}}</v-container>
             </v-container>  
         </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+        <v-card class="mx-0 px-0" v-if="!loading && !sent">
             <v-toolbar
                 color="gradient"
                 dark
@@ -26,10 +26,26 @@
                     <v-col cols="4" class="mt-2 text-right">
                         Buy Amount
                     </v-col>
-                    <v-col cols="auto" class="text-center">
+                    <v-col cols="5" class="text-center">
                         <v-text-field
-                            v-model="brdgAmount"
-                            name="brdgAmount"
+                            v-model="amount"
+                            name="amount"
+                            outlined
+                            dense
+                            color="secondary"
+                            required
+                            @change="calculateCost"
+                            :rules="[rules.required, rules.gtzero, rules.wholeamount]"
+                        >
+                        </v-text-field>
+                    </v-col>
+                     <v-col cols="4" class="mt-2 text-right">
+                        Slippage %
+                    </v-col>
+                    <v-col cols="5" class="text-center">
+                        <v-text-field
+                            v-model="slippage"
+                            name="slippage"
                             outlined
                             dense
                             color="secondary"
@@ -39,32 +55,78 @@
                         </v-text-field>
                     </v-col>
                 <v-row>
-                <v-row dense class="px-0 mx-0 mt-0">
-                    <v-col cols="4" class="mt-2 text-right">
-                        Slippage %
+                <v-row dense class="px-0 mx-0 my-n6">
+                    <v-col cols="4" class="pt-9 text-right">
+                        Estimated Cost
                     </v-col>
-                    <v-col cols="auto" class="text-center">
+                    <v-col cols="5" class="text-center">
+                        <div style="font-size:10px;">{{ethBalance}} Available</div>
                         <v-text-field
-                            v-model="slippage"
-                            name="slippage"
+                            v-model="cost"
+                            name="cost"
                             outlined
                             dense
                             color="secondary"
-                            required
-                            :rules="[rules.required, rules.gtzero]"
+                            readonly
                         >
                         </v-text-field>
+                        <div style="font-size:11px; color:red; margin-top:-24px;">{{statusMessage}}</div>
+                    </v-col>
+                    <v-col cols="1" class="mt-8">
+                        ETH
                     </v-col>
                 <v-row>
             </v-card-text>
-            <v-card-text class="mx-0 mt-n2 text-justify" style="font-size:11px;">
-                By clicking below, you agree that you understand the process of buying tokens on Uniswap and agree to assume all responsibility for this transaction.  Any issues arising from the transaction after the point of transmission are between the user and Uniswap, Bridge Protocol Corporation will relays the transaction on your behalf but is not involved with the actual purchase or market mechanics and will not provide end user support for your transaction.  If you prefer, you can use the Uniswap exchange directly <a @click="openUrl('https://info.uniswap.org/pair/0xa23c4aa7050425d2922956bedd9d513da1b4a977');">here</a>
+            <v-card-text class="mx-0 mt-3 text-justify" style="font-size:11px;">
+                By clicking below, you agree that you understand the process and nuances of buying tokens on Uniswap and agree to assume all responsibility for this transaction.  Any issues arising from the transaction after the point of transmission are between the user and Uniswap, Bridge Protocol Corporation will relays the transaction on your behalf but is not involved with the actual purchase or market mechanics and will not provide end user support for your transaction.  If you prefer, you can use the Uniswap exchange directly <a @click="openUrl('https://info.uniswap.org/pair/0xa23c4aa7050425d2922956bedd9d513da1b4a977');">here</a>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="close()">Cancel</v-btn>
                 <v-btn color="accent"  @click="buy()" v-if="!insufficientBalance && !error">Send Buy Request to Uniswap</v-btn>
             </v-card-actions>
+        </v-card>
+        <v-card v-if="!loading && sent">
+            <v-container text-center align-middle>
+                <v-container>
+                    <v-alert 
+                    dense
+                    outlined
+                    type="success" 
+                    v-if="!error"
+                    class="text-justify"
+                >
+                    Uniswap Transaction Sent Successfully
+                </v-alert>
+                <v-alert
+                    dense
+                    outlined
+                    type="error" 
+                    v-if="error"
+                    class="text-justify"
+                    >
+                    Uniswap Transaction Failed: {{statusMessage}}
+                </v-alert>
+                <v-container class="px-0 py-0" v-if="!error">
+                    <v-subheader class="pl-0 ml-0 mt-2 caption">Swap Information</v-subheader>
+                    <v-divider class="mb-2"></v-divider>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Date</v-col><v-col cols="auto" class="caption">{{new Date().toLocaleDateString()}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{address}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{txId}}</v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(txId)" class="pl-0" v-if="txId">View Transaction</v-btn></v-col></v-row>
+                    <v-alert 
+                        dense
+                        outlined
+                        type="info" 
+                        class="text-left caption"
+                        color="primary"
+                        class="mt-2"
+                    >
+                        NOTE: Bridge Protocol Corporation has relayed the transaction on your behalf to Uniswap, but is not involved with the actual purchase or market mechanics and cannot provide end user support for your transaction.  View your transaction on Etherscan to track the transaction.
+                    </v-alert>
+                </v-container>
+                <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
+            </v-container>  
         </v-card>
     </v-dialog>
 </template>
@@ -77,20 +139,18 @@ export default {
             visible: true,
             loading: false,
             loadingMessage: "Please wait",
-            passportContext: null,
-            brdgBalance: 0,
-            brdgAmount: 0,
-            totalGasCost: 0,
-            gasBalance: 0,
+            wallet: null,
+            address: null,
+            ethBalance: 0,
+            amount: 1,
             slippage: 50,
+            cost: 0,
             insufficientBalance: false,
             insufficientBalanceErrorMessage: "",
             sent: false,
             statusMessage: null,
-            swapTxId: null,
+            txId: null,
             error: false,
-            pendingSwap: false,
-            pendingSwapInfo: null,
             rules: {
                 required: value => !!value || 'BRDG amount required',
                 gtzero: value => {
@@ -117,23 +177,8 @@ export default {
     },
     methods:{
         getBalances: async function(){
-            // let fromBalances = await BridgeExtension.getWalletBalances(this.from);
-            // let toBalances = await BridgeExtension.getWalletBalances(this.to);
-            // //Calculate the GAS cost
-            // this.brdgBalance = fromBalances.brdg;
-            // if(this.from.network.toLowerCase() === "neo"){
-            //     this.gasBalance = toBalances.gas;
-            // }
-            // else{
-            //     this.gasBalance = fromBalances.gas;
-            // }
-
-            // this.totalGasCost = await BridgeProtocol.Services.Blockchain.sendTokenSwapRequest(this.passportContext.passport, this.passportContext.passphrase, this.from, this.to, 1, true);
-
-            // if(this.gasBalance < this.totalGasCost){
-            //     this.insufficientBalance = true;
-            //     this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
-            // }
+            let balances = await BridgeExtension.getWalletBalances(this.wallet);
+            this.ethBalance = balances.native;
         },
         buy: async function(){
             let app = this;
@@ -145,20 +190,64 @@ export default {
                 let passport = passportContext.passport;
                 let wallet = passport.getWalletForNetwork("eth");
                 await wallet.unlock(passportContext.passphrase);
-                alert(wallet.address);
 
-                //Construct the trade
-                const swap = await BridgeProtocol.Services.Blockchain.createUniswapSwap(wallet.address, app.brdgAmount);
-                console.log(JSON.stringify(swap));
+                try{
+                    //Construct the trade
+                    const swap = await BridgeProtocol.Services.Blockchain.createUniswapSwap(wallet.address, app.amount);
+                    console.log(JSON.stringify(swap));
 
-                //Relay the transaction
-                let tx = await BridgeProtocol.Services.Blockchain.sendUniswapTradeTransaction(wallet, swap, false);
-                console.log(JSON.stringify(tx));
+                    //Relay the transaction
+                    let tx = await BridgeProtocol.Services.Blockchain.sendUniswapTradeTransaction(wallet, swap, false);
+                    console.log(JSON.stringify(tx));
+                    
+                    if(!tx)
+                        throw new Error("Error relaying transaction");
 
-                app.error = false;
-                app.sent = true;
+                    app.txId = tx;
+                    app.sent = true;
+                    app.error = false;
+                }
+                catch(err){
+                    app.statusMessage = err.message;
+                    app.error = true;
+                    app.sent = false;
+                }
+
                 app.loading = false;
             },500);
+        },
+        calculateCost: async function(){
+            //Construct the trade
+            this.loading = true;
+            try{
+                const swap = await BridgeProtocol.Services.Blockchain.createUniswapSwap(this.wallet.address, this.amount);
+                if(!swap){
+                    alert("Insufficient liquidity to fill order");
+                    this.amount = 1;
+                    this.calculateCost();
+                }
+                else{
+                    //Get the current gas price
+                    let price = await BridgeProtocol.Services.Blockchain.getUniswapTransactionCost();
+                    this.cost = parseFloat(swap.value) + parseFloat(price);
+                    this.cost = this.cost.toFixed(6);
+                }
+            }
+            catch(err){
+                alert(err.message);
+            }
+
+            if(this.cost > this.ethBalance)
+            {
+                this.statusMessage = "Insufficient funds for purchase amount";
+                this.insufficientBalance = true;
+            }
+            else{
+                this.statusMessage = null;
+                this.insufficientBalance = false;
+            }
+
+            this.loading = false;
         },
         close: function(){
             this.$emit('close', true);
@@ -173,7 +262,12 @@ export default {
     },
     mounted: async function(){
         this.loading = true;
+        let passportContext = await BridgeExtension.getPassportContext();
+        let passport = passportContext.passport;
+        this.wallet = passport.getWalletForNetwork("eth");
+        this.address = this.wallet.address;
         await this.getBalances();
+        await this.calculateCost();
         this.loading = false;
     }
 };

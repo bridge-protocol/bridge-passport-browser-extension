@@ -50,9 +50,15 @@
                         </div>
                         <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>
+                        <v-row dense v-if="wallet.network.toLowerCase() === 'neo'">
+                            <v-col cols="auto" class="text-left">
+                                <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.nativeBalance}} NEO</v-col>
+                        </v-row>
                         <v-row dense>
                             <v-col cols="auto" class="text-left">
-                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
+                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-gas-logo.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
                         </v-row>
@@ -61,9 +67,27 @@
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="1" class="text-left">
+                              
+                            </v-col>
                             <v-col cols="auto">
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="accent">Swap Tokens</v-btn>
-                                <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" x-small color="accent">Buy on Uniswap</v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
+                                    Swap Tokens 
+                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
+                                    Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
+                                </v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buyFlamingo(wallet);" small color="accent">
+                                    Buy on 
+                                    <v-img src="/images/flamingo.png" class="mx-0 ml-2" style="height:16px !important; width: 75px !important;"></v-img>
+                                </v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buySwitcheo(wallet);" small color="accent">
+                                    Buy on 
+                                    <v-img src="/images/switcheo.png" class="mx-0 ml-2" style="margin-top: -1px !important; height:10px !important; width: 60px !important;"></v-img>
+                                </v-btn>
                             </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -288,6 +312,7 @@ export default {
             wallet.registered = false;
             wallet.brdgBalance = "0";
             wallet.gasBalance = "0"
+            wallet.nativeBalance = "0";
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.wallets.push({});
@@ -297,6 +322,7 @@ export default {
                 let balances = await BridgeExtension.getWalletBalances(wallet);
                 wallet.brdgBalance = balances.brdg;
                 wallet.gasBalance = balances.gas;
+                wallet.nativeBalance = balances.native;
 
                 let res = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
                 if(res && res.length > 0)
@@ -337,6 +363,12 @@ export default {
             this.uniswapDialog = true;
             this.wallets.push({});
             this.wallets.pop();
+        },
+        buyFlamingo: function(){
+            window.open('https://flamingo.finance/swap/tabs');
+        },
+        buySwitcheo: function(){
+            window.open('https://switcheo.exchange/markets/BRDG_NEO');
         },
         openUrl: function(url){
             this.$emit('openUrl', url);

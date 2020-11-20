@@ -47,12 +47,15 @@ export default {
             this.$emit('close', true);
         },
         async init() {
-          let app = this;
+            await this.refreshCode();
+        },
+        async refreshCode(){
           let passportContext = await BridgeExtension.getPassportContext();
           let res = await BridgeExtension.handoffPassport(passportContext.passport, passportContext.passphrase);
           let code = await BridgeExtension.getQRCode(res.id);
           this.codeUrl = code;
           this.loading = false;
+          setTimeout(this.refreshCode, 60000);
         }
     },
     mounted: function () {

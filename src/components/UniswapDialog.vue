@@ -57,7 +57,7 @@
                 <v-row>
                 <v-row dense class="px-0 mx-0 my-n6">
                     <v-col cols="4" class="pt-9 text-right">
-                        Estimated Cost
+                        Est Max Cost
                     </v-col>
                     <v-col cols="5" class="text-center">
                         <div style="font-size:10px;">{{ethBalance}} Available</div>
@@ -78,7 +78,7 @@
                 <v-row>
             </v-card-text>
             <v-card-text class="mx-0 mt-3 text-justify" style="font-size:11px;">
-                By clicking below, you agree that you understand the process and nuances of buying tokens on Uniswap and agree to assume all responsibility for this transaction.  Any issues arising from the transaction after the point of transmission are between the user and Uniswap, Bridge Protocol Corporation will relays the transaction on your behalf but is not involved with the actual purchase or market mechanics and will not provide end user support for your transaction.  If you prefer, you can use the Uniswap exchange directly <a @click="openUrl('https://info.uniswap.org/pair/0xa23c4aa7050425d2922956bedd9d513da1b4a977');">here</a>
+                By clicking below, you agree that you understand the process and nuances of buying tokens on Uniswap and agree to assume all responsibility for this transaction.  Any issues arising from the transaction after the point of transmission are between the user and Uniswap, Bridge Protocol Corporation will relay the transaction on your behalf but is not involved with the actual purchase or market mechanics and will not provide end user support for your transaction.  If you prefer, you can use the Uniswap exchange directly <a @click="openUrl('https://info.uniswap.org/pair/0xa23c4aa7050425d2922956bedd9d513da1b4a977');">here</a>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -118,11 +118,10 @@
                         dense
                         outlined
                         type="info" 
-                        class="text-left caption"
+                        class="text-justify caption mt-2"
                         color="primary"
-                        class="mt-2"
                     >
-                        NOTE: Bridge Protocol Corporation has relayed the transaction on your behalf to Uniswap, but is not involved with the actual purchase or market mechanics and cannot provide end user support for your transaction.  View your transaction on Etherscan to track the transaction.
+                        NOTE: Your transaction has been relayed on your behalf to Uniswap, but Bridge not involved with the actual purchase or market mechanics and cannot provide end user support for your transaction.  View Etherscan for detailed information about your transaction.
                     </v-alert>
                 </v-container>
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
@@ -227,10 +226,9 @@ export default {
                     this.calculateCost();
                 }
                 else{
-                    //Get the current gas price
-                    let price = await BridgeProtocol.Services.Blockchain.getUniswapTransactionCost();
-                    this.cost = parseFloat(swap.value) + parseFloat(price);
-                    this.cost = this.cost.toFixed(6);
+                    let costs = await BridgeProtocol.Services.Blockchain.getUniswapEstimatedCost(this.wallet, swap);
+                    console.log(costs);
+                    this.cost = costs.totalCost;
                 }
             }
             catch(err){

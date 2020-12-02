@@ -184,6 +184,9 @@ export default {
             }
             if(!this.ethWallet){
                 try{
+                    if(!this.ethPrivateKey.startsWith("0x"))
+                        this.ethPrivateKey = "0x" + this.ethPrivateKey;
+
                     await passportContext.passport.addWallet("eth", passportContext.passphrase, this.ethPrivateKey);
                     success = true;
                     this.ethWallet = true;

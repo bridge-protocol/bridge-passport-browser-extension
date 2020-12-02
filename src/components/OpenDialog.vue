@@ -198,6 +198,9 @@ export default {
             }
 
             try{
+                if(!this.ethPrivateKey.startsWith("0x"))
+                    this.ethPrivateKey = "0x" + this.ethPrivateKey;
+
                 await passport.addWallet("eth", this.password, this.ethPrivateKey);
             }
             catch(err){

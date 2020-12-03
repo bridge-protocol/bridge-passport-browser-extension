@@ -69,24 +69,24 @@
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
                         </v-row>
                         <v-row>
-                            <v-col cols="1" class="text-left">
-                              
+                            <v-col cols="1" class="text-right">
+                             
                             </v-col>
                             <v-col cols="auto">
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
-                                    Swap Tokens 
-                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
-                                </v-btn>
                                 <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
                                     Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
                                 </v-btn>
                                 <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buyFlamingo(wallet);" small color="accent">
-                                    Buy on 
-                                    <v-img src="/images/flamingo.png" class="mx-0 ml-2" style="height:16px !important; width: 75px !important;"></v-img>
+                                    Buy on
+                                    <v-img src="/images/flamingo.png" class="mx-0 ml-1" style="height:16px !important; width: 75px !important;"></v-img>
                                 </v-btn>
                                 <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buySwitcheo(wallet);" small color="accent">
-                                    Buy on 
-                                    <v-img src="/images/switcheo.png" class="mx-0 ml-2" style="margin-top: -1px !important; height:10px !important; width: 60px !important;"></v-img>
+                                    Buy on
+                                    <v-img src="/images/switcheo.png" class="mx-0 ml-1" style="margin-top: -1px !important; height:13px !important; width: 68px !important;"></v-img>
+                                </v-btn>
+                                <v-btn v-if="wallet.brdgBalance == 0" @click="tokenSwap(wallet.network);" small color="accent">
+                                    Swap Tokens
+                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -184,7 +184,7 @@ export default {
             }
             if(!this.ethWallet){
                 try{
-                    if(!this.ethPrivateKey.startsWith("0x"))
+                    if(this.ethPrivateKey && !this.ethPrivateKey.startsWith("0x"))
                         this.ethPrivateKey = "0x" + this.ethPrivateKey;
 
                     await passportContext.passport.addWallet("eth", passportContext.passphrase, this.ethPrivateKey);

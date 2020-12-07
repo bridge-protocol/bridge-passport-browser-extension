@@ -13,8 +13,12 @@
                         <v-progress-circular
                             indeterminate
                             color="secondary"
-                            style="margin-left: 50%;"
-                        ></v-progress-circular>
+                            style="margin-left: 48%;"
+                        >
+                        <div class="pt-4 mt-12 text-no-wrap">
+                            {{loadStatus}}
+                        </div>
+                        </v-progress-circular>
                     </v-container>
                     <v-container v-if="!loading" align-middle class="mx-0 my-0 px-0 py-0" style="min-height: 300px;">
                         <v-container align-middle class="mx-0 my-2 px-0 py-2">
@@ -39,6 +43,7 @@ export default {
         return {
             visible: true,
             loading: true,
+            loadStatus: "Generating Code",
             codeUrl: '../../images/bridge-passport.png'
         }
     },

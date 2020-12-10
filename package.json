@@ -1,6 +1,6 @@
 {
   "name": "bridge-passport",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "Extension to allow users to create, manage, and use their Bridge Passport",
   "author": "Bridge Protocol Corporation",
   "scripts": {
@@ -13,9 +13,15 @@
     "watch:dev": "cross-env HMR=true npm run build:dev -- --watch"
   },
   "dependencies": {
-    "@bridge-protocol/bridge-protocol-js": "^3.0.28",
+    "@bridge-protocol/bridge-protocol-js": "^3.1.0",
+    "@ethersproject/contracts": "^5.0.5",
+    "@ethersproject/networks": "^5.0.4",
+    "@ethersproject/providers": "^5.0.14",
+    "@ethersproject/solidity": "^5.0.5",
+    "@uniswap/sdk": "^3.0.3",
     "chrome-extension-async": "^3.4.1",
     "jquery": "^3.4.1",
+    "qrcode": "^1.4.4",
     "vue": "^2.6.10",
     "vuetify": "^2.2.19"
   },

@@ -50,9 +50,15 @@
                         </div>
                         <v-subheader class="pl-0 ml-0 caption">Balances</v-subheader>
                         <v-divider class="mb-2"></v-divider>
+                        <v-row dense v-if="wallet.network.toLowerCase() === 'neo'">
+                            <v-col cols="auto" class="text-left">
+                                <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
+                            </v-col>
+                            <v-col cols="auto" class="text-left align-end">{{wallet.nativeBalance}} NEO</v-col>
+                        </v-row>
                         <v-row dense>
                             <v-col cols="auto" class="text-left">
-                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-logo.png'" height="20" contain></v-img>
+                                <v-img :src="'/images/' + wallet.network.toLowerCase() + '-gas-logo.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left">{{wallet.gasBalance}} {{wallet.gasBalanceLabel}}</v-col>
                         </v-row>
@@ -61,8 +67,27 @@
                                 <v-img :src="'/images/bridge-token.png'" height="20" contain></v-img>
                             </v-col>
                             <v-col cols="auto" class="text-left align-end">{{wallet.brdgBalance}} BRDG</v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="1" class="text-right">
+                             
+                            </v-col>
                             <v-col cols="auto">
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" x-small color="accent">Swap Tokens</v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
+                                    Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
+                                </v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buyFlamingo(wallet);" small color="accent">
+                                    Buy on
+                                    <v-img src="/images/flamingo.png" class="mx-0 ml-1" style="height:16px !important; width: 75px !important;"></v-img>
+                                </v-btn>
+                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buySwitcheo(wallet);" small color="accent">
+                                    Buy on
+                                    <v-img src="/images/switcheo.png" class="mx-0 ml-1" style="margin-top: -1px !important; height:13px !important; width: 68px !important;"></v-img>
+                                </v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
+                                    Swap Tokens
+                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
                             </v-col>
                         </v-row>
                         <v-subheader class="pl-0 ml-0 caption">Address</v-subheader>
@@ -126,17 +151,20 @@
         </v-dialog>
         <transaction-dialog v-if="transactionDialog" :wallet="transactionWallet" @close="transactionDialog = false; transactionWallet = null" @openUrl="openUrl"></transaction-dialog>
         <token-swap-dialog v-if="tokenSwapDialog" :from="swapFrom" :to="swapTo" @close="tokenSwapDialog = false; swapFrom = null; swapTo = null; "></token-swap-dialog>
+        <uniswap-dialog v-if="uniswapDialog" :wallet="wallet" @close="uniswapDialog = false; swapFrom = null; swapTo = null; "></uniswap-dialog>
     </v-container>
 </template>
 
 <script>
 import TransactionDialog from './PassportWalletsTransactionDialog.vue';
 import TokenSwapDialog from './TokenSwapDialog.vue';
+import UniswapDialog from './UniswapDialog.vue'; 
 export default {
     name: 'passport-wallets',
     components:{
         TransactionDialog,
-        TokenSwapDialog
+        TokenSwapDialog,
+        UniswapDialog
     },
     methods: {
         addWallet: async function(){
@@ -156,6 +184,9 @@ export default {
             }
             if(!this.ethWallet){
                 try{
+                    if(this.ethPrivateKey && !this.ethPrivateKey.startsWith("0x"))
+                        this.ethPrivateKey = "0x" + this.ethPrivateKey;
+
                     await passportContext.passport.addWallet("eth", passportContext.passphrase, this.ethPrivateKey);
                     success = true;
                     this.ethWallet = true;
@@ -284,6 +315,7 @@ export default {
             wallet.registered = false;
             wallet.brdgBalance = "0";
             wallet.gasBalance = "0"
+            wallet.nativeBalance = "0";
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.wallets.push({});
@@ -293,6 +325,7 @@ export default {
                 let balances = await BridgeExtension.getWalletBalances(wallet);
                 wallet.brdgBalance = balances.brdg;
                 wallet.gasBalance = balances.gas;
+                wallet.nativeBalance = balances.native;
 
                 let res = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
                 if(res && res.length > 0)
@@ -329,6 +362,17 @@ export default {
             this.wallets.push({});
             this.wallets.pop();
         },
+        buyUniswap: async function(wallet){
+            this.uniswapDialog = true;
+            this.wallets.push({});
+            this.wallets.pop();
+        },
+        buyFlamingo: function(){
+            window.open('https://flamingo.finance/swap');
+        },
+        buySwitcheo: function(){
+            window.open('https://switcheo.exchange/markets/BRDG_NEO');
+        },
         openUrl: function(url){
             this.$emit('openUrl', url);
         }
@@ -350,7 +394,8 @@ export default {
             transactionWallet: null,
             wallets: [],
             swapFrom: null,
-            swapTo: null
+            swapTo: null,
+            uniswapDialog: false
         }
     },
     created: async function(){

@@ -1,13 +1,17 @@
 <template>
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
-        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-0 px-0 py-0">
+        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-12 px-0 py-12">
             <v-progress-circular
                 indeterminate
                 color="secondary"
-                style="margin-left: 50%;"
-            ></v-progress-circular>
+                style="margin-left: 48%;"
+            >
+            <div class="pt-4 mt-12 text-no-wrap">
+                {{loadStatus}}
+            </div>
+            </v-progress-circular>
         </v-container>
-        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + minContainerHeight + 'px; overflow-y:auto;'">
             <v-expansion-panels>
                 <v-expansion-panel @click="passportDetail">
                     <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
@@ -258,7 +262,8 @@ export default {
     },
     data: function() {
         return {
-            mainContainerHeight: 690,
+            loadStatus: "Please Wait",
+            mainContainerHeight: 985,
             passportId: "",
             passportDetailSelected: false,
             passportNeoLoading: false,
@@ -302,12 +307,15 @@ export default {
             this.refreshing = true;
 
             this.claims = [];
+
+            this.loadStatus = "Decrypting Identity Claims";
             let passportContext = await BridgeExtension.getPassportContext();
             let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
 
             //Update with all the user friendly info
             this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
 
+            this.loadStatus = "";
             this.refreshing = false;
         },
         passportDetail: async function(){
@@ -484,10 +492,13 @@ export default {
             window.open(url);
         }
     },
-    created: async function(){
-        await this.init();
-        await this.refreshClaims();
-        this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
+    mounted: async function()
+    {
+        this.$nextTick(async function () {
+            await this.init();
+            await this.refreshClaims();
+            this.mainContainerHeight = this.$refs.mainContainer.clientHeight;
+        });
     }
 };
 </script>

@@ -2,6 +2,7 @@
     const jquery = require('jquery');
     const Bridge = require('@bridge-protocol/bridge-protocol-js');
     const chromeAsync = require('chrome-extension-async'); 
+    var QRCode = require('qrcode');
     
     class BridgeExtension
     {
@@ -181,6 +182,21 @@
             document.body.appendChild(iframe);
         }
 
+        async handoffPassport(passport, passphrase){
+            return await Bridge.Services.Passport.handoff(passport, passphrase);
+        }
+
+        async getQRCode(value){
+            return new Promise(function (resolve, reject) {
+                QRCode.toDataURL(value, function (err, url) {
+                    if(err)
+                        reject(err);
+                        
+                    resolve(url);
+                });
+            });
+        }
+
         async sendLoginResponse(sender, response){
             let message = {
                 action: 'sendBridgeLoginResponse',
@@ -211,6 +227,7 @@
             let balances = await BridgeProtocol.Services.Blockchain.getBalances(wallet.network, wallet.address);
             let gas = 0;
             let brdg = 0;
+            let native = 0;
             if(balances){
                 for(let i=0; i<balances.length; i++){
                     if(balances[i].asset.toLowerCase() === "gas"){
@@ -218,13 +235,17 @@
                     }
                     else if(balances[i].asset.toLowerCase() == "eth"){
                         gas = balances[i].balance;
+                        native = balances[i].balance;
+                    }
+                    if(balances[i].asset.toLowerCase() == "neo"){
+                        native = balances[i].balance;
                     }
                     if(balances[i].asset.toLowerCase() == "brdg"){
                         brdg = balances[i].balance;
                     }
                 }
             }
-            return { gas, brdg };
+            return { gas, brdg, native };
         }
 
         getReadableDate(date, includeTime){

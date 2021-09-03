@@ -76,14 +76,6 @@
                                 <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
                                     Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
                                 </v-btn>
-                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buyFlamingo(wallet);" small color="accent">
-                                    Buy on
-                                    <v-img src="/images/flamingo.png" class="mx-0 ml-1" style="height:16px !important; width: 75px !important;"></v-img>
-                                </v-btn>
-                                <v-btn v-if="wallet.network.toLowerCase() === 'neo'" @click="buySwitcheo(wallet);" small color="accent">
-                                    Buy on
-                                    <v-img src="/images/switcheo.png" class="mx-0 ml-1" style="margin-top: -1px !important; height:13px !important; width: 68px !important;"></v-img>
-                                </v-btn>
                                 <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
                                     Swap Tokens
                                     <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>

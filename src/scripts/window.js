@@ -3,7 +3,7 @@
     const Bridge = require('@bridge-protocol/bridge-protocol-js');
     const chromeAsync = require('chrome-extension-async'); 
     var QRCode = require('qrcode');
-    
+        
     class BridgeExtension
     {
         get testPassportContent(){
@@ -294,7 +294,7 @@
         }
 
         async getFullClaimInfo(claim){
-             //Assingn a unique id
+             //Assign a unique id
              claim.id = Math.random().toString(36).substring(2) + Date.now().toString(36);
              claim.verifiedOn = this.getReadableDate(claim.createdOn);
 

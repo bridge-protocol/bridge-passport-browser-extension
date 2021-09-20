@@ -57,14 +57,23 @@
                                         <v-expansion-panel>
                                             <v-expansion-panel-header class="py-0">
                                                 <v-row>
-                                                    <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
+                                                    <v-col cols="auto">
+                                                        <v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img>
+                                                    </v-col>
                                                     <v-col cols="auto">
                                                         <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
-                                                        <div class="caption" v-text="claim.claimValue"></div>
+                                                        <div class="caption clip" v-text="claim.claimValue"></div>
                                                     </v-col>
                                                 <v-row>
                                             </v-expansion-panel-header>
                                             <v-expansion-panel-content>
+                                                    <div v-if="claim.claimTypeName == 'Photo'">
+                                                        <v-subheader class="pl-0 ml-0 caption">
+                                                            Image
+                                                        </v-subheader>
+                                                        <v-divider class="mb-2"></v-divider>
+                                                        <v-img :src="claim.claimValue" width="100" contain></v-img>
+                                                    </div>
                                                     <v-subheader class="pl-0 ml-0 caption">
                                                         Claim Details 
                                                     </v-subheader>
@@ -99,6 +108,15 @@
         </v-card>
     </v-dialog>
 </template>
+
+<style scoped>
+    .clip {
+        text-overflow: ellipsis; 
+        overflow: hidden; 
+        white-space: nowrap;
+        width:400px;
+    }
+</style>
 
 <script>
 export default {

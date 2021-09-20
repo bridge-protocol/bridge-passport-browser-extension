@@ -139,11 +139,18 @@
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
                                 <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
-                                <div class="caption" v-text="claim.claimValue"></div>
+                                <div class="caption clip" v-text="claim.claimValue"></div>
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
+                        <v-container fluid class="mb-n2" v-if="claim.claimTypeName == 'Photo'">
+                            <v-subheader class="pl-0 ml-0 caption">
+                                Image
+                            </v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-img :src="claim.claimValue" width="100" contain></v-img>
+                        </v-container>
                         <v-container fluid>
                             <v-subheader class="pl-0 ml-0 caption">
                                 Claim Details 
@@ -250,6 +257,15 @@
         <blockchain-claim-publish-dialog v-if="publishClaimDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishClaimDialog = false" @publishPassport="showPublishDialog"></blockchain-claim-publish-dialog>
     </v-container>
 </template>
+
+<style scoped>
+    .clip {
+        text-overflow: ellipsis; 
+        overflow: hidden; 
+        white-space: nowrap;
+        width:400px;
+    }
+</style>
 
 <script>
 import BlockchainPublishDialog from '../components/PassportBlockchainPublishDialog.vue';

@@ -27,6 +27,14 @@
             <v-list-item-title>My Blockchain Wallets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item :disabled="!passportLoaded" :class="isCurrentView('passportNfts') ? 'gradient2':''" link @click="drawer = !drawer, currentView = 'passportNfts'">
+          <v-list-item-action>
+            <v-icon>mdi-image-multiple</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title >My Non-Fungible Tokens</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item link :disabled="!passportLoaded" :class="isCurrentView('passportApplications') ? 'gradient2':''" @click="drawer = !drawer, currentView = 'passportApplications'">
           <v-list-item-action>
             <v-icon>mdi-shopping</v-icon>
@@ -53,11 +61,12 @@
     >
       <v-toolbar-title>
         <v-row link>
-          <v-col cols="auto" link ><v-icon @click.stop="drawer = !drawer" link>mdi-menu</v-icon></v-col>
-          <v-col cols="auto" class="subtitle-1 mt-1">
+          <v-col cols="auto">
+            <v-icon @click.stop="drawer = !drawer" link class="mt-n1 mr-2">mdi-menu</v-icon>
             <span v-if="isCurrentView('passportDetails')">Digital Identity</span>
             <span v-if="isCurrentView('passportWallets')">Blockchain Wallets</span>
             <span v-if="isCurrentView('passportApplications')">Marketplace Requests</span>
+            <span v-if="isCurrentView('passportNfts')">Non-Fungible Tokens</span>
           </v-col>
         </v-row>
       </v-toolbar-title>
@@ -140,8 +149,9 @@
 
     <v-content>
       <v-container
-        fluid
-        class="fill-height justify-center text-center"
+        fill-height 
+        justify-center 
+        text-center
       >
 
       <!-- about dialog -->
@@ -169,6 +179,7 @@
       <passport-details v-if="isCurrentView('passportDetails')" @showMarketplace="currentView = 'passportApplications'"></passport-details>
       <passport-wallets v-if="isCurrentView('passportWallets')" @openUrl="openUrl"></passport-wallets>
       <passport-applications v-if="isCurrentView('passportApplications')" @openUrl="openUrl"></passport-applications>
+      <passport-nfts v-if="isCurrentView('passportNfts')"></passport-nfts>
 
       <!-- home view -->
       <v-container v-if="isCurrentView('passportHome')" class="text-center" style="position:fixed; top:250px;">
@@ -197,6 +208,10 @@
   </v-app>
 </template>
 
+<style>
+  html { overflow-y: auto }
+</style>
+
 <script>
   import AboutDialog from '../components/AboutDialog.vue';
   import OpenDialog from '../components/OpenDialog.vue';
@@ -208,6 +223,7 @@
   import PassportDetails from '../components/PassportDetails.vue';
   import PassportWallets from '../components/PassportWallets.vue';
   import PassportApplications from '../components/PassportApplications.vue';
+  import PassportNfts from '../components/PassportNfts.vue';
 
   export default {
     components: {
@@ -220,7 +236,8 @@
       ClaimsImportDialog,
       PassportDetails,
       PassportWallets,
-      PassportApplications
+      PassportApplications,
+      PassportNfts
     },
     props: {
       source: String,

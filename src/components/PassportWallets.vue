@@ -78,7 +78,7 @@
                                 </v-btn>
                                 <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
                                     Swap Tokens
-                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                    <img :src="'/images/' + wallet.network.toLowerCase() + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -92,6 +92,7 @@
                             <v-col cols="auto">
                                 <v-btn text v-if="wallet.network.toLowerCase() === 'neo'" @click="openUrl('https://neoscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Neoscan</v-btn>
                                 <v-btn text v-if="wallet.network.toLowerCase() === 'eth'" @click="openUrl('https://etherscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Etherscan</v-btn>
+                                <v-btn text v-if="wallet.network.toLowerCase() === 'bsc'" @click="openUrl('https://bscscan.com/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Bscscan</v-btn>
                             </v-col>   
                         </v-row>
                         <v-row dense>
@@ -129,6 +130,12 @@
                         <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
                         <v-col cols="10">
                         <v-text-field v-model="ethPrivateKey" color="accent" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-row dense v-if="!bscWallet">
+                        <v-col cols="auto"><v-img src="../images/bsc-logo.png" width="36"></v-img></v-col>
+                        <v-col cols="10">
+                        <v-text-field v-model="bscPrivateKey" color="accent" label="Binance Smart Chain Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
                 </v-card-text>
@@ -185,6 +192,19 @@ export default {
                 }
                 catch(err){
                     console.log("Unable to add Ethererum wallet: " + err.message);
+                }
+            }
+            if(!this.bscWallet){
+                try{
+                    if(this.bscPrivateKey && !this.bscPrivateKey.startsWith("0x"))
+                        this.bscPrivateKey = "0x" + this.bscPrivateKey;
+
+                    await passportContext.passport.addWallet("bsc", passportContext.passphrase, this.bscPrivateKey);
+                    success = true;
+                    this.bscWallet = true;
+                }
+                catch(err){
+                    console.log("Unable to add Binance Smart Chain wallet: " + err.message);
                 }
             }
 
@@ -246,6 +266,8 @@ export default {
                 this.neoWallet = false;
             if(wallet.network.toLowerCase() === "eth")
                 this.ethWallet = false;
+            if(wallet.network.toLowerCase() === "bsc")
+                this.bscWallet = false;
 
             //Hack again?
             this.wallets.push({});
@@ -275,6 +297,12 @@ export default {
                         wallets[i].color = "#6a719f";
                         wallets[i].networkName = "Ethereum";
                         wallets[i].gasBalanceLabel = "ETH";
+                    }
+                    else if(wallets[i].network.toLowerCase() === "bsc"){
+                        this.bscWallet = true;
+                        wallets[i].color = "#f3ba2f";
+                        wallets[i].networkName = "Binance Smart Chain";
+                        wallets[i].gasBalanceLabel = "BSC";
                     }
 
                     this.wallets = wallets;
@@ -362,9 +390,6 @@ export default {
         buyFlamingo: function(){
             window.open('https://flamingo.finance/swap');
         },
-        buySwitcheo: function(){
-            window.open('https://switcheo.exchange/markets/BRDG_NEO');
-        },
         openUrl: function(url){
             this.$emit('openUrl', url);
         }
@@ -376,8 +401,10 @@ export default {
             unlocking: false,
             neoWallet: null,
             ethWallet: null,
+            bscWallet: null,
             neoPrivateKey: null,
             ethPrivateKey: null,
+            bscPrivateKey: null,
             refreshing: true,
             addDialog: false,
             adding: false,

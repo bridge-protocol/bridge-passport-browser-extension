@@ -14,3 +14,15 @@
     width:400px;
 }
 
+
+.clip[data-v-d9ff2752] {
+    text-overflow: ellipsis; 
+    overflow: hidden; 
+    white-space: nowrap;
+    width:400px;
+}
+
+
+html { overflow-y: auto
+}
+

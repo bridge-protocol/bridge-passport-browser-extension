@@ -52,8 +52,8 @@
                                 <v-col cols="auto">{{nft.tokenAddress}}</v-col>
                             </v-row>
                             <v-row dense>
-                                <v-col cols="2" class="text-left">TokenId:</v-col>
-                                <v-col cols="auto">{{nft.tokenId}}</v-col>
+                                <v-col cols="2" class="text-left">Token Id:</v-col>
+                                <v-col cols="auto" style="width:400px; text-overflow:ellipsis;">{{nft.tokenId}}</v-col>
                             </v-row>
                             <v-row dense>
                                 <v-col cols="2" class="text-left">Name:</v-col>
@@ -111,7 +111,7 @@ export default {
         },
         refresh: async function(){
             this.refreshing = true;
-            this.nfts = await BridgeProtocol.Services.Blockchain.getNftsForAddress("eth", "0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb");
+            this.nfts = await BridgeProtocol.Services.Blockchain.getNftsForAddress(this.wallet.network, this.wallet.address);
             //cleanup any broken
             for(let i=0; i<this.nfts.length; i++)
             {

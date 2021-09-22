@@ -11,10 +11,10 @@
             </div>
             </v-progress-circular>
         </v-container>
-        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + minContainerHeight + 'px; overflow-y:auto;'">
+        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0>
             <v-expansion-panels>
                 <v-expansion-panel @click="passportDetail">
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
@@ -134,7 +134,7 @@
                 :key="claim.id"
                 @click="claimSelected(claim)"
                 >
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">

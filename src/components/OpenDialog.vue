@@ -219,6 +219,7 @@ export default {
                     this.bscPrivateKey = "0x" + this.bscPrivateKey;
 
                 await passport.addWallet("bsc", this.password, this.bscPrivateKey);
+                let wallet = await passport.getWalletForNetwork("bsc");
             }
             catch(err){
                 console.log("Unable to add Binance Smart Chain wallet: " + err.message);

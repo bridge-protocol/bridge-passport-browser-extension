@@ -6,7 +6,7 @@
             type="info"
             elevation="2"
             class="mt-2 text-left"
-            v-if="wallets.length == 0"
+            v-if="!refreshing && wallets && wallets.length == 0"
             >
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
@@ -17,7 +17,7 @@
                 right
                 color="accent"
                 @click="addDialog = true"
-                v-if="wallets.length < 2"
+                v-if="!refreshing && wallets && wallets.length < 3"
                 style="position:fixed; right: 10px; top:70px; z-index:500;"
             >
                 <v-icon link>mdi-plus</v-icon>
@@ -386,9 +386,6 @@ export default {
             this.uniswapDialog = true;
             this.wallets.push({});
             this.wallets.pop();
-        },
-        buyFlamingo: function(){
-            window.open('https://flamingo.finance/swap');
         },
         openUrl: function(url){
             this.$emit('openUrl', url);

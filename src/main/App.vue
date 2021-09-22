@@ -152,6 +152,8 @@
         fill-height 
         justify-center 
         text-center
+        ma-0
+        pa-0
       >
 
       <!-- about dialog -->

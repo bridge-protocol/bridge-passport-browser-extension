@@ -7,7 +7,7 @@
                 style="margin-left: 50%;"
             ></v-progress-circular>
         </v-container>
-        <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+        <v-container fill-height align-start px-0 py-0 mx-0 my-0>
             <v-btn
                 dark
                 fab
@@ -16,7 +16,7 @@
                 color="accent"
                 @click="applicationCreateDialog = true"
                 v-if="!refreshing" 
-                style="position:fixed; right: 10px; top:70px; z-index:500;"
+                style="position:fixed; right: 10px; top:6px; z-index:500;"
             >
                 <v-icon link>mdi-plus</v-icon>
             </v-btn>
@@ -25,7 +25,7 @@
                 colored-border
                 type="info"
                 elevation="2"
-                class="caption text-left pr-12"
+                class="caption text-left pr-12 pt-6"
                 v-if="applications.length == 0 && !refreshing"
                 >
                 No Bridge Marketplace verification requests found.  Get started by creating a new marketplace request.
@@ -38,7 +38,7 @@
                 :key="i"
                 @click="applicationSelected(application)"
                 >
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">

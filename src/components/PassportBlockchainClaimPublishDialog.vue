@@ -1,13 +1,10 @@
 <template>
     <v-dialog v-model="visible" persistent overlay-opacity=".8">
         <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadingMessage}}</v-container>
-            </v-container>  
+            <v-container class="text-center">
+                <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+                <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadingMessage}}</div></v-col></v-row>
+            </v-container>
         </v-card>
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-toolbar
@@ -199,7 +196,7 @@ export default {
         networkSelected: async function(network){
             this.loading = true;
             this.network = network;
-            this.networkName = network === "eth" ? "Ethereum" : "Neo";
+            this.networkName = BridgeExtension.getNetworkName(network);
             this.passportPublished = false;
             this.gasBalance = 0;
             this.brdgBalance = 0;
@@ -230,7 +227,7 @@ export default {
             let balances = await BridgeExtension.getWalletBalances(this.wallet);
             this.gasBalance = balances.gas;
             this.brdgBalance = balances.brdg;
-            this.gasLabel = network === "eth" ? "ETH" : "GAS";
+            this.gasLabel = BridgeExtension.getGasName(network);
 
             if(this.brdgBalance < this.networkFee){
                 this.insufficientBalance = true;
@@ -241,7 +238,7 @@ export default {
             this.totalGasCost = parseFloat(claimPublishGasCost);
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
+                this.insufficientBalanceErrorMessage = "Insufficient " + this.gasLabel + " balance for transaction";
             }
 
             this.loading = false;
@@ -296,10 +293,13 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        let bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
         if(neoWallet)
             this.networks.push({ id:"neo", name:"Neo" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
+        if(bscWallet)
+            this.networks.push({ id:"bsc", name:"Binance Smart Chain"});
             
         this.networkSelected("neo");
     }

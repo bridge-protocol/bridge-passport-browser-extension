@@ -148,7 +148,7 @@ export default {
         return {
             visible: true,
             loading: false,
-            loadStatus: "Loading marketplace info",
+            loadStatus: "Loading marketplace info...",
             passportContext: null,
             passportPublished: false,
             selectedPartner: null,
@@ -173,7 +173,6 @@ export default {
         create: async function(){
             let app = this;
             app.loading = true;
-            app.loadStatus = "Please wait";
 
             //Allow UI to refresh with spinner
             window.setTimeout(async function(){
@@ -197,7 +196,7 @@ export default {
                 return;
 
             this.loading = true;
-            this.loadStatus = "Loading partner information";
+            this.loadStatus = "Loading partner information...";
             this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
             this.selectedPartnerName = this.selectedPartner.name;
             
@@ -212,10 +211,7 @@ export default {
         getCostsAndBalances: async function(network){
             let wallet = this.passportContext.passport.getWalletForNetwork(network);
             let balances = await BridgeExtension.getWalletBalances(wallet);
-            this.gasLabel = "GAS";
-            if(this.network.toLowerCase() === "eth")
-                this.gasLabel = "ETH";
-
+            this.gasLabel = BridgeExtension.getGasName(this.network);
             this.gasBalance = balances.gas;
             this.brdgBalance = balances.brdg;
 
@@ -224,7 +220,7 @@ export default {
 
             if(balances.gas < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + (this.network === "neo" ? "GAS":"ETH");
+                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + this.gasLabel;
             }
             if(balances.brdg < this.networkFee){
                 this.insufficientBalance = true;
@@ -241,7 +237,7 @@ export default {
                 return; 
 
             this.loading = true;
-            this.loadStatus = "Please wait";
+            this.loadStatus = "Loading network info...";
 
             this.network = network;
             this.passportPublished = await this.checkPassportPublished(network);
@@ -263,10 +259,13 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        let bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
         if(ethWallet)
             this.networks.push("eth");
         if(neoWallet)
             this.networks.push("neo");
+        if(bscWallet)
+            this.networks.push("bsc");
 
         //For now just default Bridge
         await this.updateNetworkInfo(this.network, true);

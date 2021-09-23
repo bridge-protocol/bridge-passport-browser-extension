@@ -57,7 +57,7 @@
     <v-app-bar
       app
       clipped-left
-      color="gradient"
+      color="gradient2"
     >
       <v-toolbar-title>
         <v-row link>
@@ -211,7 +211,39 @@
 </template>
 
 <style>
-  html { overflow-y: auto }
+
+html, body{
+    padding: 0px;
+    margin: 0px;
+    overflow-y: hidden;
+}
+
+.gradient{
+    background: rgb(144,64,153) !important;
+    background: -moz-linear-gradient(343deg, rgba(144,64,153,1) 0%, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: -webkit-linear-gradient(343deg, rgba(144,64,153,1) 0%, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: linear-gradient(343deg, rgba(144,64,153,1) 0%, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#904099",endColorstr="#348bc9",GradientType=1) !important;
+}
+
+.gradient2{
+    background:#6451ab !important;
+    background: -moz-linear-gradient(343deg, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: -webkit-linear-gradient(343deg,rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+    background: linear-gradient(343deg, rgba(97,85,163,1) 62%, rgba(52,139,201,1) 100%) !important;
+}
+
+.gradient3{
+    background: rgb(27,28,29) !important;
+    background: -moz-linear-gradient(90deg,rgba(54,56,57,1) 10%, rgba(27,28,29,1) 100%) !important;
+    background: -webkit-linear-gradient(90deg, rgba(54,56,57,1) 10%, rgba(27,28,29,1) 100%) !important;
+    background: linear-gradient(90deg,rgba(54,56,57,1) 10%, rgba(27,28,29,1) 100%) !important;
+
+}
+
+.left-border-color-primary{
+    border-left:0px solid rgba(97,85,163,1);
+}
 </style>
 
 <script>

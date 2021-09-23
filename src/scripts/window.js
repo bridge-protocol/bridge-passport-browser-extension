@@ -237,6 +237,10 @@
                         gas = balances[i].balance;
                         native = balances[i].balance;
                     }
+                    else if(balances[i].asset.toLowerCase() == "bnb"){
+                        gas = balances[i].balance;
+                        native = balances[i].balance;
+                    }
                     if(balances[i].asset.toLowerCase() == "neo"){
                         native = balances[i].balance;
                     }
@@ -397,6 +401,34 @@
                     text = "Not Published";
             }
             return text;
+        }
+
+        getNetworkName(network){
+            switch(network){
+                case "eth":
+                    return "Ethereum";
+                    break;
+                case "neo":
+                    return "Neo";
+                    break;
+                case "bsc":
+                    return "Binance Smart Chain";
+                    break;
+            }
+        }
+
+        getGasName(network){
+            switch(network){
+                case "eth":
+                    return "ETH";
+                    break;
+                case "neo":
+                    return "GAS";
+                    break;
+                case "bsc":
+                    return "BNB";
+                    break;
+            }
         }
     }
 

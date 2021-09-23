@@ -24,8 +24,8 @@
         </v-btn>
         <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
-            v-for="(wallet,i) in wallets"
-            :key="wallet.address"
+            v-for="(wallet) in wallets"
+            :key="wallet.network+wallet.address"
             @click="walletSelected(wallet)"
             >
                 <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">

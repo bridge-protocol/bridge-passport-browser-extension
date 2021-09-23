@@ -117,7 +117,7 @@
                     No digital identity verified claims found.  To add verified claims, create a Bridge Marketplace request. <a @click="navigateToMarketplace">Go to My Marketplace Requests</a>
                 </v-alert>
                 <v-expansion-panel
-                v-for="(claim,i) in claims"
+                v-for="(claim) in claims"
                 :key="claim.id"
                 @click="claimSelected(claim)"
                 >

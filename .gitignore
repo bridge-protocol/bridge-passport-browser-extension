@@ -2,3 +2,5 @@
 /*.log
 /dist-zip
 *.zip
+src/images/Thumbs.db
+dist/.DS_Store

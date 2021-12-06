@@ -60,7 +60,7 @@
                 <v-row>
                 <v-row dense class="px-0 mx-0 my-n2">
                     <v-col cols="4" class="pt-9 text-right">
-                        ETH Required
+                        {{getNetworkGas(to.network)}} Required
                     </v-col>
                     <v-col cols="4" class="text-center">
                         <div style="font-size:10px;">{{gasBalance}} Available</div>
@@ -234,10 +234,10 @@ export default {
                             timestamp: new Date(pendingList[i].createdOn * 1000).toLocaleDateString(),
                             sendAddress: pendingList[i].sendAddress,
                             amount: pendingList[i].sendAmount,
-                            url: pendingList[i].sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pendingList[i].sendTxId : "https://etherscan.io/tx/" + pendingList[i].sendTxId,
+                            url: this.getTransactionUrl(pendingList[i].sendTxNetwork.toLowerCase(), pendingList[i].sendTxId),
                             receiveAddress: pendingList[i].receiveAddress,
                             gashash: pendingList[i].gasTxId,
-                            gasurl: "https://etherscan.io/tx/" + pendingList[i].gasTxId
+                            gasurl: this.getTransactionUrl(pendingList[i].sendTxNetwork.toLowerCase(), pendingList[i].gasTxId)
                         };
                         return true;
                     }
@@ -262,7 +262,7 @@ export default {
 
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
+                this.insufficientBalanceErrorMessage = "There are insufficient funds in the wallet to cover transaction GAS cost for the swap.";
             }
         },
         swap: async function(){
@@ -304,11 +304,26 @@ export default {
             window.open(url);
         },
         viewTransaction(transactionId){
+            this.openUrl(this.getTransactionUrl(this.from.network.toLowerCase(), transactionId));
+        },
+        getNetworkGas(network){
+            switch(network.toLowerCase()){
+                case 'neo':
+                    return 'GAS';
+                case 'eth':
+                    return 'ETH';
+                case 'bsc':
+                    return 'BNB';
+            }  
+        },
+        getTransactionUrl(network, transctionId){
             let url = "https://neoscan.io/transaction/" + transactionId;
-            if(this.from.network.toLowerCase() === "eth")
+            if(network.toLowerCase() === "eth")
                 url = "https://etherscan.io/tx/" + transactionId;
-            
-            this.openUrl(url);
+            else if(network.toLowerCase() === "bsc")
+                url = "https://bscscan.com/tx/" + transactionId;
+
+            return url;
         }
     },
     mounted: async function(){

@@ -76,9 +76,17 @@
                                 <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
                                     Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
                                 </v-btn>
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
-                                    Swap Tokens
-                                    <img :src="'/images/' + wallet.network.toLowerCase() + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'neo'" @click="tokenSwap(wallet.network, 'neo');" small color="accent">
+                                    Swap to NEP-5
+                                    <img :src="'/images/neo-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
+                                 <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'eth'" @click="tokenSwap(wallet.network, 'eth');" small color="accent">
+                                    Swap to ERC-20
+                                    <img :src="'/images/eth-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'bsc'" @click="tokenSwap(wallet.network, 'bsc');" small color="accent">
+                                    Swap to BEP-20
+                                    <img :src="'/images/bsc-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -360,23 +368,10 @@ export default {
             this.wallets.push({});
             this.wallets.pop();
         },
-        tokenSwap: async function(network){
-            network = network.toLowerCase();
+        tokenSwap: async function(from, to){
             let passportContext = await BridgeExtension.getPassportContext();
-            if(network === "neo"){
-                this.swapFrom = passportContext.passport.getWalletForNetwork("neo");
-                this.swapTo = passportContext.passport.getWalletForNetwork("eth");
-            }
-            else{
-                this.swapFrom = passportContext.passport.getWalletForNetwork("eth");
-                this.swapTo = passportContext.passport.getWalletForNetwork("neo");
-            }
-
-            if(!this.swapFrom || !this.swapTo){
-                alert("You must have both a Neo and Ethereum wallet in your passport to swap tokens.");
-                return;
-            }
-
+            this.swapFrom = passportContext.passport.getWalletForNetwork(from);
+            this.swapTo = passportContext.passport.getWalletForNetwork(to);
             this.tokenSwapDialog = true;
             //HACK: there has to be a better way to force the refresh
             this.wallets.push({});

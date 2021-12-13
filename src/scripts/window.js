@@ -261,12 +261,16 @@
         }
 
         getReadableString(str) {
-            let camelMatch = /([A-Z])/g;
-            str = str.replace(camelMatch, " $1");
-        
-            str = str.charAt(0).toUpperCase() + str.slice(1);
-        
-            return str;
+            try{
+                let camelMatch = /([A-Z])/g;
+                str = str.replace(camelMatch, " $1");
+                str = str.charAt(0).toUpperCase() + str.slice(1);
+                return str;
+            }
+            catch(err){
+                
+            }
+            return null;
         }
 
         async getClaimType(claimTypeId){

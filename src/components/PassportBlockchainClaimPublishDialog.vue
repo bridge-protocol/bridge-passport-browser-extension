@@ -15,7 +15,7 @@
             </v-toolbar>
             <v-card-text v-if="pendingClaim != null">
                 <v-row>
-                    <v-col class="d-flex" cols="12">
+                    <v-col class="d-flex mt-4" cols="12">
                         <v-select
                         :items="networks"
                         outlined
@@ -36,7 +36,7 @@
                     >
                     Publish Request Already Pending
                 </v-alert>
-                <v-row>
+                <v-row >
                     <v-col cols="3">
                         Network
                     </v-col>
@@ -147,7 +147,7 @@
                             v-if="!passportPublished"
                             >
                             <div>Passport is not published to the blockchain.  Passport must be published to the blockchain prior to publishing a claim.</div>
-                            <v-btn x-small class="accent" @click="publishPassport()">Publish Passport</v-btn>
+                            <v-btn x-small class="accent mt-4" @click="publishPassport()">Publish Passport</v-btn>
                         </v-alert>
                     </div>
             </v-card-text>

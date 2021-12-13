@@ -154,6 +154,10 @@ export default {
                 this.requestNetworkName = "Ethereum";
                 this.requestAddressUrl = BridgeProtocol.Constants.etherscanUrl + "/address/" + this.requestAddress;
             }
+            else if(this.requestNetwork === "bsc"){
+                this.requestNetworkName = "Binance Smart Chain";
+                this.requestAddressUrl = BridgeProtocol.Constants.bscScanUrl + "/address/" + this.requestAddress;
+            }
 
             let requestingPassport = await BridgeProtocol.Services.Passport.getDetails(passportContext.passport, passportContext.passphrase, this.requestMessage.passportId);
             requestingPassport.name = requestingPassport.id;

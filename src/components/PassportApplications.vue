@@ -233,10 +233,13 @@ export default {
                 application.transactionNetwork = appDetails.transactionNetwork.toLowerCase();
 
             if(application.transactionNetwork === "neo"){
-                application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + appDetails.transactionId;
+                application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/neo2/mainnet/" + appDetails.transactionId;
             }
             else if(application.transactionNetwork === "eth"){
                 application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + appDetails.transactionId;
+            }
+            else if(application.transactionNetwork === "bsc"){
+                application.transactionUrl = BridgeProtocol.Constants.bscScanUrl + "/tx/" + appDetails.transactionId;
             }
 
             //HACK: Make sure we refresh

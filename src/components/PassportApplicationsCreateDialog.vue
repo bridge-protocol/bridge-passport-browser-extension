@@ -58,7 +58,7 @@
                             <v-col
                                 @click="networkSelected('neo')"
                                 v-if="networks.includes('neo')"
-                                cols="auto"
+                                cols="2"
                                 class="my-0"
                             >
                                 <v-row>
@@ -69,15 +69,12 @@
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/neo-logo.png" width="20" contain>
                                     </v-col>
-                                    <v-col cols="5" class="ml-n4 py-0">
-                                        Neo
-                                    </v-col>
                                 </v-row>
                             </v-col>
                             <v-col
                                 @click="networkSelected('eth')"
                                 v-if="networks.includes('eth')"
-                                cols="4"
+                                cols="2"
                                 class="pl-n12 my-0"
                             >
                                 <v-row>
@@ -88,8 +85,21 @@
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/eth-logo.png" width="20" contain>
                                     </v-col>
-                                    <v-col cols="6" class="ml-n4 py-0">
-                                        Ethereum
+                                </v-row>
+                            </v-col>
+                            <v-col
+                                @click="networkSelected('bsc')"
+                                v-if="networks.includes('bsc')"
+                                cols="2"
+                                class="pl-n12 my-0"
+                            >
+                                <v-row>
+                                    <v-col cols="1" class="py-0">
+                                        <v-icon left v-if="network != 'bsc'">mdi-checkbox-blank-circle</v-icon>
+                                        <v-icon left v-if="network == 'bsc'" color="accent">mdi-checkbox-marked-circle</v-icon>
+                                    </v-col>
+                                    <v-col cols="auto" class="ml-2 py-0">
+                                        <v-img src="/images/bsc-logo.png" width="20" contain>
                                     </v-col>
                                 </v-row>
                             </v-col>
@@ -150,7 +160,6 @@ export default {
             loading: false,
             loadStatus: "Loading marketplace info...",
             passportContext: null,
-            passportPublished: false,
             selectedPartner: null,
             selectedPartnerName: "",
             networks: [],
@@ -227,11 +236,6 @@ export default {
                 this.insufficientBalanceErrorMessage = "Insufficient balance for network fees.  This transaction requires " + this.networkFee + " BRDG";
             }
         },
-        checkPassportPublished: async function(network){
-            let wallet = this.passportContext.passport.getWalletForNetwork(network);
-            let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-            return published != null && published.length > 0;
-        },
         updateNetworkInfo: async function(network, forceUpdate){
             if(this.network == network && !forceUpdate)
                 return; 
@@ -240,7 +244,6 @@ export default {
             this.loadStatus = "Loading network info...";
 
             this.network = network;
-            this.passportPublished = await this.checkPassportPublished(network);
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
             await this.getCostsAndBalances(network);
 

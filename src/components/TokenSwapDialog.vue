@@ -126,7 +126,7 @@
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{from.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Address</v-col><v-col cols="auto" class="caption">{{to.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{swapTxId}}</v-col></v-row>
-                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(swapTxId)" class="pl-0" v-if="swapTxId">View Transaction</v-btn></v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(from.network, swapTxId)" class="pl-0" v-if="swapTxId">View Transaction</v-btn></v-col></v-row>
                     <v-alert 
                         dense
                         outlined
@@ -225,6 +225,7 @@ export default {
     methods:{
         getPendingSwap: async function(){
             let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
+
             //Find out if we have a pending swap for this network already
             if(pendingList != null && pendingList.length > 0){
                 for(let i=0; i<pendingList.length; i++){
@@ -237,13 +238,13 @@ export default {
                             url: this.getTransactionUrl(pendingList[i].sendTxNetwork.toLowerCase(), pendingList[i].sendTxId),
                             receiveAddress: pendingList[i].receiveAddress,
                             gashash: pendingList[i].gasTxId,
-                            gasurl: this.getTransactionUrl(pendingList[i].sendTxNetwork.toLowerCase(), pendingList[i].gasTxId)
+                            gasurl: this.getTransactionUrl(pendingList[i].gasTxNetwork.toLowerCase(), pendingList[i].gasTxId)
                         };
+                        this.swapTxId = pendingList[i].sendTxId;
                         return true;
                     }
                 }
             }
-
             return false;
         },
         checkCostsAndBalances: async function(){
@@ -303,8 +304,8 @@ export default {
         openUrl(url){
             window.open(url);
         },
-        viewTransaction(transactionId){
-            this.openUrl(this.getTransactionUrl(this.from.network.toLowerCase(), transactionId));
+        viewTransaction(network, transactionId){
+            this.openUrl(this.getTransactionUrl(network, transactionId));
         },
         getNetworkGas(network){
             switch(network.toLowerCase()){
@@ -316,12 +317,12 @@ export default {
                     return 'BNB';
             }  
         },
-        getTransactionUrl(network, transctionId){
-            let url = "https://neoscan.io/transaction/" + transactionId;
+        getTransactionUrl(network, txId){
+            let url = "https://dora.coz.io/transaction/neo2/mainnet/" + txId;
             if(network.toLowerCase() === "eth")
-                url = "https://etherscan.io/tx/" + transactionId;
+                url = "https://etherscan.io/tx/" + txId;
             else if(network.toLowerCase() === "bsc")
-                url = "https://bscscan.com/tx/" + transactionId;
+                url = "https://bscscan.com/tx/" + txId;
 
             return url;
         }

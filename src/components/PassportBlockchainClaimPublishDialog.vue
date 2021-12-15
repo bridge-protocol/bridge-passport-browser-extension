@@ -115,7 +115,7 @@
                                 Network Fee
                             </v-col>
                             <v-col cols="auto"><v-img :src="'/images/bridge-token.png'" width="20" contain></v-img></v-col>
-                            <v-col cols="8" class="ml-n5">
+                            <v-col cols="8" class="ml-n5 text-left">
                                 {{networkFee}} BRDG ({{brdgBalance}} Available)
                             </v-col>
                         </v-row>
@@ -124,7 +124,7 @@
                                 GAS Cost
                             </v-col>
                             <v-col cols="auto"><v-img :src="'/images/' + network + '-logo.png'" width="20" contain></v-img></v-col>
-                            <v-col cols="8" class="ml-n5">
+                            <v-col cols="8" class="ml-n5 text-left">
                                 {{totalGasCost}} {{gasLabel}} ({{gasBalance}} Available)
                             </v-col>
                         </v-row>
@@ -204,6 +204,7 @@ export default {
             this.pendingClaim = null;
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
+            await this.wallet.unlock(this.passportContext.passphrase);
 
             //Find out if there is a pending claim publish for this type
             let pendingClaims = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);

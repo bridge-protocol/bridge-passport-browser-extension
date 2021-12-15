@@ -2,7 +2,7 @@
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
         <v-container v-if="refreshing" class="text-center" style="position:fixed; top:250px;">
             <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
-            <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadStatus}}</div></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
         </v-container>
         <v-container ref="nftContainer" v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0>
             <v-alert
@@ -77,12 +77,10 @@
 </style>
 
 <script>
-import $ from 'jquery';
-import NftAddDialog from '../components/PassportNftAddDialog.vue';
 export default {
     name: 'passport-nfts',
     components: {
-        NftAddDialog
+
     },
     data: function() {
         return {

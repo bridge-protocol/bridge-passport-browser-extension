@@ -24,7 +24,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://verification.bridgeprotocol.io/*"
+        "https://verification.bridgeprotocol.io/*",
+        "http://localhost:8080/*"
       ],
       "js": [
         "scripts/contentscript.js"

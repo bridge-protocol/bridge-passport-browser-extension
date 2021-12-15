@@ -1,12 +1,10 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container class="text-center">
-                <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
-                <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadingMessage}}</div></v-col></v-row>
-            </v-container>
-        </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+    <v-overlay v-model="visible" persistent opacity=".95">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadingMessage}}</div></v-col></v-row>
+        </v-container>  
+        <v-card class="mx-0 px-0" style="min-width:550px;" v-if="!loading">
             <v-toolbar
                 color="gradient"
                 dark
@@ -54,11 +52,11 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text @click="cancel()">Cancel</v-btn>
+                <v-btn text @click="cancel()" class="mb-n4">Cancel</v-btn>
                 <v-btn color="accent" @click="publish()" v-if="!insufficientBalance" class="mt-4">Publish to Blockchain</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <script>

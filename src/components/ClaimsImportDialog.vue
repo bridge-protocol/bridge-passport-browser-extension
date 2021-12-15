@@ -1,14 +1,9 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadStatus}}</v-container>
-            </v-container>  
-        </v-card>
+    <v-overlay v-model="visible" persistent opacity=".95">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
+        </v-container>  
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-toolbar
                 v-if="!loading"
@@ -106,7 +101,7 @@
                 <v-btn color="accent" @click="importClaims()" v-if="claims.length > 0">Import Claim(s)</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <style scoped>

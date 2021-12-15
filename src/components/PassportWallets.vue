@@ -39,10 +39,10 @@
                 </v-expansion-panel-header>
                 <v-expansion-panel-content class="left-border-color-primary">
                     <div class="text-center" v-if="!wallet.loaded">
-                        <v-progress-circular
-                            indeterminate
-                            color="secondary"
-                        ></v-progress-circular>
+                        <v-container text-center align-middle>
+                            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+                            <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadingMessage}}</div></v-col></v-row>
+                        </v-container>  
                     </div>
                     <div v-if="wallet.loaded">
                         <div class="float-right pt-4">

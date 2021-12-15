@@ -2,7 +2,7 @@
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
         <v-container v-if="refreshing" class="text-center" style="position:fixed; top:250px;">
             <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
-            <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadStatus}}</div></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
         </v-container>
         <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0>
             <v-expansion-panels>
@@ -155,7 +155,7 @@
                                 <v-col cols="2" class="text-left">Issuer:</v-col>
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
-                            <div v-if="neoWallet != null || ethWallet != null">
+                            <div v-if="claim.claimTypeId > 0">
                                 <div class="float-right">
                                     <v-menu close-on-click small bottom left>
                                             <template v-slot:activator="{ on }">
@@ -182,9 +182,9 @@
                                             </v-list>
                                     </v-menu>
                                 </div>
-                                <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
-                                <v-divider class="mb-2"></v-divider>
-                                <v-row dense v-if="neoWallet != null">
+                                <v-subheader v-if="claim.claimTypeId > 0" class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
+                                <v-divider v-if="claim.claimTypeId > 0" class="mb-2"></v-divider>
+                                <v-row dense v-if="claim.claimTypeId > 0 && neoWallet != null">
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
@@ -197,7 +197,7 @@
                                         <v-img :src="'/images/spinner.svg'" height="16" contain>
                                     </v-col>
                                 </v-row>
-                                <v-row dense v-if="ethWallet != null">
+                                <v-row dense v-if="claim.claimTypeId > 0 && ethWallet != null">
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
@@ -209,7 +209,7 @@
                                         <v-img :src="'/images/spinner.svg'" height="16" contain>
                                     </v-col>
                                 </v-row>
-                                <v-row dense v-if="bscWallet != null">
+                                <v-row dense v-if="claim.claimTypeId > 0 && bscWallet != null">
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/bsc-logo.png'" height="20" contain></v-img>
                                     </v-col>

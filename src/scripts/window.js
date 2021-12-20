@@ -182,8 +182,9 @@
             document.body.appendChild(iframe);
         }
 
-        async handoffPassport(passport, passphrase){
-            return await Bridge.Services.Passport.handoff(passport, passphrase);
+        async handoffPassport(passport){
+            let request = await passport.export();
+            return await Bridge.Services.RequestRelay.createRequest(1, request);
         }
 
         async getQRCode(value){

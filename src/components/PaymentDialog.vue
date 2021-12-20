@@ -2,7 +2,7 @@
     <v-overlay v-model="visible" persistent opacity=".95">
         <v-container elevation="0" v-if="loading" text-center align-middle>
             <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
-            <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadStatus}}</div></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
         </v-container>  
         <v-card class="mx-4 px-0" v-if="!loading">
             <v-toolbar

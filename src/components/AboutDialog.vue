@@ -11,7 +11,7 @@
 
                     <div class="subtitle-2">License</div>
                     <p class="caption">
-                        This software is licensed under the Apache 2.0 License and is being provided to you on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  Bridge Protocol Corporation will not be held liable for any loss or damages resulting from the use of this software.  If you do not agree with these terms, you must stop using this software immediately.  Please review the <a @click="openUrl('https://bridge-protocol.github.io/docs/license')">Bridge Network terms of service</a> and <a @click="openUrl('https://bridge-protocol.github.io/docs/tos')">open source license</a> before using this software.
+                        This software is licensed under the Apache 2.0 License and is being provided to you on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  Bridge Protocol Corporation will not be held liable for any loss or damages resulting from the use of this software.  If you do not agree with these terms, you must stop using this software immediately.  Please review the <a @click="openUrl('https://docs.bridgeprotocol.io/docs/license')">Bridge Network terms of service</a> and <a @click="openUrl('https://docs.bridgeprotocol.io/docs/tos')">open source license</a> before using this software.
                     </p>
                     <div class="subtitle-2">Limitation of Liability</div>
                     <p class="caption">

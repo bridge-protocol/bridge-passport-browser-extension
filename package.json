@@ -19,7 +19,7 @@
     "@ethersproject/solidity": "^5.1.0",
     "@uniswap/sdk": "^3.0.3",
     "chrome-extension-async": "^3.4.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "qrcode": "^1.4.4",
     "vue": "^2.6.10",
     "vuetify": "^2.2.19"

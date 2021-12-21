@@ -1,15 +1,10 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadingMessage}}</v-container>
-            </v-container>  
-        </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+    <v-overlay v-model="visible" persistent opacity=".95">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadingMessage}}</div></v-col></v-row>
+        </v-container>  
+        <v-card class="mx-0 px-0" style="min-width:550px;" v-if="!loading">
             <v-toolbar
                 color="gradient"
                 dark
@@ -57,11 +52,11 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text @click="cancel()">Cancel</v-btn>
-                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance">Publish to Blockchain</v-btn>
+                <v-btn text @click="cancel()" class="mb-n4">Cancel</v-btn>
+                <v-btn color="accent" @click="publish()" v-if="!insufficientBalance" class="mt-4">Publish to Blockchain</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <script>
@@ -93,11 +88,11 @@ export default {
         networkSelected: async function(network){
             this.loading = true;
             this.network = network;
-            this.networkName = network === "eth" ? "Ethereum" : "Neo";
+            this.networkName = BridgeExtension.getNetworkName(network);
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
             await this.wallet.unlock(this.passportContext.passphrase);
-            this.gasLabel = network === "eth" ? "ETH" : "GAS";
+            this.gasLabel = BridgeExtension.getGasName(network);
 
             let passportPublishCost = await BridgeProtocol.Services.Blockchain.sendPassportPublishRequest(this.passportContext.passport, this.passportContext.passphrase, this.wallet, true);
             this.totalGasCost = parseFloat(passportPublishCost);
@@ -108,7 +103,7 @@ export default {
 
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
+                this.insufficientBalanceErrorMessage = "Insufficient " + this.gasLabel + " balance for transaction";
             }
 
             this.loading = false;
@@ -155,10 +150,13 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        let bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
         if(neoWallet)
             this.networks.push({ id:"neo", name:"Neo" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
+        if(bscWallet)
+            this.networks.push({ id:"bsc", name:"Binance Smart Chain"});
         await this.networkSelected("neo");
 
         this.loading = false;

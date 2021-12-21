@@ -1,14 +1,9 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadStatus}}</v-container>
-            </v-container>  
-        </v-card>
+    <v-overlay v-model="visible" persistent opacity=".95">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
+        </v-container>  
         <v-card class="mx-0 px-0" v-if="!loading">
             <v-toolbar
                 v-if="!loading"
@@ -57,14 +52,23 @@
                                         <v-expansion-panel>
                                             <v-expansion-panel-header class="py-0">
                                                 <v-row>
-                                                    <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
+                                                    <v-col cols="auto">
+                                                        <v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img>
+                                                    </v-col>
                                                     <v-col cols="auto">
                                                         <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
-                                                        <div class="caption" v-text="claim.claimValue"></div>
+                                                        <div class="caption clip" v-text="claim.claimValue"></div>
                                                     </v-col>
                                                 <v-row>
                                             </v-expansion-panel-header>
                                             <v-expansion-panel-content>
+                                                    <div v-if="claim.claimTypeName == 'Photo'">
+                                                        <v-subheader class="pl-0 ml-0 caption">
+                                                            Image
+                                                        </v-subheader>
+                                                        <v-divider class="mb-2"></v-divider>
+                                                        <v-img :src="claim.claimValue" width="100" contain></v-img>
+                                                    </div>
                                                     <v-subheader class="pl-0 ml-0 caption">
                                                         Claim Details 
                                                     </v-subheader>
@@ -97,8 +101,17 @@
                 <v-btn color="accent" @click="importClaims()" v-if="claims.length > 0">Import Claim(s)</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
+
+<style scoped>
+    .clip {
+        text-overflow: ellipsis; 
+        overflow: hidden; 
+        white-space: nowrap;
+        width:400px;
+    }
+</style>
 
 <script>
 export default {

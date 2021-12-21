@@ -1,20 +1,13 @@
 <template>
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
-        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-12 px-0 py-12">
-            <v-progress-circular
-                indeterminate
-                color="secondary"
-                style="margin-left: 48%;"
-            >
-            <div class="pt-4 mt-12 text-no-wrap">
-                {{loadStatus}}
-            </div>
-            </v-progress-circular>
+        <v-container v-if="refreshing" class="text-center" style="position:fixed; top:250px;">
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
         </v-container>
-        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + minContainerHeight + 'px; overflow-y:auto;'">
+        <v-container v-if="!refreshing" fill-height align-start px-0 py-0 mx-0 my-0>
             <v-expansion-panels>
                 <v-expansion-panel @click="passportDetail">
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
@@ -70,23 +63,12 @@
                                 <v-col cols="9" class="text-left" v-if="!passportNeoLoading">
                                     <span v-if="passportNeoPublished">Published </span>
                                     <span v-if="passportNeoPending">Publish Pending
-                                        <v-progress-circular
-                                            indeterminate
-                                            color="secondary"
-                                            size="12"
-                                            width="2"
-                                            class="ml-1"
-                                        ></v-progress-circular>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain>
                                     </span>
                                     <span v-if="!passportNeoPublished && !passportNeoPending">Not Published </span>
                                 </v-col>
                                 <v-col cols="auto" v-if="passportNeoLoading">
-                                    <v-progress-circular
-                                        indeterminate
-                                        color="secondary"
-                                        size="16"
-                                        width="2"
-                                    ></v-progress-circular>
+                                    <v-img :src="'/images/spinner.svg'" height="16" contain>
                                 </v-col>
                             </v-row>
                             <v-row dense v-if="ethWallet != null">
@@ -96,24 +78,29 @@
                                 <v-col cols="9" class="text-left" v-if="!passportEthLoading">
                                     <span v-if="passportEthPublished">Published</span>
                                     <span v-if="passportEthPending">Publish Pending
-                                        <v-progress-circular
-                                        indeterminate
-                                        color="secondary"
-                                        size="12"
-                                        width="2"
-                                        class="ml-1"
-                                        ></v-progress-circular>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain>
                                         <v-btn text @click="openUrl('https://etherscan.io/address/' + ethWallet.address);" x-small color="accent" class="pl-0 ml-4">View on Etherscan</v-btn>
                                     </span>
                                     <span v-if="!passportEthPublished && !passportEthPending">Not Published </span>
                                 </v-col>
                                 <v-col cols="auto" v-if="passportEthLoading">
-                                    <v-progress-circular
-                                        indeterminate
-                                        color="secondary"
-                                        size="16"
-                                        width="2"
-                                    ></v-progress-circular>
+                                    <v-img :src="'/images/spinner.svg'" height="16" contain>
+                                </v-col>
+                            </v-row>
+                            <v-row dense v-if="bscWallet != null">
+                                <v-col cols="1" class="text-left">
+                                    <v-img :src="'/images/bsc-logo.png'" height="20" contain></v-img>
+                                </v-col>
+                                <v-col cols="9" class="text-left" v-if="!passportEthLoading">
+                                    <span v-if="passportBscPublished">Published</span>
+                                    <span v-if="passportBscPending">Publish Pending
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain>
+                                        <v-btn text @click="openUrl('https://bscscan.com/address/' + ethWallet.address);" x-small color="accent" class="pl-0 ml-4">View on Bscscan</v-btn>
+                                    </span>
+                                    <span v-if="!passportBscPublished && !passportBscPending">Not Published </span>
+                                </v-col>
+                                <v-col cols="auto" v-if="passportBscLoading">
+                                    <v-img :src="'/images/spinner.svg'" height="16" contain>
                                 </v-col>
                             </v-row>
                         </div>
@@ -130,20 +117,27 @@
                     No digital identity verified claims found.  To add verified claims, create a Bridge Marketplace request. <a @click="navigateToMarketplace">Go to My Marketplace Requests</a>
                 </v-alert>
                 <v-expansion-panel
-                v-for="(claim,i) in claims"
+                v-for="(claim) in claims"
                 :key="claim.id"
                 @click="claimSelected(claim)"
                 >
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
                                 <div class="mb-1 title-2" v-text="claim.claimTypeName"></div>
-                                <div class="caption" v-text="claim.claimValue"></div>
+                                <div class="caption clip" v-text="claim.claimValue"></div>
                             </v-col>
                         <v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
+                        <v-container fluid class="mb-n2" v-if="claim.claimTypeName == 'Photo'">
+                            <v-subheader class="pl-0 ml-0 caption">
+                                Image
+                            </v-subheader>
+                            <v-divider class="mb-2"></v-divider>
+                            <v-img :src="claim.claimValue" width="100" contain></v-img>
+                        </v-container>
                         <v-container fluid>
                             <v-subheader class="pl-0 ml-0 caption">
                                 Claim Details 
@@ -161,7 +155,7 @@
                                 <v-col cols="2" class="text-left">Issuer:</v-col>
                                 <v-col cols="auto">{{claim.signedByName}}</v-col>
                             </v-row>
-                            <div v-if="neoWallet != null || ethWallet != null">
+                            <div v-if="claim.claimTypeId > 0">
                                 <div class="float-right">
                                     <v-menu close-on-click small bottom left>
                                             <template v-slot:activator="{ on }">
@@ -188,56 +182,43 @@
                                             </v-list>
                                     </v-menu>
                                 </div>
-                                <v-subheader class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
-                                <v-divider class="mb-2"></v-divider>
-                                <v-row dense v-if="neoWallet != null">
+                                <v-subheader v-if="claim.claimTypeId > 0" class="pl-0 ml-0 caption">Blockchain Claims</v-subheader>
+                                <v-divider v-if="claim.claimTypeId > 0" class="mb-2"></v-divider>
+                                <v-row dense v-if="claim.claimTypeId > 0 && neoWallet != null">
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/neo-logo.png'" height="20" contain></v-img>
                                     </v-col>
                                     <v-col cols="11" class="text-left" v-if="!claim.neoLoading && claim.neoPublish">
                                         {{claim.neoPublish != null ? claim.neoPublish.text : null}} 
                                         <v-btn v-if="claim.neoPublish != null  && claim.neoPublish.status == 3" x-small class="accent ml-1" @click="sendNeoClaimTransaction(claim)" :loading="neoPublishing">Publish</v-btn>
-                                        <v-progress-circular
-                                        indeterminate
-                                        color="secondary"
-                                        size="12"
-                                        width="2"
-                                        class="ml-1"
-                                        v-if="claim.neoPublish != null && claim.neoPublish.status == 2"
-                                        ></v-progress-circular>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain v-if="claim.neoPublish != null && claim.neoPublish.status == 2">
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.neoLoading">
-                                        <v-progress-circular
-                                            indeterminate
-                                            color="secondary"
-                                            size="16"
-                                            width="2"
-                                        ></v-progress-circular>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain>
                                     </v-col>
                                 </v-row>
-                                <v-row dense v-if="ethWallet != null">
+                                <v-row dense v-if="claim.claimTypeId > 0 && ethWallet != null">
                                     <v-col cols="1" class="text-left">
                                         <v-img :src="'/images/eth-logo.png'" height="20" contain></v-img>
                                     </v-col>
                                     <v-col cols="11" class="text-left" v-if="!claim.ethLoading">
                                         {{claim.ethPublish != null ? claim.ethPublish.text : null}}
-                                        <v-progress-circular
-                                        indeterminate
-                                        color="secondary"
-                                        size="12"
-                                        width="2"
-                                        class="ml-1"
-                                        v-if="claim.ethPublish != null && claim.ethPublish.status == 2"
-                                        ></v-progress-circular>
-                                        <v-btn text v-if="claim.ethPublish != null && claim.ethPublish.txId != null" @click="openUrl('https://etherscan.io/tx/' + claim.ethPublish.txId);" x-small color="accent" class="pl-0 ml-4">View on Etherscan</v-btn>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain v-if="claim.ethPublish != null && claim.ethPublish.status == 2">
                                     </v-col>
                                     <v-col cols="auto" v-if="claim.ethLoading">
-                                        <v-progress-circular
-                                            indeterminate
-                                            color="secondary"
-                                            size="16"
-                                            width="2"
-                                        ></v-progress-circular>
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain>
+                                    </v-col>
+                                </v-row>
+                                <v-row dense v-if="claim.claimTypeId > 0 && bscWallet != null">
+                                    <v-col cols="1" class="text-left">
+                                        <v-img :src="'/images/bsc-logo.png'" height="20" contain></v-img>
+                                    </v-col>
+                                    <v-col cols="11" class="text-left" v-if="!claim.bscLoading">
+                                        {{claim.bscPublish != null ? claim.bscPublish.text : null}}
+                                        <v-img :src="'/images/spinner.svg'" height="16" contain v-if="claim.bscPublish != null && claim.bscPublish.status == 2">
+                                    </v-col>
+                                    <v-col cols="auto" v-if="claim.bscLoading">
+                                         <v-img :src="'/images/spinner.svg'" height="16" contain>
                                     </v-col>
                                 </v-row>
                             </div>
@@ -250,6 +231,15 @@
         <blockchain-claim-publish-dialog v-if="publishClaimDialog" :claim="publishClaim" :network="publishNetwork" @published="claimPublished" @cancel="publishClaimDialog = false" @publishPassport="showPublishDialog"></blockchain-claim-publish-dialog>
     </v-container>
 </template>
+
+<style scoped>
+    .clip {
+        text-overflow: ellipsis; 
+        overflow: hidden; 
+        white-space: nowrap;
+        width:400px;
+    }
+</style>
 
 <script>
 import BlockchainPublishDialog from '../components/PassportBlockchainPublishDialog.vue';
@@ -268,17 +258,22 @@ export default {
             passportDetailSelected: false,
             passportNeoLoading: false,
             passportEthLoading: false,
+            passportBscLoading: false,
             passportNeoPending: false,
             passportEthPending: false,
+            passportBscPending: false,
             passportNeoPublished: false,
             passportEthPublished: false,
+            passportBscPublished: false,
             version: null,
             publicKey: "",
             lastSelectedClaim: "",
             neoWallet: null,
             ethWallet: null,
+            bscWallet: null,
             neoWait: false,
             ethWait: false,
+            bscWait: false,
             refreshing: true,
             claims: [],
             publishClaim: null,
@@ -291,6 +286,7 @@ export default {
     methods: {
         init: async function(){
             this.refreshing = true;
+            this.loadStatus = "Unlocking passport wallets...";
             this.passportId = "";
             this.publicKey = "";
 
@@ -299,20 +295,24 @@ export default {
             this.publicKey = this.passportContext.passport.publicKey;
             this.version = BridgeExtension.passportVersion;
 
+            this.loadStatus = "Unlocking Neo wallet...";
             this.neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+            this.loadStatus = "Unlocking ETH wallet...";
             this.ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
+            this.loadStatus = "Unlocking BSC wallet...";
+            this.bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
             this.refreshing = false;
         },
         refreshClaims: async function(){
             this.refreshing = true;
-
             this.claims = [];
+            this.loadStatus = "Decrypting identity claims...";
 
-            this.loadStatus = "Decrypting Identity Claims";
             let passportContext = await BridgeExtension.getPassportContext();
             let decryptedClaims = await passportContext.passport.getDecryptedClaims(null, passportContext.passphrase);
 
             //Update with all the user friendly info
+            this.loadStatus = "Updating claims...";
             this.claims = await BridgeExtension.getFullClaimsInfo(decryptedClaims);
 
             this.loadStatus = "";
@@ -338,6 +338,7 @@ export default {
         refreshClaim: async function(claim){
             claim.neoLoading = true;
             claim.ethLoading = true;
+            claim.bscLoading = true;
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
@@ -361,6 +362,15 @@ export default {
                     this.pollPublishStatus(this.ethWallet, claim);
             }
 
+            //See if it's published on Ethereum if we have an Ethereum wallet
+            if(this.bscWallet){
+                claim.bscPublish = await BridgeExtension.getBlockchainClaimPublishStatus(this.passportContext.passport, this.passportContext.passphrase, this.bscWallet, claim.claimTypeId);
+                claim.bscLoading = false;
+                //If we are pending, poll to keep the status updated
+                if(claim.bscPublish.status == 2)
+                    this.pollPublishStatus(this.bscWallet, claim);
+            }
+
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
             this.claims.pop();
@@ -371,8 +381,10 @@ export default {
         async pollPublishStatus(wallet, claim){
             if(wallet.network.toLowerCase() === "neo")
                 claim.neoPublish = await this.pollClaimPublishStatus(wallet, claim.claimTypeId);
-            else
+            else if(wallet.network.toLowerCase() === "eth")
                 claim.ethPublish = await this.pollClaimPublishStatus(wallet, claim.claimTypeId);
+            else if(wallet.network.toLowerCase() === "bsc")
+                claim.bscPublish = await this.pollClaimPublishStatus(wallet, claim.claimTypeId);
 
             //HACK: there has to be a better way to force the refresh, not sure why the array isn't being watched correctly
             this.claims.push({});
@@ -399,11 +411,13 @@ export default {
         refreshPassportDetail: async function(){
             this.passportNeoLoading = true;
             this.passportEthLoading = true;
-            
+            this.passportBscLoading = true;
+
             await this.getPassportPublishStatus();
 
             this.passportNeoLoading = false;
             this.passportEthLoading = false;
+            this.passportBscLoading = false;
         },
         getPassportPublishStatus: async function(){
             let pendingPassportPublish = await BridgeProtocol.Services.Passport.getPendingPassportPublishList(this.passportContext.passport, this.passportContext.passphrase);
@@ -440,8 +454,24 @@ export default {
                 }
             }
 
+            //See if the passport is published or pending publish on Ethereum
+            if(this.bscWallet){
+                let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(this.bscWallet.network, this.bscWallet.address);
+                this.passportBscPublished = false;
+                if(published != null && published.length > 0)
+                    this.passportBscPublished = true;
+
+                this.passportBscPending = false;
+                if(!this.passportBscPublished){
+                    for(let i=0; i<pendingPassportPublish.length; i++){
+                        if(pendingPassportPublish[i].network.toLowerCase() === "bsc")
+                            this.passportBscPending = true;
+                    }
+                }
+            }
+
              //If there is a pending publish, poll for status while open
-            if(this.passportNeoPending || this.passportEthPending){
+            if(this.passportNeoPending || this.passportEthPending || this.passportBscPending){
                 console.log("passport publish pending, polling for updated status");
                 this.polling = true;
                 let app = this;

@@ -1,13 +1,10 @@
 <template>
     <v-container fill-height align-start text-center class="mx-0 my-0 px-0 py-0" ref="mainContainer">
-        <v-container v-if="refreshing" fill-height align-middle class="mx-0 my-0 px-0 py-0">
-            <v-progress-circular
-                indeterminate
-                color="secondary"
-                style="margin-left: 50%;"
-            ></v-progress-circular>
+        <v-container v-if="refreshing" class="text-center" style="position:fixed; top:250px;">
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
         </v-container>
-        <v-container fill-height align-start px-0 py-0 mx-0 my-0 :style="'height:' + mainContainerHeight + 'px; overflow-y:auto;'">
+        <v-container fill-height align-start px-0 py-0 mx-0 my-0>
             <v-btn
                 dark
                 fab
@@ -16,7 +13,7 @@
                 color="accent"
                 @click="applicationCreateDialog = true"
                 v-if="!refreshing" 
-                style="position:fixed; right: 10px; top:70px; z-index:500;"
+                style="position:fixed; right: 10px; top:6px; z-index:500;"
             >
                 <v-icon link>mdi-plus</v-icon>
             </v-btn>
@@ -25,7 +22,7 @@
                 colored-border
                 type="info"
                 elevation="2"
-                class="caption text-left pr-12"
+                class="caption text-left pr-12 pt-6"
                 v-if="applications.length == 0 && !refreshing"
                 >
                 No Bridge Marketplace verification requests found.  Get started by creating a new marketplace request.
@@ -38,7 +35,7 @@
                 :key="i"
                 @click="applicationSelected(application)"
                 >
-                    <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
+                    <v-expansion-panel-header class="left-border-color-primary pt-2 pb-2">
                         <v-row>
                             <v-col cols="auto"><v-img src="/images/bridge-token-white.png" height="40" width="40"></v-img></v-col>
                             <v-col cols="auto">
@@ -49,10 +46,8 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="left-border-color-primary">
                             <div class="text-center" v-if="application.loading">
-                                <v-progress-circular
-                                    indeterminate
-                                    color="secondary"
-                                ></v-progress-circular>
+                                <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+                                <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadingMessage}}</div></v-col></v-row>
                             </div>
                             <v-container v-if="!application.loading">
                                 <v-subheader class="pl-0 ml-0 caption">Request Information</v-subheader>
@@ -139,6 +134,7 @@ export default {
         },
         refreshApplications: async function(open){
             this.refreshing = true;
+            this.loadStatus = "Loading marketplace info...";
             let passportContext = await BridgeExtension.getPassportContext();
             let applications = await BridgeProtocol.Services.Application.getApplicationList(passportContext.passport, passportContext.passphrase);
             for(let i=0; i<applications.length; i++){
@@ -235,10 +231,13 @@ export default {
                 application.transactionNetwork = appDetails.transactionNetwork.toLowerCase();
 
             if(application.transactionNetwork === "neo"){
-                application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/" + appDetails.transactionId;
+                application.transactionUrl = BridgeProtocol.Constants.neoscanUrl + "transaction/neo2/mainnet/" + appDetails.transactionId;
             }
             else if(application.transactionNetwork === "eth"){
                 application.transactionUrl = BridgeProtocol.Constants.etherscanUrl + "/tx/" + appDetails.transactionId;
+            }
+            else if(application.transactionNetwork === "bsc"){
+                application.transactionUrl = BridgeProtocol.Constants.bscScanUrl + "/tx/" + appDetails.transactionId;
             }
 
             //HACK: Make sure we refresh

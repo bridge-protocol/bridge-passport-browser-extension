@@ -1,14 +1,9 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadStatus}}</v-container>
-            </v-container>  
-        </v-card>
+    <v-overlay v-model="visible" persistent overlay-opacity=".8">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
+        </v-container>  
         <v-card fill-height v-if="!loading">
             <v-toolbar
                 color="gradient"
@@ -58,7 +53,7 @@
                             <v-col
                                 @click="networkSelected('neo')"
                                 v-if="networks.includes('neo')"
-                                cols="auto"
+                                cols="2"
                                 class="my-0"
                             >
                                 <v-row>
@@ -69,15 +64,12 @@
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/neo-logo.png" width="20" contain>
                                     </v-col>
-                                    <v-col cols="5" class="ml-n4 py-0">
-                                        Neo
-                                    </v-col>
                                 </v-row>
                             </v-col>
                             <v-col
                                 @click="networkSelected('eth')"
                                 v-if="networks.includes('eth')"
-                                cols="4"
+                                cols="2"
                                 class="pl-n12 my-0"
                             >
                                 <v-row>
@@ -88,8 +80,21 @@
                                     <v-col cols="auto" class="ml-2 py-0">
                                         <v-img src="/images/eth-logo.png" width="20" contain>
                                     </v-col>
-                                    <v-col cols="6" class="ml-n4 py-0">
-                                        Ethereum
+                                </v-row>
+                            </v-col>
+                            <v-col
+                                @click="networkSelected('bsc')"
+                                v-if="networks.includes('bsc')"
+                                cols="2"
+                                class="pl-n12 my-0"
+                            >
+                                <v-row>
+                                    <v-col cols="1" class="py-0">
+                                        <v-icon left v-if="network != 'bsc'">mdi-checkbox-blank-circle</v-icon>
+                                        <v-icon left v-if="network == 'bsc'" color="accent">mdi-checkbox-marked-circle</v-icon>
+                                    </v-col>
+                                    <v-col cols="auto" class="ml-2 py-0">
+                                        <v-img src="/images/bsc-logo.png" width="20" contain>
                                     </v-col>
                                 </v-row>
                             </v-col>
@@ -138,7 +143,7 @@
                 <v-btn color="accent" @click="create()" :disabled="insufficientBalance" v-if="selectedPartner != null">Create Request</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <script>
@@ -148,9 +153,8 @@ export default {
         return {
             visible: true,
             loading: false,
-            loadStatus: "Loading marketplace info",
+            loadStatus: "Loading marketplace info...",
             passportContext: null,
-            passportPublished: false,
             selectedPartner: null,
             selectedPartnerName: "",
             networks: [],
@@ -173,7 +177,6 @@ export default {
         create: async function(){
             let app = this;
             app.loading = true;
-            app.loadStatus = "Please wait";
 
             //Allow UI to refresh with spinner
             window.setTimeout(async function(){
@@ -197,7 +200,7 @@ export default {
                 return;
 
             this.loading = true;
-            this.loadStatus = "Loading partner information";
+            this.loadStatus = "Loading partner information...";
             this.selectedPartner = await BridgeProtocol.Services.Partner.getPartner(partnerId);
             this.selectedPartnerName = this.selectedPartner.name;
             
@@ -212,10 +215,7 @@ export default {
         getCostsAndBalances: async function(network){
             let wallet = this.passportContext.passport.getWalletForNetwork(network);
             let balances = await BridgeExtension.getWalletBalances(wallet);
-            this.gasLabel = "GAS";
-            if(this.network.toLowerCase() === "eth")
-                this.gasLabel = "ETH";
-
+            this.gasLabel = BridgeExtension.getGasName(this.network);
             this.gasBalance = balances.gas;
             this.brdgBalance = balances.brdg;
 
@@ -224,27 +224,21 @@ export default {
 
             if(balances.gas < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + (this.network === "neo" ? "GAS":"ETH");
+                this.insufficientBalanceErrorMessage = "Insufficient balance for GAS cost.  This transaction requires " + this.totalGasCost + " " + this.gasLabel;
             }
             if(balances.brdg < this.networkFee){
                 this.insufficientBalance = true;
                 this.insufficientBalanceErrorMessage = "Insufficient balance for network fees.  This transaction requires " + this.networkFee + " BRDG";
             }
         },
-        checkPassportPublished: async function(network){
-            let wallet = this.passportContext.passport.getWalletForNetwork(network);
-            let published = await BridgeProtocol.Services.Blockchain.getPassportForAddress(wallet.network, wallet.address);
-            return published != null && published.length > 0;
-        },
         updateNetworkInfo: async function(network, forceUpdate){
             if(this.network == network && !forceUpdate)
                 return; 
 
             this.loading = true;
-            this.loadStatus = "Please wait";
+            this.loadStatus = "Loading network info...";
 
             this.network = network;
-            this.passportPublished = await this.checkPassportPublished(network);
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
             await this.getCostsAndBalances(network);
 
@@ -263,10 +257,13 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        let bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
         if(ethWallet)
             this.networks.push("eth");
         if(neoWallet)
             this.networks.push("neo");
+        if(bscWallet)
+            this.networks.push("bsc");
 
         //For now just default Bridge
         await this.updateNetworkInfo(this.network, true);

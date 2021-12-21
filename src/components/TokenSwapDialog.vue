@@ -1,14 +1,9 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8" max-width="600">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadingMessage}}</v-container>
-            </v-container>  
-        </v-card>
+    <v-overlay v-model="visible" persistent overlay-opacity="1.0" max-width="600">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadingMessage}}</div></v-col></v-row>
+        </v-container>  
         <v-card class="mx-0 px-0" v-if="!loading && !sent && !pendingSwap">
             <v-toolbar
                 color="gradient"
@@ -60,7 +55,7 @@
                 <v-row>
                 <v-row dense class="px-0 mx-0 my-n2">
                     <v-col cols="4" class="pt-9 text-right">
-                        ETH Required
+                        {{getNetworkGas(to.network)}} Required
                     </v-col>
                     <v-col cols="4" class="text-center">
                         <div style="font-size:10px;">{{gasBalance}} Available</div>
@@ -126,7 +121,7 @@
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Wallet Address</v-col><v-col cols="auto" class="caption">{{from.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Swap Address</v-col><v-col cols="auto" class="caption">{{to.address}}</v-col></v-row>
                     <v-row dense><v-col cols="3" class="font-weight-bold caption text-left">Transaction Id</v-col><v-col cols="9" class="caption text-break text-justify" style="text-size:12px;">{{swapTxId}}</v-col></v-row>
-                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(swapTxId)" class="pl-0" v-if="swapTxId">View Transaction</v-btn></v-col></v-row>
+                    <v-row dense><v-col cols="3" class="caption"></v-col><v-col cols="auto" class="caption"><v-btn text x-small color="accent" @click="viewTransaction(from.network, swapTxId)" class="pl-0" v-if="swapTxId">View Transaction</v-btn></v-col></v-row>
                     <v-alert 
                         dense
                         outlined
@@ -172,7 +167,7 @@
                 <v-btn color="accent" @click="close()" class="mt-4">Close</v-btn>
             </v-container>  
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <script>
@@ -225,6 +220,7 @@ export default {
     methods:{
         getPendingSwap: async function(){
             let pendingList = await BridgeProtocol.Services.TokenSwap.getPendingTokenSwapList(this.passportContext.passport, this.passportContext.passphrase);
+
             //Find out if we have a pending swap for this network already
             if(pendingList != null && pendingList.length > 0){
                 for(let i=0; i<pendingList.length; i++){
@@ -234,16 +230,16 @@ export default {
                             timestamp: new Date(pendingList[i].createdOn * 1000).toLocaleDateString(),
                             sendAddress: pendingList[i].sendAddress,
                             amount: pendingList[i].sendAmount,
-                            url: pendingList[i].sendTxNetwork.toLowerCase() === "neo" ? "https://neoscan.io/transaction/" + pendingList[i].sendTxId : "https://etherscan.io/tx/" + pendingList[i].sendTxId,
+                            url: this.getTransactionUrl(pendingList[i].sendTxNetwork.toLowerCase(), pendingList[i].sendTxId),
                             receiveAddress: pendingList[i].receiveAddress,
                             gashash: pendingList[i].gasTxId,
-                            gasurl: "https://etherscan.io/tx/" + pendingList[i].gasTxId
+                            gasurl: this.getTransactionUrl(pendingList[i].gasTxNetwork.toLowerCase(), pendingList[i].gasTxId)
                         };
+                        this.swapTxId = pendingList[i].sendTxId;
                         return true;
                     }
                 }
             }
-
             return false;
         },
         checkCostsAndBalances: async function(){
@@ -262,7 +258,7 @@ export default {
 
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "There is not enough ETH in the wallet to cover transaction GAS costs for the swap.";
+                this.insufficientBalanceErrorMessage = "There are insufficient funds in the wallet to cover transaction GAS cost for the swap.";
             }
         },
         swap: async function(){
@@ -303,12 +299,27 @@ export default {
         openUrl(url){
             window.open(url);
         },
-        viewTransaction(transactionId){
-            let url = "https://neoscan.io/transaction/" + transactionId;
-            if(this.from.network.toLowerCase() === "eth")
-                url = "https://etherscan.io/tx/" + transactionId;
-            
-            this.openUrl(url);
+        viewTransaction(network, transactionId){
+            this.openUrl(this.getTransactionUrl(network, transactionId));
+        },
+        getNetworkGas(network){
+            switch(network.toLowerCase()){
+                case 'neo':
+                    return 'GAS';
+                case 'eth':
+                    return 'ETH';
+                case 'bsc':
+                    return 'BNB';
+            }  
+        },
+        getTransactionUrl(network, txId){
+            let url = "https://dora.coz.io/transaction/neo2/mainnet/" + txId;
+            if(network.toLowerCase() === "eth")
+                url = "https://etherscan.io/tx/" + txId;
+            else if(network.toLowerCase() === "bsc")
+                url = "https://bscscan.com/tx/" + txId;
+
+            return url;
         }
     },
     mounted: async function(){

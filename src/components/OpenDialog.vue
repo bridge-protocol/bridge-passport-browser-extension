@@ -60,6 +60,12 @@
                                                 <v-text-field v-model="ethPrivateKey" color="secondary" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                                                 </v-col>
                                             </v-row>
+                                            <v-row dense>
+                                                <v-col cols="auto"><v-img src="../images/bsc-logo.png" width="36"></v-img></v-col>
+                                                <v-col cols="11">
+                                                <v-text-field v-model="bscPrivateKey" color="secondary" label="Binance Smart Chain Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                                                </v-col>
+                                            </v-row>
                                         </v-expansion-panel-content>
                                     </v-expansion-panel>
                                 </v-expansion-panels>
@@ -118,6 +124,7 @@ export default {
             importPasswordErrorMessages: null,
             neoPrivateKey: null,
             ethPrivateKey: null,
+            bscPrivateKey: null,
             importFile: null,
             importPassword: null,
             password: null,
@@ -205,6 +212,17 @@ export default {
             }
             catch(err){
                 console.log("Unable to add Ethererum wallet: " + err.message);
+            }
+
+            try{
+                if(this.bscPrivateKey && !this.bscPrivateKey.startsWith("0x"))
+                    this.bscPrivateKey = "0x" + this.bscPrivateKey;
+
+                await passport.addWallet("bsc", this.password, this.bscPrivateKey);
+                let wallet = await passport.getWalletForNetwork("bsc");
+            }
+            catch(err){
+                console.log("Unable to add Binance Smart Chain wallet: " + err.message);
             }
 
             await BridgeExtension.savePassportToBrowserStorage(passport);

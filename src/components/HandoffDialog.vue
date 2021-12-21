@@ -10,15 +10,8 @@
                 </v-toolbar>
                 <v-card-text>
                     <v-container v-if="loading" align-middle class="mx-0 my-14 px-0 py-0">
-                        <v-progress-circular
-                            indeterminate
-                            color="secondary"
-                            style="margin-left: 48%;"
-                        >
-                        <div class="pt-4 mt-12 text-no-wrap">
-                            {{loadStatus}}
-                        </div>
-                        </v-progress-circular>
+                        <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+                        <v-row><v-col cols="12" class="text-center"><div>{{loadStatus}}</div></v-col></v-row>
                     </v-container>
                     <v-container v-if="!loading" align-middle class="mx-0 my-0 px-0 py-0" style="min-height: 300px;">
                         <v-container align-middle class="mx-0 my-2 px-0 py-2">
@@ -57,7 +50,7 @@ export default {
         async refreshCode(){
           let passportContext = await BridgeExtension.getPassportContext();
           let res = await BridgeExtension.handoffPassport(passportContext.passport, passportContext.passphrase);
-          let code = await BridgeExtension.getQRCode(res.id);
+          let code = await BridgeExtension.getQRCode("BPP-" + res.id);
           this.codeUrl = code;
           this.loading = false;
           setTimeout(this.refreshCode, 60000);

@@ -6,7 +6,7 @@
             type="info"
             elevation="2"
             class="mt-2 text-left"
-            v-if="wallets.length == 0"
+            v-if="!refreshing && wallets && wallets.length == 0"
             >
             No blockchain wallets found.  Add or import a wallet below to get started.
         </v-alert>
@@ -17,15 +17,15 @@
                 right
                 color="accent"
                 @click="addDialog = true"
-                v-if="wallets.length < 2"
+                v-if="!refreshing && wallets && wallets.length < 3"
                 style="position:fixed; right: 10px; top:70px; z-index:500;"
             >
                 <v-icon link>mdi-plus</v-icon>
         </v-btn>
         <v-expansion-panels v-if="!refreshing">
             <v-expansion-panel
-            v-for="(wallet,i) in wallets"
-            :key="wallet.address"
+            v-for="(wallet) in wallets"
+            :key="wallet.network+wallet.address"
             @click="walletSelected(wallet)"
             >
                 <v-expansion-panel-header class="left-border-color-primary pt-1 pb-1">
@@ -39,10 +39,10 @@
                 </v-expansion-panel-header>
                 <v-expansion-panel-content class="left-border-color-primary">
                     <div class="text-center" v-if="!wallet.loaded">
-                        <v-progress-circular
-                            indeterminate
-                            color="secondary"
-                        ></v-progress-circular>
+                        <v-container text-center align-middle>
+                            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+                            <v-row><v-col cols="12" class="text-center"><div class="text-uppercase">{{loadingMessage}}</div></v-col></v-row>
+                        </v-container>  
                     </div>
                     <div v-if="wallet.loaded">
                         <div class="float-right pt-4">
@@ -76,9 +76,17 @@
                                 <v-btn v-if="wallet.network.toLowerCase() === 'eth'" @click="buyUniswap(wallet);" small color="accent">
                                     Buy on <img src="/images/uniswap.png" contain class="ml-1 mr-0" style="margin-top: -2px !important; height:20px !important;"></img>
                                 </v-btn>
-                                <v-btn v-if="wallet.brdgBalance > 0" @click="tokenSwap(wallet.network);" small color="accent">
-                                    Swap Tokens
-                                    <img :src="'/images/' + (wallet.network.toLowerCase() === 'eth' ? 'neo':'eth') + '-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'neo'" @click="tokenSwap(wallet.network, 'neo');" small color="accent">
+                                    Swap to NEP-5
+                                    <img :src="'/images/neo-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
+                                 <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'eth'" @click="tokenSwap(wallet.network, 'eth');" small color="accent">
+                                    Swap to ERC-20
+                                    <img :src="'/images/eth-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
+                                </v-btn>
+                                <v-btn v-if="wallet.brdgBalance > 0 && wallet.network.toLowerCase() != 'bsc'" @click="tokenSwap(wallet.network, 'bsc');" small color="accent">
+                                    Swap to BEP-20
+                                    <img :src="'/images/bsc-logo-white-nopad.png'" class="ml-1 mr-0" style="height:16px !important;"></img>
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -92,6 +100,7 @@
                             <v-col cols="auto">
                                 <v-btn text v-if="wallet.network.toLowerCase() === 'neo'" @click="openUrl('https://neoscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Neoscan</v-btn>
                                 <v-btn text v-if="wallet.network.toLowerCase() === 'eth'" @click="openUrl('https://etherscan.io/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Etherscan</v-btn>
+                                <v-btn text v-if="wallet.network.toLowerCase() === 'bsc'" @click="openUrl('https://bscscan.com/address/' + wallet.address);" x-small color="accent" class="pl-0">View on Bscscan</v-btn>
                             </v-col>   
                         </v-row>
                         <v-row dense>
@@ -129,6 +138,12 @@
                         <v-col cols="auto"><v-img src="../images/eth-logo.png" width="36"></v-img></v-col>
                         <v-col cols="10">
                         <v-text-field v-model="ethPrivateKey" color="accent" label="Ethereum Private Key" placeholder=" " type="text" outlined dense></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-row dense v-if="!bscWallet">
+                        <v-col cols="auto"><v-img src="../images/bsc-logo.png" width="36"></v-img></v-col>
+                        <v-col cols="10">
+                        <v-text-field v-model="bscPrivateKey" color="accent" label="Binance Smart Chain Private Key" placeholder=" " type="text" outlined dense></v-text-field>
                         </v-col>
                     </v-row>
                 </v-card-text>
@@ -185,6 +200,19 @@ export default {
                 }
                 catch(err){
                     console.log("Unable to add Ethererum wallet: " + err.message);
+                }
+            }
+            if(!this.bscWallet){
+                try{
+                    if(this.bscPrivateKey && !this.bscPrivateKey.startsWith("0x"))
+                        this.bscPrivateKey = "0x" + this.bscPrivateKey;
+
+                    await passportContext.passport.addWallet("bsc", passportContext.passphrase, this.bscPrivateKey);
+                    success = true;
+                    this.bscWallet = true;
+                }
+                catch(err){
+                    console.log("Unable to add Binance Smart Chain wallet: " + err.message);
                 }
             }
 
@@ -246,6 +274,8 @@ export default {
                 this.neoWallet = false;
             if(wallet.network.toLowerCase() === "eth")
                 this.ethWallet = false;
+            if(wallet.network.toLowerCase() === "bsc")
+                this.bscWallet = false;
 
             //Hack again?
             this.wallets.push({});
@@ -275,6 +305,12 @@ export default {
                         wallets[i].color = "#6a719f";
                         wallets[i].networkName = "Ethereum";
                         wallets[i].gasBalanceLabel = "ETH";
+                    }
+                    else if(wallets[i].network.toLowerCase() === "bsc"){
+                        this.bscWallet = true;
+                        wallets[i].color = "#f3ba2f";
+                        wallets[i].networkName = "Binance Smart Chain";
+                        wallets[i].gasBalanceLabel = "BSC";
                     }
 
                     this.wallets = wallets;
@@ -332,23 +368,10 @@ export default {
             this.wallets.push({});
             this.wallets.pop();
         },
-        tokenSwap: async function(network){
-            network = network.toLowerCase();
+        tokenSwap: async function(from, to){
             let passportContext = await BridgeExtension.getPassportContext();
-            if(network === "neo"){
-                this.swapFrom = passportContext.passport.getWalletForNetwork("neo");
-                this.swapTo = passportContext.passport.getWalletForNetwork("eth");
-            }
-            else{
-                this.swapFrom = passportContext.passport.getWalletForNetwork("eth");
-                this.swapTo = passportContext.passport.getWalletForNetwork("neo");
-            }
-
-            if(!this.swapFrom || !this.swapTo){
-                alert("You must have both a Neo and Ethereum wallet in your passport to swap tokens.");
-                return;
-            }
-
+            this.swapFrom = passportContext.passport.getWalletForNetwork(from);
+            this.swapTo = passportContext.passport.getWalletForNetwork(to);
             this.tokenSwapDialog = true;
             //HACK: there has to be a better way to force the refresh
             this.wallets.push({});
@@ -358,12 +381,6 @@ export default {
             this.uniswapDialog = true;
             this.wallets.push({});
             this.wallets.pop();
-        },
-        buyFlamingo: function(){
-            window.open('https://flamingo.finance/swap');
-        },
-        buySwitcheo: function(){
-            window.open('https://switcheo.exchange/markets/BRDG_NEO');
         },
         openUrl: function(url){
             this.$emit('openUrl', url);
@@ -376,8 +393,10 @@ export default {
             unlocking: false,
             neoWallet: null,
             ethWallet: null,
+            bscWallet: null,
             neoPrivateKey: null,
             ethPrivateKey: null,
+            bscPrivateKey: null,
             refreshing: true,
             addDialog: false,
             adding: false,

@@ -182,8 +182,9 @@
             document.body.appendChild(iframe);
         }
 
-        async handoffPassport(passport, passphrase){
-            return await Bridge.Services.Passport.handoff(passport, passphrase);
+        async handoffPassport(passport){
+            let request = await passport.export();
+            return await Bridge.Services.RequestRelay.createRequest(1, request);
         }
 
         async getQRCode(value){
@@ -237,6 +238,10 @@
                         gas = balances[i].balance;
                         native = balances[i].balance;
                     }
+                    else if(balances[i].asset.toLowerCase() == "bnb"){
+                        gas = balances[i].balance;
+                        native = balances[i].balance;
+                    }
                     if(balances[i].asset.toLowerCase() == "neo"){
                         native = balances[i].balance;
                     }
@@ -257,12 +262,16 @@
         }
 
         getReadableString(str) {
-            let camelMatch = /([A-Z])/g;
-            str = str.replace(camelMatch, " $1");
-        
-            str = str.charAt(0).toUpperCase() + str.slice(1);
-        
-            return str;
+            try{
+                let camelMatch = /([A-Z])/g;
+                str = str.replace(camelMatch, " $1");
+                str = str.charAt(0).toUpperCase() + str.slice(1);
+                return str;
+            }
+            catch(err){
+                
+            }
+            return null;
         }
 
         async getClaimType(claimTypeId){
@@ -397,6 +406,34 @@
                     text = "Not Published";
             }
             return text;
+        }
+
+        getNetworkName(network){
+            switch(network){
+                case "eth":
+                    return "Ethereum";
+                    break;
+                case "neo":
+                    return "Neo";
+                    break;
+                case "bsc":
+                    return "Binance Smart Chain";
+                    break;
+            }
+        }
+
+        getGasName(network){
+            switch(network){
+                case "eth":
+                    return "ETH";
+                    break;
+                case "neo":
+                    return "GAS";
+                    break;
+                case "bsc":
+                    return "BNB";
+                    break;
+            }
         }
     }
 

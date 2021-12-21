@@ -1,15 +1,10 @@
 <template>
-    <v-dialog v-model="visible" persistent overlay-opacity=".8">
-        <v-card v-if="loading" class="py-12">
-            <v-container text-center align-middle>
-                <v-progress-circular
-                    indeterminate
-                    color="secondary"
-                ></v-progress-circular>
-                <v-container>{{loadingMessage}}</v-container>
-            </v-container>  
-        </v-card>
-        <v-card class="mx-0 px-0" v-if="!loading">
+    <v-overlay v-model="visible" persistent opacity=".95">
+        <v-container elevation="0" v-if="loading" text-center align-middle>
+            <v-row><v-col cols="12" class="text-center"><v-img :src="'/images/spinner.svg'" height="80" contain></v-img></v-col></v-row>
+            <v-row><v-col cols="12" class="text-center"><div>{{loadingMessage}}</div></v-col></v-row>
+        </v-container>  
+        <v-card class="mx-0 px-0" style="min-width:550px;" v-if="!loading">
             <v-toolbar
                 color="gradient"
                 dark
@@ -18,7 +13,7 @@
             </v-toolbar>
             <v-card-text v-if="pendingClaim != null">
                 <v-row>
-                    <v-col class="d-flex" cols="12">
+                    <v-col class="d-flex mt-4" cols="12">
                         <v-select
                         :items="networks"
                         outlined
@@ -39,7 +34,7 @@
                     >
                     Publish Request Already Pending
                 </v-alert>
-                <v-row>
+                <v-row >
                     <v-col cols="3">
                         Network
                     </v-col>
@@ -120,7 +115,7 @@
                                 Network Fee
                             </v-col>
                             <v-col cols="auto"><v-img :src="'/images/bridge-token.png'" width="20" contain></v-img></v-col>
-                            <v-col cols="8" class="ml-n5">
+                            <v-col cols="8" class="ml-n5 text-left">
                                 {{networkFee}} BRDG ({{brdgBalance}} Available)
                             </v-col>
                         </v-row>
@@ -129,7 +124,7 @@
                                 GAS Cost
                             </v-col>
                             <v-col cols="auto"><v-img :src="'/images/' + network + '-logo.png'" width="20" contain></v-img></v-col>
-                            <v-col cols="8" class="ml-n5">
+                            <v-col cols="8" class="ml-n5 text-left">
                                 {{totalGasCost}} {{gasLabel}} ({{gasBalance}} Available)
                             </v-col>
                         </v-row>
@@ -150,7 +145,7 @@
                             v-if="!passportPublished"
                             >
                             <div>Passport is not published to the blockchain.  Passport must be published to the blockchain prior to publishing a claim.</div>
-                            <v-btn x-small class="accent" @click="publishPassport()">Publish Passport</v-btn>
+                            <v-btn x-small class="accent mt-4" @click="publishPassport()">Publish Passport</v-btn>
                         </v-alert>
                     </div>
             </v-card-text>
@@ -164,7 +159,7 @@
                 <v-btn text @click="cancel()">Close</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-overlay>
 </template>
 
 <script>
@@ -199,7 +194,7 @@ export default {
         networkSelected: async function(network){
             this.loading = true;
             this.network = network;
-            this.networkName = network === "eth" ? "Ethereum" : "Neo";
+            this.networkName = BridgeExtension.getNetworkName(network);
             this.passportPublished = false;
             this.gasBalance = 0;
             this.brdgBalance = 0;
@@ -209,6 +204,7 @@ export default {
             this.pendingClaim = null;
 
             this.wallet = this.passportContext.passport.getWalletForNetwork(network);
+            await this.wallet.unlock(this.passportContext.passphrase);
 
             //Find out if there is a pending claim publish for this type
             let pendingClaims = await BridgeProtocol.Services.Claim.getPendingClaimPublishList(this.passportContext.passport, this.passportContext.passphrase);
@@ -230,7 +226,7 @@ export default {
             let balances = await BridgeExtension.getWalletBalances(this.wallet);
             this.gasBalance = balances.gas;
             this.brdgBalance = balances.brdg;
-            this.gasLabel = network === "eth" ? "ETH" : "GAS";
+            this.gasLabel = BridgeExtension.getGasName(network);
 
             if(this.brdgBalance < this.networkFee){
                 this.insufficientBalance = true;
@@ -241,7 +237,7 @@ export default {
             this.totalGasCost = parseFloat(claimPublishGasCost);
             if(this.gasBalance < this.totalGasCost){
                 this.insufficientBalance = true;
-                this.insufficientBalanceErrorMessage = "Insufficient GAS balance for transaction";
+                this.insufficientBalanceErrorMessage = "Insufficient " + this.gasLabel + " balance for transaction";
             }
 
             this.loading = false;
@@ -296,10 +292,13 @@ export default {
         //Setup the available networks
         let ethWallet = this.passportContext.passport.getWalletForNetwork("eth");
         let neoWallet = this.passportContext.passport.getWalletForNetwork("neo");
+        let bscWallet = this.passportContext.passport.getWalletForNetwork("bsc");
         if(neoWallet)
             this.networks.push({ id:"neo", name:"Neo" });
         if(ethWallet)
             this.networks.push({ id:"eth", name:"Ethereum" });
+        if(bscWallet)
+            this.networks.push({ id:"bsc", name:"Binance Smart Chain"});
             
         this.networkSelected("neo");
     }

@@ -22,7 +22,7 @@
     "jquery": "^3.4.1",
     "qrcode": "^1.4.4",
     "vue": "^2.6.10",
-    "vuetify": "^2.2.19"
+    "vuetify": "^2.6.10"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
